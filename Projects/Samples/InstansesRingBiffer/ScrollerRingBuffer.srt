@@ -1,0 +1,100 @@
+class ScrollerRingBuffer
+{
+	int buffer_length;
+	array<int> buffer_indices;
+
+	void Init(int length)
+	{
+		buffer_length = length;
+
+		buffer_indices.resize(buffer_length);	
+
+		FullRefresh();	
+		
+		InitWidgets();		
+	}
+
+	void InitWidgets()
+	{
+		
+	}
+
+	void FullRefresh()
+	{		
+		for (int i=0; i<buffer_length; i++)
+		{
+			buffer_indices[i] = -2;			
+		}	
+	}
+
+	void Update()
+	{		
+		int index = GetFirstVisibleIndex();
+		
+		if (index < 0)
+		{		
+			index = 0;
+		}		
+
+		int buffer_index = index % buffer_length;		
+
+		int visible_count = GetVisibleCount();
+		int total_count = GetElementCount();
+		
+		for (int i=0; i<visible_count; i++)
+		{		
+			if (index < total_count)
+			{				
+				if (buffer_indices[buffer_index] != index)
+				{						
+					UpdateElement(buffer_index, index, true);									
+
+					buffer_indices[buffer_index] = index;				
+				}								
+			}
+			else
+			{
+				if (buffer_indices[buffer_index] != -1)
+				{										
+					UpdateElement(buffer_index, index, false);
+					
+					buffer_indices[buffer_index] = -1;				
+				}				
+			}		
+
+			buffer_index++;			
+
+			if (buffer_index >= buffer_length)
+			{
+				buffer_index = 0;
+			}
+
+			index++;
+		}
+		
+		UpdateWidgets();
+	}
+
+	void UpdateWidgets()
+	{
+	}	
+
+	int GetElementCount()
+	{
+		return 0;		
+	}
+
+	int GetFirstVisibleIndex()
+	{
+		return 0;
+	}
+
+	int GetVisibleCount()
+	{		
+		return buffer_length;
+	}
+
+	void UpdateElement(int buffer_index, int index, bool show)
+	{		
+	}
+};

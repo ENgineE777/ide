@@ -1,0 +1,18 @@
+
+varying mediump vec2 oTex;
+varying mediump vec3 oNormal;
+
+uniform sampler2D slot0;
+
+uniform mediump vec4 viewVec;
+
+void main(void)
+{
+    mediump vec4 diff = texture2D(slot0, oTex);
+	
+	highp float k = 1.0 - clamp(dot(viewVec.xyz, oNormal) * 1.5, 0.0, 1.0);	
+	
+	gl_FragColor = k + diff * 0.5;	
+	//gl_FragColor.xyz = viewVec.xyz;
+	gl_FragColor.w = clamp(k + diff.w, 0.0, 1.0);
+}

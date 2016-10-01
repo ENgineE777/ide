@@ -1,0 +1,280 @@
+\hypertarget{class_scene_script_core_mobile}{}\section{Scene\+Script\+Core\+Mobile Class Reference}
+\label{class_scene_script_core_mobile}\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_scene_script_core_mobile_af80fadb6d060cc7ae790a996521bdbc1}{Set\+Push\+Listener} (Callback1S @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_aa2bf0e1fdd08bbaeb8a8c77d01cbf11c}{Set\+On\+Resume\+Callback} (Callback\+W\+OP @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_afda47dc93fb520437a689a1acc52be85}{Set\+On\+Pause\+Callback} (Callback\+W\+OP @cb)
+\item 
+bool \hyperlink{class_scene_script_core_mobile_a3a6620cdb6dfbe9bc34edfabde93b8ef}{Is\+Read\+Contacts\+Allowed} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_ad48ba9c214510f891dd055cc04d3a77e}{Request\+Access\+To\+Contacts} (Callback1I @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_aa8c4bc72675c16bac8e46906e55a26c8}{Start\+Read\+Contacts} (Callback1I @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a98d84f8e5a4aaa629fbb2496ba697551}{Start\+Read\+Contacts\+Avatars} (Callback1I @cb)
+\item 
+int \hyperlink{class_scene_script_core_mobile_a92a5d4e0afdb25d6aa3dc6ae95ca034a}{Get\+Contacts\+Count} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_ab91eabbfa351de0cbfa0f5262641d9e4}{Get\+Contact\+Data} (int i, string \&name, string \&texture, string \&numbers)
+\item 
+void \hyperlink{class_scene_script_core_mobile_ac46247fdf455476f8373413f3d23f75b}{Send\+Sms} (string \&in number, string \&in text, Callback1I @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_af43ee93a60350979461600a320ed266d}{Get\+Sim\+Operator\+Name} (string \&name)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a7fbea5c354c51ca5170bb5d5c67a0e28}{Start\+Select\+Image} (int type, Callback1\+I1S @cb)
+\item 
+bool \hyperlink{class_scene_script_core_mobile_a8f78dc37f8c60b266ea1a91a23243c6c}{Is\+Allow\+Call} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_ae32e99bac06ecfb842cecf9bac3e0b22}{Call\+Number} (string \&in number)
+\item 
+void \hyperlink{class_scene_script_core_mobile_ae8a8eebd4be1acb3a9901048c0277926}{Send\+Mail} (string \&in address, string \&in subject, string \&in body)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a0671f838d4a51ceda5d075d8bfb33101}{Start\+Share\+Text} (string \&in text, string \&in extra\+\_\+data, Callback1S@ cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a8d45d7b8789e93a3a79f23b34f544c28}{Start\+Share\+Image} (string \&in image, Callback1S@ cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a0fa7d779e73b1d58218846266739c487}{Add\+Event\+To\+Calendar} (int day, int month, int year, int hour, int minute, int second, string \&in name, string \&in desc, string \&in location)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a400acec3e49bed461f127b204f0368a5}{Set\+Push\+Server\+U\+RL} (string \&in number)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a10b274acb407ecc9873e31d85bd500a2}{Start\+Register\+In\+Push\+Service} ()
+\item 
+float \hyperlink{class_scene_script_core_mobile_ad09ce5f5f84f1df405c6dd22182abfb9}{Get\+Tittle\+Bar\+Height} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_a3bc72aff3ec6e1b8b16b2cd5e009b08d}{Show\+Map} (bool show)
+\item 
+void \hyperlink{class_scene_script_core_mobile_aa2e383859b3fa9593c305988f5b6b92b}{Set\+Map\+Position} (float x, float y, float w, float h)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a4976087580c2e72e5301a3f6530b7aee}{Add\+Object\+To\+Map} (float x, float y, string \&in text)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a851aa58f214a966bb04abdbb1187e52e}{Delete\+All\+Map\+Objects} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_a64b526784ef4c35f5fd3c8064551ce3f}{Show\+Native\+Map} (float x, float y, string \&in text)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a62cb4343a032f015a7d5adaa4a0a9782}{Show\+Popup} (string \&in title, string \&in text, string \&in btn\+\_\+text, Callback\+W\+OP @cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a00b413238b2760487a2b15bc6523214e}{Show\+Popup} (string \&in title, string \&in text, string \&in btn\+\_\+ok\+\_\+text, Callback\+W\+OP @cb\+\_\+ok, string \&in btn\+\_\+cancel\+\_\+text, Callback\+W\+OP @cb\+\_\+cancel)
+\item 
+float \hyperlink{class_scene_script_core_mobile_ae5998ea117850e790822c3446834e15f}{Get\+Battery\+Level} ()
+\item 
+int \hyperlink{class_scene_script_core_mobile_a34e0107e67f704de98e425673e189a5c}{Get\+Battery\+Status} ()
+\item 
+void \hyperlink{class_scene_script_core_mobile_a2cf129468a46d881c92acdb357cbf662}{Get\+Install\+Referer} (string \&referer)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a50227898d842f9fe68574d9512b4f3ae}{Start\+Scan\+Barcode} (Callback1S@ cb)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a7e4ce77ca8cf3d103a27209e7f92bc88}{Get\+Camera\+Texture\+Size} (int \&width, int \&height)
+\item 
+void \hyperlink{class_scene_script_core_mobile_a099ef38d65b95396210b8e62089f2a91}{Enable\+Track\+G\+PS} (bool enable, Callback1\+I2F@ cb)
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_scene_script_core_mobile_a0fa7d779e73b1d58218846266739c487}{}\label{class_scene_script_core_mobile_a0fa7d779e73b1d58218846266739c487} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Add\+Event\+To\+Calendar@{Add\+Event\+To\+Calendar}}
+\index{Add\+Event\+To\+Calendar@{Add\+Event\+To\+Calendar}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Add\+Event\+To\+Calendar()}{AddEventToCalendar()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Add\+Event\+To\+Calendar (\begin{DoxyParamCaption}\item[{int}]{day,  }\item[{int}]{month,  }\item[{int}]{year,  }\item[{int}]{hour,  }\item[{int}]{minute,  }\item[{int}]{second,  }\item[{string \&in}]{name,  }\item[{string \&in}]{desc,  }\item[{string \&in}]{location }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a4976087580c2e72e5301a3f6530b7aee}{}\label{class_scene_script_core_mobile_a4976087580c2e72e5301a3f6530b7aee} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Add\+Object\+To\+Map@{Add\+Object\+To\+Map}}
+\index{Add\+Object\+To\+Map@{Add\+Object\+To\+Map}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Add\+Object\+To\+Map()}{AddObjectToMap()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Add\+Object\+To\+Map (\begin{DoxyParamCaption}\item[{float}]{x,  }\item[{float}]{y,  }\item[{string \&in}]{text }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ae32e99bac06ecfb842cecf9bac3e0b22}{}\label{class_scene_script_core_mobile_ae32e99bac06ecfb842cecf9bac3e0b22} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Call\+Number@{Call\+Number}}
+\index{Call\+Number@{Call\+Number}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Call\+Number()}{CallNumber()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Call\+Number (\begin{DoxyParamCaption}\item[{string \&in}]{number }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a851aa58f214a966bb04abdbb1187e52e}{}\label{class_scene_script_core_mobile_a851aa58f214a966bb04abdbb1187e52e} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Delete\+All\+Map\+Objects@{Delete\+All\+Map\+Objects}}
+\index{Delete\+All\+Map\+Objects@{Delete\+All\+Map\+Objects}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Delete\+All\+Map\+Objects()}{DeleteAllMapObjects()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Delete\+All\+Map\+Objects (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a099ef38d65b95396210b8e62089f2a91}{}\label{class_scene_script_core_mobile_a099ef38d65b95396210b8e62089f2a91} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Enable\+Track\+G\+PS@{Enable\+Track\+G\+PS}}
+\index{Enable\+Track\+G\+PS@{Enable\+Track\+G\+PS}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Enable\+Track\+G\+P\+S()}{EnableTrackGPS()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Enable\+Track\+G\+PS (\begin{DoxyParamCaption}\item[{bool}]{enable,  }\item[{Callback1\+I2F@}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ae5998ea117850e790822c3446834e15f}{}\label{class_scene_script_core_mobile_ae5998ea117850e790822c3446834e15f} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Battery\+Level@{Get\+Battery\+Level}}
+\index{Get\+Battery\+Level@{Get\+Battery\+Level}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Battery\+Level()}{GetBatteryLevel()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Mobile\+::\+Get\+Battery\+Level (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a34e0107e67f704de98e425673e189a5c}{}\label{class_scene_script_core_mobile_a34e0107e67f704de98e425673e189a5c} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Battery\+Status@{Get\+Battery\+Status}}
+\index{Get\+Battery\+Status@{Get\+Battery\+Status}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Battery\+Status()}{GetBatteryStatus()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Mobile\+::\+Get\+Battery\+Status (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a7e4ce77ca8cf3d103a27209e7f92bc88}{}\label{class_scene_script_core_mobile_a7e4ce77ca8cf3d103a27209e7f92bc88} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Camera\+Texture\+Size@{Get\+Camera\+Texture\+Size}}
+\index{Get\+Camera\+Texture\+Size@{Get\+Camera\+Texture\+Size}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Camera\+Texture\+Size()}{GetCameraTextureSize()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Get\+Camera\+Texture\+Size (\begin{DoxyParamCaption}\item[{int \&}]{width,  }\item[{int \&}]{height }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ab91eabbfa351de0cbfa0f5262641d9e4}{}\label{class_scene_script_core_mobile_ab91eabbfa351de0cbfa0f5262641d9e4} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Contact\+Data@{Get\+Contact\+Data}}
+\index{Get\+Contact\+Data@{Get\+Contact\+Data}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Contact\+Data()}{GetContactData()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Get\+Contact\+Data (\begin{DoxyParamCaption}\item[{int}]{i,  }\item[{string \&}]{name,  }\item[{string \&}]{texture,  }\item[{string \&}]{numbers }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a92a5d4e0afdb25d6aa3dc6ae95ca034a}{}\label{class_scene_script_core_mobile_a92a5d4e0afdb25d6aa3dc6ae95ca034a} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Contacts\+Count@{Get\+Contacts\+Count}}
+\index{Get\+Contacts\+Count@{Get\+Contacts\+Count}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Contacts\+Count()}{GetContactsCount()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Mobile\+::\+Get\+Contacts\+Count (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a2cf129468a46d881c92acdb357cbf662}{}\label{class_scene_script_core_mobile_a2cf129468a46d881c92acdb357cbf662} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Install\+Referer@{Get\+Install\+Referer}}
+\index{Get\+Install\+Referer@{Get\+Install\+Referer}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Install\+Referer()}{GetInstallReferer()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Get\+Install\+Referer (\begin{DoxyParamCaption}\item[{string \&}]{referer }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_af43ee93a60350979461600a320ed266d}{}\label{class_scene_script_core_mobile_af43ee93a60350979461600a320ed266d} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Sim\+Operator\+Name@{Get\+Sim\+Operator\+Name}}
+\index{Get\+Sim\+Operator\+Name@{Get\+Sim\+Operator\+Name}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Sim\+Operator\+Name()}{GetSimOperatorName()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Get\+Sim\+Operator\+Name (\begin{DoxyParamCaption}\item[{string \&}]{name }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ad09ce5f5f84f1df405c6dd22182abfb9}{}\label{class_scene_script_core_mobile_ad09ce5f5f84f1df405c6dd22182abfb9} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Get\+Tittle\+Bar\+Height@{Get\+Tittle\+Bar\+Height}}
+\index{Get\+Tittle\+Bar\+Height@{Get\+Tittle\+Bar\+Height}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Get\+Tittle\+Bar\+Height()}{GetTittleBarHeight()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Mobile\+::\+Get\+Tittle\+Bar\+Height (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a8f78dc37f8c60b266ea1a91a23243c6c}{}\label{class_scene_script_core_mobile_a8f78dc37f8c60b266ea1a91a23243c6c} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Is\+Allow\+Call@{Is\+Allow\+Call}}
+\index{Is\+Allow\+Call@{Is\+Allow\+Call}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Is\+Allow\+Call()}{IsAllowCall()}}
+{\footnotesize\ttfamily bool Scene\+Script\+Core\+Mobile\+::\+Is\+Allow\+Call (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a3a6620cdb6dfbe9bc34edfabde93b8ef}{}\label{class_scene_script_core_mobile_a3a6620cdb6dfbe9bc34edfabde93b8ef} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Is\+Read\+Contacts\+Allowed@{Is\+Read\+Contacts\+Allowed}}
+\index{Is\+Read\+Contacts\+Allowed@{Is\+Read\+Contacts\+Allowed}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Is\+Read\+Contacts\+Allowed()}{IsReadContactsAllowed()}}
+{\footnotesize\ttfamily bool Scene\+Script\+Core\+Mobile\+::\+Is\+Read\+Contacts\+Allowed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ad48ba9c214510f891dd055cc04d3a77e}{}\label{class_scene_script_core_mobile_ad48ba9c214510f891dd055cc04d3a77e} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Request\+Access\+To\+Contacts@{Request\+Access\+To\+Contacts}}
+\index{Request\+Access\+To\+Contacts@{Request\+Access\+To\+Contacts}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Request\+Access\+To\+Contacts()}{RequestAccessToContacts()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Request\+Access\+To\+Contacts (\begin{DoxyParamCaption}\item[{Callback1I @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ae8a8eebd4be1acb3a9901048c0277926}{}\label{class_scene_script_core_mobile_ae8a8eebd4be1acb3a9901048c0277926} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Send\+Mail@{Send\+Mail}}
+\index{Send\+Mail@{Send\+Mail}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Send\+Mail()}{SendMail()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Send\+Mail (\begin{DoxyParamCaption}\item[{string \&in}]{address,  }\item[{string \&in}]{subject,  }\item[{string \&in}]{body }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_ac46247fdf455476f8373413f3d23f75b}{}\label{class_scene_script_core_mobile_ac46247fdf455476f8373413f3d23f75b} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Send\+Sms@{Send\+Sms}}
+\index{Send\+Sms@{Send\+Sms}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Send\+Sms()}{SendSms()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Send\+Sms (\begin{DoxyParamCaption}\item[{string \&in}]{number,  }\item[{string \&in}]{text,  }\item[{Callback1I @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_aa2e383859b3fa9593c305988f5b6b92b}{}\label{class_scene_script_core_mobile_aa2e383859b3fa9593c305988f5b6b92b} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Set\+Map\+Position@{Set\+Map\+Position}}
+\index{Set\+Map\+Position@{Set\+Map\+Position}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Set\+Map\+Position()}{SetMapPosition()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Set\+Map\+Position (\begin{DoxyParamCaption}\item[{float}]{x,  }\item[{float}]{y,  }\item[{float}]{w,  }\item[{float}]{h }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_afda47dc93fb520437a689a1acc52be85}{}\label{class_scene_script_core_mobile_afda47dc93fb520437a689a1acc52be85} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Set\+On\+Pause\+Callback@{Set\+On\+Pause\+Callback}}
+\index{Set\+On\+Pause\+Callback@{Set\+On\+Pause\+Callback}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Set\+On\+Pause\+Callback()}{SetOnPauseCallback()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Set\+On\+Pause\+Callback (\begin{DoxyParamCaption}\item[{Callback\+W\+OP @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_aa2bf0e1fdd08bbaeb8a8c77d01cbf11c}{}\label{class_scene_script_core_mobile_aa2bf0e1fdd08bbaeb8a8c77d01cbf11c} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Set\+On\+Resume\+Callback@{Set\+On\+Resume\+Callback}}
+\index{Set\+On\+Resume\+Callback@{Set\+On\+Resume\+Callback}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Set\+On\+Resume\+Callback()}{SetOnResumeCallback()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Set\+On\+Resume\+Callback (\begin{DoxyParamCaption}\item[{Callback\+W\+OP @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_af80fadb6d060cc7ae790a996521bdbc1}{}\label{class_scene_script_core_mobile_af80fadb6d060cc7ae790a996521bdbc1} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Set\+Push\+Listener@{Set\+Push\+Listener}}
+\index{Set\+Push\+Listener@{Set\+Push\+Listener}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Set\+Push\+Listener()}{SetPushListener()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Set\+Push\+Listener (\begin{DoxyParamCaption}\item[{Callback1S @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a400acec3e49bed461f127b204f0368a5}{}\label{class_scene_script_core_mobile_a400acec3e49bed461f127b204f0368a5} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Set\+Push\+Server\+U\+RL@{Set\+Push\+Server\+U\+RL}}
+\index{Set\+Push\+Server\+U\+RL@{Set\+Push\+Server\+U\+RL}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Set\+Push\+Server\+U\+R\+L()}{SetPushServerURL()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Set\+Push\+Server\+U\+RL (\begin{DoxyParamCaption}\item[{string \&in}]{number }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a3bc72aff3ec6e1b8b16b2cd5e009b08d}{}\label{class_scene_script_core_mobile_a3bc72aff3ec6e1b8b16b2cd5e009b08d} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Show\+Map@{Show\+Map}}
+\index{Show\+Map@{Show\+Map}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Show\+Map()}{ShowMap()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Show\+Map (\begin{DoxyParamCaption}\item[{bool}]{show }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a64b526784ef4c35f5fd3c8064551ce3f}{}\label{class_scene_script_core_mobile_a64b526784ef4c35f5fd3c8064551ce3f} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Show\+Native\+Map@{Show\+Native\+Map}}
+\index{Show\+Native\+Map@{Show\+Native\+Map}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Show\+Native\+Map()}{ShowNativeMap()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Show\+Native\+Map (\begin{DoxyParamCaption}\item[{float}]{x,  }\item[{float}]{y,  }\item[{string \&in}]{text }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a62cb4343a032f015a7d5adaa4a0a9782}{}\label{class_scene_script_core_mobile_a62cb4343a032f015a7d5adaa4a0a9782} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Show\+Popup@{Show\+Popup}}
+\index{Show\+Popup@{Show\+Popup}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Show\+Popup()}{ShowPopup()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Show\+Popup (\begin{DoxyParamCaption}\item[{string \&in}]{title,  }\item[{string \&in}]{text,  }\item[{string \&in}]{btn\+\_\+text,  }\item[{Callback\+W\+OP @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a00b413238b2760487a2b15bc6523214e}{}\label{class_scene_script_core_mobile_a00b413238b2760487a2b15bc6523214e} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Show\+Popup@{Show\+Popup}}
+\index{Show\+Popup@{Show\+Popup}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Show\+Popup()}{ShowPopup()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Show\+Popup (\begin{DoxyParamCaption}\item[{string \&in}]{title,  }\item[{string \&in}]{text,  }\item[{string \&in}]{btn\+\_\+ok\+\_\+text,  }\item[{Callback\+W\+OP @}]{cb\+\_\+ok,  }\item[{string \&in}]{btn\+\_\+cancel\+\_\+text,  }\item[{Callback\+W\+OP @}]{cb\+\_\+cancel }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_aa8c4bc72675c16bac8e46906e55a26c8}{}\label{class_scene_script_core_mobile_aa8c4bc72675c16bac8e46906e55a26c8} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Read\+Contacts@{Start\+Read\+Contacts}}
+\index{Start\+Read\+Contacts@{Start\+Read\+Contacts}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Read\+Contacts()}{StartReadContacts()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Read\+Contacts (\begin{DoxyParamCaption}\item[{Callback1I @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a98d84f8e5a4aaa629fbb2496ba697551}{}\label{class_scene_script_core_mobile_a98d84f8e5a4aaa629fbb2496ba697551} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Read\+Contacts\+Avatars@{Start\+Read\+Contacts\+Avatars}}
+\index{Start\+Read\+Contacts\+Avatars@{Start\+Read\+Contacts\+Avatars}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Read\+Contacts\+Avatars()}{StartReadContactsAvatars()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Read\+Contacts\+Avatars (\begin{DoxyParamCaption}\item[{Callback1I @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a10b274acb407ecc9873e31d85bd500a2}{}\label{class_scene_script_core_mobile_a10b274acb407ecc9873e31d85bd500a2} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Register\+In\+Push\+Service@{Start\+Register\+In\+Push\+Service}}
+\index{Start\+Register\+In\+Push\+Service@{Start\+Register\+In\+Push\+Service}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Register\+In\+Push\+Service()}{StartRegisterInPushService()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Register\+In\+Push\+Service (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a50227898d842f9fe68574d9512b4f3ae}{}\label{class_scene_script_core_mobile_a50227898d842f9fe68574d9512b4f3ae} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Scan\+Barcode@{Start\+Scan\+Barcode}}
+\index{Start\+Scan\+Barcode@{Start\+Scan\+Barcode}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Scan\+Barcode()}{StartScanBarcode()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Scan\+Barcode (\begin{DoxyParamCaption}\item[{Callback1S@}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a7fbea5c354c51ca5170bb5d5c67a0e28}{}\label{class_scene_script_core_mobile_a7fbea5c354c51ca5170bb5d5c67a0e28} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Select\+Image@{Start\+Select\+Image}}
+\index{Start\+Select\+Image@{Start\+Select\+Image}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Select\+Image()}{StartSelectImage()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Select\+Image (\begin{DoxyParamCaption}\item[{int}]{type,  }\item[{Callback1\+I1S @}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a8d45d7b8789e93a3a79f23b34f544c28}{}\label{class_scene_script_core_mobile_a8d45d7b8789e93a3a79f23b34f544c28} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Share\+Image@{Start\+Share\+Image}}
+\index{Start\+Share\+Image@{Start\+Share\+Image}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Share\+Image()}{StartShareImage()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Share\+Image (\begin{DoxyParamCaption}\item[{string \&in}]{image,  }\item[{Callback1S@}]{cb }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_mobile_a0671f838d4a51ceda5d075d8bfb33101}{}\label{class_scene_script_core_mobile_a0671f838d4a51ceda5d075d8bfb33101} 
+\index{Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}!Start\+Share\+Text@{Start\+Share\+Text}}
+\index{Start\+Share\+Text@{Start\+Share\+Text}!Scene\+Script\+Core\+Mobile@{Scene\+Script\+Core\+Mobile}}
+\subsubsection{\texorpdfstring{Start\+Share\+Text()}{StartShareText()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Mobile\+::\+Start\+Share\+Text (\begin{DoxyParamCaption}\item[{string \&in}]{text,  }\item[{string \&in}]{extra\+\_\+data,  }\item[{Callback1S@}]{cb }\end{DoxyParamCaption})}
+

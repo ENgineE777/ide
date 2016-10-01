@@ -1,0 +1,50 @@
+
+shared enum AliasAction
+{
+	alias_activated,
+	alias_activeted_exclusive,
+	alias_fast_activated,
+	alias_fast_activated_exclusive,
+	alias_active	
+};
+
+shared enum Platform
+{
+	platform_pc,
+	platform_ios,
+	platform_android,
+	platform_osx,
+	platform_undefined
+};
+
+shared enum DataType
+{
+	data_xml,
+	data_binary,
+	data_json
+};
+
+shared enum ScreenDPI
+{
+	dpi_low,
+	dpi_medium,
+	dpi_hight	
+};
+
+shared enum KeyboardType
+{
+	kb_Text,
+	kb_URL,
+	kb_Number,
+	kb_Phone,
+	kb_Email
+};
+
+shared enum KeyboardReturnKey
+{
+	rk_Default,
+	rk_Next,
+	rk_Done,
+	rk_Go,
+	rk_Search
+};

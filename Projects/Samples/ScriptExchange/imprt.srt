@@ -1,0 +1,6 @@
+
+shared class TestClass
+{
+	float    dt;
+	NGUILabel @item;
+};

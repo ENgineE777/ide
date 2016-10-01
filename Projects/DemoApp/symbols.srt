@@ -1,0 +1,52 @@
+namespace screens
+{
+
+dictionary symbols_by_name;
+dictionary symbols_by_class;
+
+array<Symbol@> symbols;
+array<ScreenSymbol@> screen_symbols;
+
+ScreenSymbol@ FindSymbol(NGUIWidget@ wgt)
+{
+	for (int i = 0, size = screen_symbols.length(); i < size; ++i)
+	{
+		if (screen_symbols[i].symbol is wgt)
+		{
+			return screen_symbols[i];
+		}
+	}
+
+	return null;
+}
+
+Menu@ menu;
+NewsScreen@ news;
+Top@ top;
+PhilantropyScreen@ philantropy;
+BiographyScreen@ biography;
+EventsScreen@ events;
+EventsAndNewsScreen@ events_and_news;
+NewsExpandedScreen@ news_expanded;
+MusicScreen@ music;
+FilmographyScreen@ filmography;
+LoadingScreen@ loading;
+PhotoViewerScreenSymbol@ photo_viewer;
+
+void Init()
+{
+	@menu = Menu(main::menu);
+	@news = NewsScreen(main::news);
+	@top = Top(main::top);
+	@philantropy = PhilantropyScreen(main::philantropy);
+	@biography = BiographyScreen(main::biography);
+	@events = EventsScreen(main::events);
+	@events_and_news = EventsAndNewsScreen(main::events_and_news);
+	@news_expanded = NewsExpandedScreen(main::news_expanded);
+	@music = MusicScreen(main::music);
+	@filmography = FilmographyScreen(main::filmography);
+	@loading = LoadingScreen(main::loading);
+	@photo_viewer = PhotoViewerScreenSymbol(main::photo_viewer);
+}
+
+}

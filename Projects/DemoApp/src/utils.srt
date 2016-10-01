@@ -1,0 +1,1734 @@
+//===============================================================
+//
+//								Utils
+//
+//===============================================================
+
+int g_trace_counter = 0;
+
+void _T(const string&in prefix)
+{
+	core.Trace(prefix + (++g_trace_counter));
+}
+
+class DictItem
+{
+	string key;
+
+	DictItem(const string&in set_key)
+	{
+		key = set_key;
+	}
+};
+
+class DictItemFloat : DictItem
+{
+	float value;
+
+	DictItemFloat(const string&in key, float set_value)
+	{
+		super(key);
+		value = set_value;
+	}
+};
+
+class DictItemString : DictItem
+{
+	string value;
+
+	DictItemString(const string&in key, const string&in set_value)
+	{
+		super(key);
+		value = set_value;
+	}
+};
+
+DictItem@ _di(const string&in key, float value)
+{
+	return DictItemFloat(key, value);
+}
+
+DictItem@ _di(const string&in key, const string&in value)
+{
+	return DictItemString(key, value);
+}
+
+class Dict
+{
+	private array<DictItem@>@ items_;
+
+	Dict(array<DictItem@>@ items)
+	{
+		@items_ = items;
+	}
+
+	DictItem@ GetItem(const string&in key)
+	{
+		if (items_ is null)
+		{
+			return null;
+		}
+
+		for (int i = 0, size = items_.length(); i < size; ++i)
+		{
+			if (items_[i].key == key)
+			{
+				return items_[i];
+			}
+		}
+
+		return null;
+	}
+
+	float GetFloat(const string&in key, float def = 0.0f)
+	{
+		DictItem@ item = GetItem(key);
+		if (item is null) return def;
+		return cast<DictItemFloat>(item).value;
+	}
+
+	string GetString(const string&in key, const string&in def = kEmpty)
+	{
+		DictItem@ item = GetItem(key);
+		if (item is null) return def;
+		return cast<DictItemString>(item).value;	
+	}
+};
+
+float min(float x, float y)
+{
+	return x < y ? x : y;
+}
+
+int clampi(int val, int from, int to)
+{
+	if (val < from) return from;
+	if (val > to) return to;
+	return val;
+}
+
+float max(float x, float y)
+{
+	return x > y ? x : y;
+}
+
+float clampf(float val, float from, float to)
+{
+	if (val < from) return from;
+	if (val > to) return to;
+	return val;
+}
+
+float clampf_abs(float val, float from, float to)
+{
+	const float sgn = val < 0.0f ? -1.0f : 1.0f;
+	const float v = abs(val);
+
+	return sgn * clampf(abs(val), from, to);
+}
+
+void clamps(string& str, uint len, bool url = false)
+{
+	if (url)
+	{
+		// remove http://
+		str = str.substr(7);
+	}
+	
+	if (str.length() > len)
+	{
+		str = str.substr(0, len) + kDots;
+	}
+}
+
+void ltrim(string& str)
+{
+	int k = 0;
+	int size = str.length();
+
+	for (int i = 0; i < size; i++)
+	{
+		bool find_close = false;
+		int ch = str[i];
+		
+		if (ch == 0x20 || ch == 0x0D || ch == 0x0A)
+		{
+			k++;
+			find_close = true;
+
+			if (k == size)
+			{
+				str = "";
+			}
+			continue;
+		}
+
+		if (!find_close)
+		{
+			str = str.substr(i);
+			break;
+		}
+	}
+}
+
+void rtrim(string& str)
+{
+	int size = str.length();
+
+	for (int i = size - 1; i >= 0; i--)
+	{
+		bool find_close = false;
+		int ch = str[i];
+		
+		if (ch == 0x20 || ch == 0x0D || ch == 0x0A)
+		{
+			find_close = true;
+			continue;
+		}
+
+		if (!find_close)
+		{
+			str = str.substr(0, i + 1);
+			break;
+		}
+	}
+}
+
+void trim(string& str)
+{
+	ltrim(str);
+
+	if (!str.isEmpty())
+	{
+		rtrim(str);
+	}	
+}
+
+float round(float x)
+{
+	float sgn = x < 0.0f ? -1.0f : 1.0f;
+	return sgn * floor(abs(x) + 0.5f);
+}
+
+float roundeps(float x, float eps = 0.01f)
+{
+	const float inv_eps = 1.0f / eps;
+	return eps * floor((x * inv_eps) + 0.5f);
+}
+
+float sqlen(float x, float y)
+{
+	return x * x + y * y;
+}
+
+float len(float x, float y)
+{
+	return sqrt(sqlen(x, y));
+}
+
+float dist(float x0, float y0, float x1, float y1)
+{
+	return len(x1 - x0, y1 - y0);
+}
+
+float norm(float& x, float& y)
+{
+	const float tmp = len(x, y);
+
+	if (tmp <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	x = x/tmp;
+	y = y/tmp;
+
+	return tmp;
+}
+
+float sgn(float x)
+{
+	if (x > 0.0f)
+	{
+		return 1.0f;
+	}
+	if (x < 0.0f)
+	{
+		return -1.0f;
+	}
+
+	return 0.0f;
+}
+
+int mod(int x, int m)
+{
+	if (x < 0) return (m - (-x) % m) % m;
+	return x % m;
+}
+
+void center(float x0, float y0, float x1, float y1, float& cx, float& cy)
+{
+	cx = 0.5f * (x0 + x1);
+	cy = 0.5f * (y0 + y1);
+}
+
+void join(array<string>@ arr, string&in delim, string& res)
+{
+	res = kEmpty;
+	bool first = true;
+
+	for (int i = 0, size = arr.length(); i < size; ++i)
+	{
+		if (first)
+		{
+			res = arr[i];
+			first = false;
+		}
+		else
+		{
+			res += delim + arr[i];
+		}
+	}
+}
+
+void load(string&in key, bool& value, bool def = false)
+{
+	value = (core.UserStats.GetInt(key, def ? 1 : 0) == 1 ? true : false);
+}
+
+void load(string&in key, int& value, int def = 0)
+{
+	value = core.UserStats.GetInt(key, def);
+}
+
+void load(string&in key, uint& value, int def = 0)
+{
+	value = core.UserStats.GetInt(key, def);
+}
+
+void load(string&in key, float& value, float def = 0.0f)
+{
+	value = core.UserStats.GetFloat(key, def);
+}
+
+void load(string&in key, string& value)
+{
+	core.UserStats.GetString(key, kEmpty, value);	
+}
+
+void load(string&in key, array<string>@ value)
+{
+	int count = 0;
+	load(key + "length", count);
+
+	value.resize(count);
+
+	for (int i = 0, size = value.length(); i < size; ++i)
+	{
+		load(key + i, value[i]);
+	}
+}
+
+void save(string&in key, bool value, bool def = false)
+{
+	core.UserStats.SetInt(key, def ? 1 : 0, value ? 1 : 0, false);
+}
+
+void save(string&in key, int value, int def = 0)
+{
+	core.UserStats.SetInt(key, def, value, false);
+}
+
+void save(string&in key, uint value, uint def = 0)
+{
+	core.UserStats.SetInt(key, def, value, false);
+}
+
+void save(string&in key, float value, float def = 0.0f)
+{
+	core.UserStats.SetFloat(key, def, value, false);
+}
+
+void save(string&in key, string&in value)
+{
+	core.UserStats.SetString(key, kEmpty, value);
+}
+
+void save(string&in key, array<string>@ value)
+{
+	save(key + "length", value.length());
+
+	for (int i = 0, size = value.length(); i < size; ++i)
+	{
+		save(key + i, value[i]);
+	}
+}
+
+bool ExtractURL(string& text, string& url)
+{
+	string out_txt;
+
+	int len = text.length;
+
+	int start_index = -1;
+	int len_link = 1;
+
+	bool add_http = false;
+
+	for (int i = 0; i < len; ++i)
+	{	
+		if (start_index != -1)
+		{
+			if (text[i] == kBrk[0] || text[i] == kBrk[1] || text[i] == kBrk[2])
+			{
+				break;
+			}
+
+			len_link++;
+		}
+		else
+		{
+			if (i < len - 8 && text[i] == kHttp[0] && text[i+1] == kHttp[1] && text[i+2] == kHttp[2] && text[i+3] == kHttp[3] && text[i+4] == kHttp[4])
+			{
+				start_index = i;
+			}
+			else if (i < len - 9 && text[i] == kHttps[0] && text[i+1] == kHttps[1] && text[i+2] == kHttps[2] && text[i+3] == kHttps[3] && text[i+4] == kHttps[4] && text[i+5] == kHttps[5])
+			{
+				start_index = i;
+			}
+			else if (i < len - 8 && text[i] == kVKUrl[0] && text[i+1] == kVKUrl[1] && text[i+2] == kVKUrl[2] && text[i+3] == kVKUrl[3] && text[i+4] == kVKUrl[4] && text[i+5] == kVKUrl[5])
+			{
+				start_index = i;
+				add_http = true;
+			}
+		}
+	}
+
+	if (start_index != -1)	
+	{
+		out_txt = text.substr(0, start_index);
+		url = text.substr(start_index, len_link);
+
+		if (start_index + len_link < len)
+		{
+			out_txt += kEmpty + text.substr(start_index + len_link, len - start_index - len_link);
+		}
+
+		text = out_txt;
+
+		if (add_http)
+		{
+			url = kHttp + kSlash + url;
+		}
+
+		len = url.length();
+		if (url[len - 1] == 0x2E)
+		{
+			url = url.substr(0, len - 1);
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
+void WrapAllURLs(string& text, array<string>@ urls, bool cut_links = false, int r = -1, int g = -1, int b = -1)
+{
+	int idx = 0;
+	int offset = 0;
+	string url;
+	string result;
+	while (WrapURL(text, idx, url, offset, cut_links, r, g, b))
+	{
+		++idx;
+		urls.insertLast(url);
+	}
+}
+
+bool WrapURL(string& text, int link_idx, string&out url, int& offset, bool cut_links = false, int r = -1, int g = -1, int b = -1)
+{
+	string in_txt = text.substr(offset);
+
+	int len = in_txt.length();
+
+	int start_index = -1;
+	int len_link = 1;
+
+	bool add_http = false;
+
+	for (int i = 0; i < len; ++i)
+	{	
+		if (start_index != -1)
+		{
+			if (in_txt[i] == kBrk[0] || in_txt[i] == kBrk[1] || in_txt[i] == kBrk[2])
+			{
+				break;
+			}
+
+			len_link++;
+		}
+		else
+		{
+			if (i < len - 8 && in_txt[i] == kHttp[0] && in_txt[i+1] == kHttp[1] && in_txt[i+2] == kHttp[2] && in_txt[i+3] == kHttp[3] && in_txt[i+4] == kHttp[4])
+			{
+				start_index = i;
+			}
+			else if (i < len - 9 && text[i] == kHttps[0] && text[i+1] == kHttps[1] && text[i+2] == kHttps[2] && text[i+3] == kHttps[3] && text[i+4] == kHttps[4] && text[i+5] == kHttps[5])
+			{
+				start_index = i;
+			}
+			else if (i < len - 8 && in_txt[i] == kVKUrl[0] && in_txt[i+1] == kVKUrl[1] && in_txt[i+2] == kVKUrl[2] && in_txt[i+3] == kVKUrl[3] && in_txt[i+4] == kVKUrl[4] && in_txt[i+5] == kVKUrl[5])
+			{
+				start_index = i;
+				add_http = true;
+			}
+		}
+	}
+
+	if (start_index != -1)	
+	{
+		url = in_txt.substr(start_index, len_link);
+
+		string display_url = url;
+		if (cut_links)
+		{
+			replaceFirst(display_url, "http://", kEmpty, display_url);
+			replaceFirst(display_url, "https://", kEmpty, display_url);
+			replaceFirst(display_url, "www.", kEmpty, display_url);
+
+			array<string>@ arr = split(display_url, "/");
+			if (!arr.isEmpty())
+			{
+				display_url = arr[0];
+			}
+		}
+
+		string prefix = "#lnk{OnClickLink,"+link_idx+"}";
+
+		PaletteColor@ color;
+		if (view.style.palette.get("feed-links", @color) && color.IsValid())
+		{
+			prefix += "#r"+round(color.r*255.0f)+"#g"+round(color.g*255.0f)+"#b"+round(color.b*255.0f)+" ";
+		}
+		else if (r >= 0 && g >= 0 && b >= 0)
+		{
+			prefix += "#r"+r+"#g"+g+"#b"+b+" ";
+		}
+
+		string suffix = "#lnk0 ";
+
+		if (r >= 0 && g >= 0 && b >= 0)
+		{
+			suffix += "#r"+255+"#g"+255+"#b"+255+" ";
+		}
+
+		replaceFirst(in_txt, url, prefix + display_url + suffix, in_txt);
+
+		text = text.substr(0, offset) + in_txt;
+
+		offset += start_index + display_url.length() + prefix.length() + suffix.length();
+
+		return true;
+	}
+
+	return false;
+}
+
+void IncDay(int& day, int& month, int& year)
+{
+	uint64 tm = core.Utils.GetTimestamp(year, month, day, 1, 0, 0) + 24 * 3600 + 5 * 60;
+
+	day = core.Utils.ParseUnixTime(3, tm);
+	month = core.Utils.ParseUnixTime(4, tm);
+	year = core.Utils.ParseUnixTime(5, tm);
+}
+
+void DecDay(int& day, int& month, int& year)
+{
+	uint64 tm = core.Utils.GetTimestamp(year, month, day, 1, 0, 0) - 24 * 3600 - 5 * 60;
+
+	day = core.Utils.ParseUnixTime(3, tm);
+	month = core.Utils.ParseUnixTime(4, tm);
+	year = core.Utils.ParseUnixTime(5, tm);
+}
+
+void ConvertTimeUnix(uint64 tm, int&out year, int&out month, int&out day, int&out hour, int&out minute, int&out second, string&out tm_out)
+{	
+	year = core.Utils.ParseUnixTime(5,tm); 
+	month = core.Utils.ParseUnixTime(4,tm);
+	day = core.Utils.ParseUnixTime(3,tm);
+
+	hour = core.Utils.ParseUnixTime(0,tm);
+	minute = core.Utils.ParseUnixTime(1,tm);
+	second = core.Utils.ParseUnixTime(2,tm);
+
+	tm_out = "" + day + " ";
+
+	if (month == 1)
+	{
+		tm_out += _("January");
+	}
+	else if (month == 2)
+	{
+		tm_out += _("February");
+	}
+	else if (month == 3)
+	{
+		tm_out += _("March");
+	}
+	else if (month == 4)
+	{
+		tm_out += _("April"); 
+	}
+	else if (month == 5)
+	{
+		tm_out += _("May");
+	}
+	else if (month == 6)
+	{
+		tm_out += _("June"); 
+	}
+	else if (month == 7)
+	{
+		tm_out += _("July");
+	}
+	else if (month == 8)
+	{
+		tm_out += _("August");
+	}
+	else if (month == 9)
+	{
+		tm_out += _("September");
+	}
+	else if (month == 10)
+	{
+		tm_out += _("October");
+	}
+	else if (month == 11)
+	{
+		tm_out += _("November");
+	}
+	else if (month == 12)
+	{
+		tm_out += _("December");
+	}
+	
+	tm_out = formatInt(hour, '0', 2) + ":" + formatInt(minute, '0', 2) + " " + tm_out;
+}
+
+void GetCurrentDate(const string&in date_fmt, int&out day, int&out month, int&out year)
+{
+	array<string>@ tmp = split(date_fmt, ".");
+	if (tmp.length() < 3)
+	{
+		day = 0;
+		month = 0;
+		year = 0;
+		
+		return;
+	}
+
+	day = parseInt(tmp[0]);
+	month = parseInt(tmp[1]);
+	year = parseInt(tmp[2]);
+}
+
+void GetCurrentDate(const string&in date_fmt, string&out tm_out)
+{
+	array<string>@ tmp = split(date_fmt, ".");
+
+	const int day = parseInt(tmp[0]);
+	const int month = parseInt(tmp[1]);
+	const int year = parseInt(tmp[2]);
+
+	tm_out = day + " ";
+
+	if (month == 1)
+	{
+		tm_out += _("January");
+	}
+	else if (month == 2)
+	{
+		tm_out += _("February");
+	}
+	else if (month == 3)
+	{
+		tm_out += _("March");
+	}
+	else if (month == 4)
+	{
+		tm_out += _("April"); 
+	}
+	else if (month == 5)
+	{
+		tm_out += _("May");
+	}
+	else if (month == 6)
+	{
+		tm_out += _("June"); 
+	}
+	else if (month == 7)
+	{
+		tm_out += _("July");
+	}
+	else if (month == 8)
+	{
+		tm_out += _("August");
+	}
+	else if (month == 9)
+	{
+		tm_out += _("September");
+	}
+	else if (month == 10)
+	{
+		tm_out += _("October");
+	}
+	else if (month == 11)
+	{
+		tm_out += _("November");
+	}
+	else if (month == 12)
+	{
+		tm_out += _("December");
+	}
+
+	tm_out += " " + year;
+}
+
+void GetCurrentDate(int day, int month, int year, string&out tm_out)
+{
+	tm_out = day + " ";
+	
+	if (month == 1)
+	{
+		tm_out += _("January");
+	}
+	else if (month == 2)
+	{
+		tm_out += _("February");
+	}
+	else if (month == 3)
+	{
+		tm_out += _("March");
+	}
+	else if (month == 4)
+	{
+		tm_out += _("April"); 
+	}
+	else if (month == 5)
+	{
+		tm_out += _("May");
+	}
+	else if (month == 6)
+	{
+		tm_out += _("June"); 
+	}
+	else if (month == 7)
+	{
+		tm_out += _("July");
+	}
+	else if (month == 8)
+	{
+		tm_out += _("August");
+	}
+	else if (month == 9)
+	{
+		tm_out += _("September");
+	}
+	else if (month == 10)
+	{
+		tm_out += _("October");
+	}
+	else if (month == 11)
+	{
+		tm_out += _("November");
+	}
+	else if (month == 12)
+	{
+		tm_out += _("December");
+	}
+
+	tm_out += " " + year;
+}
+
+void GetCurrentDate(string&out tm_out)
+{
+	int year = core.Utils.GetYear(); 
+	int month = core.Utils.GetMonth();
+	int day = core.Utils.GetDay();
+
+	int hour = core.Utils.GetHour();
+	int minute = core.Utils.GetMinute();
+
+	tm_out = "";
+
+	if (month == 1)
+	{
+		tm_out += _("January");
+	}
+	else if (month == 2)
+	{
+		tm_out += _("February");
+	}
+	else if (month == 3)
+	{
+		tm_out += _("March");
+	}
+	else if (month == 4)
+	{
+		tm_out += _("April"); 
+	}
+	else if (month == 5)
+	{
+		tm_out += _("May");
+	}
+	else if (month == 6)
+	{
+		tm_out += _("June"); 
+	}
+	else if (month == 7)
+	{
+		tm_out += _("July");
+	}
+	else if (month == 8)
+	{
+		tm_out += _("August");
+	}
+	else if (month == 9)
+	{
+		tm_out += _("September");
+	}
+	else if (month == 10)
+	{
+		tm_out += _("October");
+	}
+	else if (month == 11)
+	{
+		tm_out += _("November");
+	}
+	else if (month == 12)
+	{
+		tm_out += _("December");
+	}
+	
+	tm_out += " " + day + ", " + year + " " + _("At") + " " + formatInt(hour, '0', 2) + ":" + formatInt(minute, '0', 2);
+}
+
+void GetDateFormat(int day, int month, int year, string&out str_out)
+{
+	if (config.date_format == "%d.%m.%y")
+	{
+		str_out = formatInt(day, '0', 2) + "." + formatInt(month, '0', 2) + "." + year;
+	}
+	else if (config.date_format == "%m/%d/%y") 
+	{
+		str_out = formatInt(month, '0', 2) + "/" + formatInt(day, '0', 2) + "/" + year;
+	}
+}
+
+void GetDayFormat(int day, string&out str_out)
+{
+	if (day == 0) 
+	{ 
+		_(str_out, "DayWeekMon");
+	}
+	else if (day == 1) 
+	{ 
+		_(str_out, "DayWeekTue");
+	}
+	else if (day == 2) 
+	{ 
+		_(str_out, "DayWeekWed");
+	}
+	else if (day == 3) 
+	{ 
+		_(str_out, "DayWeekThu");
+	}
+	else if (day == 4) 
+	{ 
+		_(str_out, "DayWeekFri");
+	}
+	else if (day == 5) 
+	{ 
+		_(str_out, "DayWeekSat");
+	}
+	else if (day == 6) 
+	{ 
+		_(str_out, "DayWeekSun");
+	}
+}
+
+void dayofweek2str(int day, string&out str_out)
+{
+	if (day == 0) 
+	{ 
+		_(str_out, "Monday");
+	}
+	else if (day == 1) 
+	{ 
+		_(str_out, "Tuesday");
+	}
+	else if (day == 2) 
+	{ 
+		_(str_out, "Wensday");
+	}
+	else if (day == 3) 
+	{ 
+		_(str_out, "Thursday");
+	}
+	else if (day == 4) 
+	{ 
+		_(str_out, "Firady");
+	}
+	else if (day == 5) 
+	{ 
+		_(str_out, "Saturday");
+	}
+	else if (day == 6) 
+	{ 
+		_(str_out, "Sunday");
+	}
+}
+
+void ReplaceNewLine(string& str)
+{
+	for (int i = 0, size = str.length(); i < size; ++i)
+	{
+		int ch = str[i];
+
+		if (ch == 0x0A)
+		{
+			str = str.substr(0, i) + kNewLine + str.substr(i + 1);
+			size = str.length();
+		}
+	}
+}
+
+void RemoveHashTags(string& str)
+{
+	string tag;
+
+	int from = -1;
+	for (int i = 0, size = str.length(); i < size; ++i)
+	{
+		int ch = str[i];
+
+		// '#'
+		if (ch == 0x23)
+		{
+			from = i;
+		}
+
+		// '\n' ' '
+		if (from >= 0 && (ch == 0x0A || ch == 0x20))
+		{
+			str = str.substr(0, from) + str.substr(i);
+
+			size = str.length();
+			i = from - 1;
+
+			from = -1;
+		}
+	}
+
+	if (from >= 0)
+	{
+		str = str.substr(0, from);
+	}
+}
+
+void RemoveNameDecor(string& str)
+{
+	for (int i = 0; i < int(str.length()); ++i)
+	{
+		if (RemoveNameDecor(i, str))
+		{
+			--i;
+		}
+	}
+}
+
+bool RemoveNameDecor(int offset, string& str)
+{
+	const int len = str.length();
+	int from = -1;
+
+	// "[id"
+	if (offset + 2 < len && str[offset + 0] == 91 && str[offset + 1] == 105 && str[offset + 2] == 100)
+	{
+		from = offset + 3;
+	}
+	// "[club"
+	else if (offset + 4 < len && str[offset + 0] == 91 && str[offset + 1] == 99 && str[offset + 2] == 108 && str[offset + 3] == 117 && str[offset + 4] == 98)
+	{
+		from = offset + 5;
+	}
+
+	if (from < 0)
+	{
+		return false;
+	}
+
+	bool res = false;
+	bool find_close = false;
+
+	for (int i = from; i < len; ++i)
+	{
+		int ch = str[i];
+
+		if (ch >= 0x30 && ch <= 0x39)
+		{
+			continue;
+		}
+
+		if (ch == 0x7C)
+		{
+			find_close = true;
+			from = i + 1;
+			continue;
+		}
+
+		if (!find_close)
+		{
+			break;
+		}
+
+		// ]
+		if (ch == 0x5D)
+		{
+			res = true;
+			str = str.substr(0, offset) + str.substr(from, i - from) + str.substr(i + 1);
+			break;
+		}
+	}
+
+	return res;
+}
+
+const string kDot = ".";
+
+int date2age(const string&in date)
+{
+	int dot_idx = -1;
+
+	int day = 0;
+	int month = 0;
+	int year = 0;
+
+	for (int i = 0, size = date.length(); i < size; ++i)
+	{
+		if (date[i] == kDot[0])
+		{
+			if (dot_idx < 0)
+			{
+				dot_idx = i;
+				day = parseInt(date.substr(0, i));
+			}
+			else
+			{
+				month = parseInt(date.substr(dot_idx + 1, i));
+
+				dot_idx = i;
+				year = parseInt(date.substr(dot_idx + 1));
+				break;
+			}
+		}
+	}
+
+	if (year <= 0)
+	{
+		return -1;
+	}
+
+	int current_day = int(core.Utils.GetDay());
+	int current_month = int(core.Utils.GetMonth());
+	int current_year = int(core.Utils.GetYear());
+
+	int age = current_year - year;
+
+	bool full_age = false;
+	if (current_month >= month)
+	{
+		if (current_month == month)
+		{
+			if (current_day >= day)
+			{
+				full_age = true;
+			}
+		}
+		else
+		{
+			full_age = true;
+		}
+	}
+
+	return full_age ? age : (age - 1);
+}
+
+array<string>@ split(const string&in str, const string&in delim)
+{
+	array<string> arr;
+
+	int pos = 0;
+	uint from = 0;
+	while ( (pos = str.findFirst(delim, from)) >= 0 )
+	{
+		arr.insertLast(str.substr(from, pos - from));
+		from = pos + delim.length();
+	}
+
+	if (from < str.length())
+	{
+		arr.insertLast(str.substr(from));
+	}
+
+	if (arr.isEmpty())
+	{
+		arr.insertLast(str);
+	}
+
+	return arr;
+}
+
+void replace(const string&in haystack, const string&in needle, const string&in replace, string&out result)
+{
+	array<string>@ arr = split(haystack, needle);
+
+	if (arr.length() > 1)
+	{
+		join(arr, replace, result);
+	}
+	else
+	{
+		replaceFirst(haystack, needle, replace, result);
+	}
+}
+
+bool replaceFirst(const string&in haystack, const string&in needle, const string&in replace, string&out result)
+{
+	int pos = haystack.findFirst(needle);
+	if (pos >= 0)
+	{
+		result = haystack.substr(0, pos) + replace + haystack.substr(pos + needle.length());
+	}
+	else
+	{
+		result = haystack;
+	}
+
+	return (pos >= 0);
+}
+
+bool fbdate2date(const string&in date, string&out result)
+{
+	array<string>@ arr = split(date, "/");
+
+	if (arr.length() != 3)
+	{
+		return false;
+	}
+
+	string str = arr[0];
+	arr[0] = arr[1];
+	arr[1] = str;
+
+	join(arr, ".", result);
+
+	return true;
+}
+
+bool ParseDate(const string&in date, int&out day, int&out month, int&out year)
+{
+	array<string>@ arr = split(date, "/");
+
+	if (arr.length() != 3)
+	{
+		@arr = split(date, ".");
+		if (arr.length() != 3)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		string str = arr[0];
+		arr[0] = arr[1];
+		arr[1] = str;
+	}
+
+	day = parseInt(arr[0]);
+	month = parseInt(arr[1]);
+	year = parseInt(arr[2]);
+
+	if (year < 999)
+	{
+		year += 2000;
+	}
+
+	return true;
+}
+
+void CutTextByHeight(string& v, NGUILabel@ label, float max_h)
+{
+	const bool need_cut = label.GetTextHeight(v) > max_h;
+
+	if (need_cut)
+	{
+		while (label.GetTextHeight(v + "...") > max_h && !v.isEmpty())
+		{
+			v = v.substr(0, v.length() - 1);
+		}
+
+		v += "...";
+	}
+}
+
+void CutText(string& v, NGUILabel@ label, float max_w)
+{
+	const bool need_cut = label.GetTextWidth(v) > max_w;
+
+	if (need_cut)
+	{
+		const float dot_w = label.GetTextWidth("...");
+
+		while (label.GetTextWidth(v) + dot_w > max_w && !v.isEmpty())
+		{
+			v = v.substr(0, v.length() - 1);
+		}
+
+		v += "...";
+	}
+}
+
+void CutText(string& v, NGUITextDrawer@ label, float max_w)
+{
+	const bool need_cut = label.GetTextWidth(v) > max_w;
+
+	if (need_cut)
+	{
+		const float dot_w = label.GetTextWidth("...");
+
+		while (label.GetTextWidth(v) + dot_w > max_w && !v.isEmpty())
+		{
+			v = v.substr(0, v.length() - 1);
+		}
+
+		v += "...";
+	}
+}
+
+string formattime(const string&in str)
+{
+	if (config.time_format == "12")
+	{
+		array<string>@ arr = split(str, ":");
+		if (arr.length() != 2)
+		{
+			return str;
+		}
+
+		int h = parseInt(arr[0]);
+
+		trim(arr[1]);
+
+		if (h == 0)
+		{
+			return "12:"+arr[1]+" am";
+		}
+		else if (h == 12)
+		{
+			return "12:"+arr[1]+" pm";
+		}
+		else if (h < 12)
+		{
+			return h+":"+arr[1]+" am";
+		}
+		else if (h > 12)
+		{
+			return (h % 12)+":"+arr[1]+" pm";
+		}
+	}
+
+	return str;
+}
+
+void WrapPrice(float price, string&out result, int price_fs = 25, int currency_fs = 23, int unit_fs = 17)
+{
+	result = kEmpty;
+
+	string price_str, unit;
+	if (price <= 0.0f)
+	{
+		price_str = _("PriceFree");
+	}
+	else
+	{
+		formatprice(price, price_str, unit);
+	}
+
+	string price_fmt = "#fz"+price_fs+" "+price_str;
+	string currency_fmt = "#fz"+currency_fs+" "+config.currency;
+
+	if (!unit.isEmpty())
+	{
+		price_fmt += "#fz"+unit_fs+"  "+unit;
+	}
+
+	if (price > 0.0f)
+	{
+		price_fmt = config.currency_in_front ? (currency_fmt + price_fmt) : (price_fmt + currency_fmt);
+	}
+
+	result = price_fmt;
+
+	// if (config.currency_in_front)
+	// {
+	// 	result = "#fz"+price_fs+" " + (price > 0.0f ? ("#fz"+currency_fs+" " + config.currency) : kEmpty) + "#fz"+price_fs+" " + price_str + "#fz"+unit_fs+"  " + unit;
+	// }
+	// else if (unit.isEmpty())
+	// {		
+	// 	result = "#fz"+price_fs+" " + price_str + "#fz"+price_fs+" " + (price > 0.0f ? ("#fz"+currency_fs+" " + config.currency) : kEmpty);
+	// }
+	// else
+	// {
+	// 	result = "#fz"+price_fs+" " + price_str + "#fz"+unit_fs+"  " + unit + "#fz"+price_fs+" " + (price > 0.0f ? ("#fz"+currency_fs+" " + config.currency) : kEmpty);
+	// }
+}
+
+void formatprice(float price, string& str, string& sUnit, bool no_spaces = false, bool no_units = false)
+{
+	if (!no_units)
+	{
+		if (price >= 1000000.0f)
+		{
+			price = ceil(price/100000.0f) / 10.0f;
+
+			string res = formatFloat(price, "l", 10, 1);
+			trim(res);
+			replace(res, ".0", kEmpty, str);
+
+			sUnit = _("Million");
+
+			return;
+		}
+		else if (price >= 100000.0f && price < 1000000.0f)
+		{
+			price = ceil(price/100.0f) / 10.0f;
+
+			string res = formatFloat(price, "l", 10, 1);
+			trim(res);
+			replace(res, ".0", kEmpty, str);
+
+			sUnit = _("Thousand");
+
+			return;
+		}
+	}
+
+	str = formatFloat(price, "l", 10, 2);
+
+	int dot_pos = str.findLast(".");
+	if (dot_pos >= 0)
+	{
+		string tail = "." + str.substr(dot_pos + 1);
+
+		if (tail.findFirst(".00") == 0)
+		{
+			str = str.substr(0, dot_pos);
+		}
+	}
+
+	if ((dot_pos = str.findLast(" ")) > 0)
+	{
+		str = str.substr(0, dot_pos);
+	}
+
+	if (no_spaces)
+	{
+		return;
+	}
+
+	string res;
+
+	dot_pos = str.findLast(".");
+	if (dot_pos < 0) dot_pos = str.length();
+	int left = dot_pos;
+	
+	for (int i = dot_pos - 1 - 3; i >= 0; i -= 3)
+	{
+		res = " " + str.substr(i + 1, 3) + res;
+		left -= 3;
+	}
+
+	res = str.substr(0, left) + res;
+	if ((dot_pos = str.findLast(".")) >= 0)
+	{
+		res += "."+str.substr(dot_pos + 1);
+	}
+
+	trim(res);
+
+	str = res;
+}
+
+const array<string> kHex = { "0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f" };
+const array<string> kAlphaNumber = { "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9",":",";","<","=",">","?","@" };
+const array<string> kAsciiChars1 = { " ","!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/" };
+const array<string> kAsciiChars2 = { "[","\\","]","^","_","`" };
+const array<string> kAsciiChars3 = { "{","|","}","~" };
+
+void char2hex(int ch, string& res)
+{
+	res += kHex[ch & 15];
+}
+
+void char2str(int ch, string& res)
+{
+	if (ch >= 0x30 && ch <= 0x40)
+	{
+		res += kAlphaNumber[52 + (ch - 0x30)];
+	}
+	else if (ch >= 0x61 && ch <= 0x7A)
+	{
+		res += kAlphaNumber[26 + (ch - 0x61)];
+	}
+	else if (ch >= 0x41 && ch <= 0x5A)
+	{
+		res += kAlphaNumber[ch - 0x41];
+	}
+	else if (ch >= 0x20 && ch <= 0x2F)
+	{
+		res += kAsciiChars1[ch-0x20];
+	}
+	else if (ch >= 0x5B && ch <= 0x60)
+	{
+		res += kAsciiChars2[ch-0x5B];
+	}
+	else if (ch >= 0x7B && ch <= 0x7E)
+	{
+		res += kAsciiChars3[ch-0x7B];
+	}
+}
+
+bool isalnum(int ch)
+{
+	return (ch >= 0x30 && ch <= 0x39) || (ch >= 0x41 && ch <= 0x5A) || (ch >= 0x61 && ch <= 0x7A);
+}
+
+void dict2post(dictionary@ d, string&out post)
+{
+	post = kEmpty;
+
+	array<string>@ keys = d.getKeys();
+
+	string val;
+	for (int i = 0, size = keys.length(); i < size; ++i)
+	{
+		if (!d.get(keys[i], val))
+		{
+			continue;
+		}
+
+		string val_enc;
+
+		for (int j = 0, jsize = val.length(); j < jsize; ++j)
+		{
+			int ch = val[j];
+
+			if (isalnum(ch))
+			{
+				char2str(ch, val_enc);
+			}
+			else
+			{
+				val_enc += '%';
+				char2hex(ch >> 4, val_enc);
+				char2hex(ch & 15, val_enc);
+			}
+		}
+
+		if (post.isEmpty())
+		{
+			post += keys[i]+'='+val_enc;
+		}
+		else
+		{
+			post += '&'+keys[i]+'='+val_enc;
+		}
+	}
+}
+
+void urlencode(const string&in val, string&out val_enc)
+{
+	val_enc = kEmpty;
+	for (int j = 0, jsize = val.length(); j < jsize; ++j)
+	{
+		int ch = val[j];
+
+		if (isalnum(ch))
+		{
+			char2str(ch, val_enc);
+		}
+		else
+		{
+			val_enc += '%';
+			char2hex(ch >> 4, val_enc);
+			char2hex(ch & 15, val_enc);
+		}
+	}
+}
+
+string urlencode(string&in val)
+{
+	string val_enc = kEmpty;
+	for (int j = 0, jsize = val.length(); j < jsize; ++j)
+	{
+		int ch = val[j];
+
+		if (isalnum(ch))
+		{
+			char2str(ch, val_enc);
+		}
+		else
+		{
+			val_enc += '%';
+			char2hex(ch >> 4, val_enc);
+			char2hex(ch & 15, val_enc);
+		}
+	}
+	
+	return val_enc;
+}
+
+void urldecode(string& str)
+{
+	string res;
+	for (int i = 0, size = str.length(); i < size; ++i)
+	{
+		// %
+		if (str[i] == 0x25)
+		{
+			int ch = (str[i+1] - 0x30) << 4;
+			int tmp = str[i+2];
+			if (tmp >= 0x30 && tmp <= 0x39)
+			{
+				ch += tmp - 0x30;
+			}
+			if (tmp >= 0x41 && tmp <= 0x46)
+			{
+				ch += tmp - 0x41 + 10;
+			}
+			i += 2;
+
+			char2str(ch, res);
+		}
+		else
+		{
+			char2str(str[i], res);
+		}
+	}
+	str = res;
+}
+
+dictionary@ post2dict(string&in post)
+{
+	dictionary d;
+
+	array<string>@ key_values = split(post, "&");
+	for (int i = 0, size = key_values.length(); i < size; ++i)
+	{
+		array<string>@ tmp = split(key_values[i], "=");
+
+		urldecode(tmp[1]);
+		d.set(tmp[0], tmp[1]);
+	}
+
+	return d;
+}
+
+float InvCubicEaseIn(float p)
+{
+	return pow(p, 1.0f/3.0f);
+}
+
+float InvCubicEaseOut(float p)
+{
+	return 1.0f - pow(1.0f - p, 1.0f/3.0f);
+}
+
+float randomf(float from, float to)
+{
+	return from + (to - from) * core.Utils.Rnd();
+}
+
+void RandomString(int count, string&out str)
+{
+	str = kEmpty;
+	for (int i = 0; i < count; ++i)
+	{
+		str += kAlphaNumber[floor(randomf(1, 26))];
+	}
+}
+
+const string kDataServer = '://d.appnow.com/';
+const string kDataImageHeight = '?h=';
+const string kDataImageTx = '?tx=';
+const string kDataImageTy = '&ty=';
+const string kDataImageTw = '&tw=';
+const string kDataImageTh = '&th=';
+
+void LoadImage(NGUILabel@ label, const string&in url, Box@ box = null, float tx = -1.0f, float ty = -1.0f, float tw = -1.0f, float th = -1.0f)
+{
+	if (url.findFirst(kDataServer) >= 0)
+	{
+		if (box !is null && box.IsValid())
+		{
+			label.SetTextureURL(url + kDataImageTx + box.left_margin + kDataImageTy + box.top_margin + kDataImageTw + box.width + kDataImageTh + box.height);
+		}
+		else if (tx >= 0.0f && ty >= 0.0f && tw > 0.0f && th > 0.0f)
+		{
+			label.SetTextureURL(url + kDataImageTx + tx + kDataImageTy + ty + kDataImageTw + tw + kDataImageTh + th);
+		}
+		else
+		{
+			label.SetTextureURL(url + kDataImageHeight + ceil(label.height * 1.4));
+		}
+	}
+	else
+	{
+		label.SetTextureURL(url);
+	}
+}
+
+void EscapeRichText(string& str)
+{
+	string result;
+
+	replace(str, "#", "\\#", result);
+	replace(result, "{", "\\{", result);
+	replace(result, "}", "\\}", result);
+
+	str = result;
+}
+
+void EscapeRichText(const string&in str, string&out result)
+{
+	result = str;
+	EscapeRichText(result);
+}
+
+const string kEmailChars = "@.";
+
+bool IsEmailValid(const string&in email)
+{
+	bool valid = true;
+
+	int dog_pos = -1;
+	int dot_pos = -1;
+
+	for (int i = 0, size = email.length(); i < size; ++i)
+	{
+		if (email[i] == kEmailChars[0])
+		{
+			if (dog_pos > 0 || i == 0)
+			{
+				valid = false;
+			}
+			else
+			{
+				dog_pos = i;
+			}
+		}
+
+		if (email[i] == kEmailChars[1])
+		{
+			dot_pos = i;
+		}
+	}
+
+	if (dot_pos < 0 || dog_pos < 0 || dot_pos == email.length() - 1 || dog_pos == email.length() - 1 || (dot_pos - dog_pos) <= 1)
+	{
+		valid = false;
+	}
+
+	return valid;
+}
+
+void SetQRCode(NGUILabel@ trg, const string&in url, dictionary@ params = null, int size = 5, int margin = 0)
+{
+	dictionary args;
+
+	args.set("cmd", "qrcode");
+	args.set("margin", kEmpty+margin);
+	args.set("size", kEmpty+size);
+
+	if (params !is null)
+	{
+		string data_params_post;
+		dict2post(params, data_params_post);
+
+		string delim = "&";
+		if (url.findFirst("?") < 0)
+		{
+			delim = "?";
+		}
+
+		args.set("data", url+delim+data_params_post);
+	}
+	else
+	{
+		args.set("data", url);
+	}
+
+	string post;
+	dict2post(args, post);
+
+	string delim = "&";
+	if (kServerUrl.findFirst("?") < 0)
+	{
+		delim = "?";
+	}
+
+	string data;
+	args.get("data", data);
+
+	trg.SetTextureURL(kServerUrl+delim+post);
+}
+
+void GetClosestTime(int& h, int& m, int step_sec = 1800)
+{
+	if (h == 0 && m == 0)
+	{
+		h = 0;
+		m = 30;
+
+		return;
+	}
+
+	int sec = h * 3600 + m * 60;
+	int tmp = sec / step_sec;
+
+	sec = tmp * step_sec + ((sec - tmp) > 0 ? 1800 : 0);
+
+	h = (sec / 3600) % 24;
+	m = (sec - h * 3600) / 60;
+}
+
+float deg2rag(float x)
+{
+	return x * 3.141592f / 180.0f;
+}
+
+float GetMapDistance(float lat1, float lng1, float lat2, float lng2)
+{
+	const float R = 6378137.0f; // Earth’s mean radius in meter
+	const float dLat = deg2rag(lat2 - lat1);
+	const float dLong = deg2rag(lng2 - lng1);
+	const float a = sin(dLat * 0.5f) * sin(dLat * 0.5f) +
+	cos(deg2rag(lat1)) * cos(deg2rag(lat2)) *
+	sin(dLong * 0.5f) * sin(dLong * 0.5f);
+	const float c = 2.0f * atan2(sqrt(a), sqrt(1.0f - a));
+	const float d = R * c;
+	return d; // returns the distance in meter
+}

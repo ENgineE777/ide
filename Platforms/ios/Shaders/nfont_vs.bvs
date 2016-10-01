@@ -1,0 +1,21 @@
+
+attribute vec4 position;
+attribute vec2 texCoord;
+
+varying vec2 DestinationUV;
+
+uniform vec4 desc[1];
+uniform mat4 transform;
+
+void main(void)
+{
+	vec4 posTemp = position;
+	posTemp = transform * posTemp;
+
+	posTemp.x = -1.0 + posTemp.x/desc[0].x * 2.0;
+	posTemp.y =  1.0 - posTemp.y/desc[0].y * 2.0;
+
+	gl_Position = vec4(posTemp.x, posTemp.y, desc[0].z, 1.0);
+	//gl_Position = vec4(posTemp.x, posTemp.y, 0.5, 1.0);
+	DestinationUV = texCoord;	  
+}

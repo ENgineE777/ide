@@ -1,0 +1,295 @@
+interface IBufferSource
+{
+	int GetElementCount();
+
+	float GetElementHeight();
+	float GetExtraScrollSize();
+
+	void UpdateWidgets(float dt);
+	void UpdateElement(float offset, int buffer_index, int index, bool show);
+
+	float GetInitialOffset();
+	float GetElementHeight(int index);
+	float GetElementPadding(int index);
+
+	float GetScrollerOffset();
+};
+
+class StaticRingBuffer
+{
+	private int buffer_length = 0;
+	private array<int> buffer_indices;
+
+	protected IBufferSource@ source;
+	protected NGUIScroller@ scroller;
+
+	StaticRingBuffer(int length, IBufferSource@ source, NGUIScroller@ scroller)
+	{
+		@this.source = source;
+		@this.scroller = scroller;
+
+		buffer_length = length;
+		buffer_indices.resize(buffer_length);
+
+		FullRefresh();
+	}
+
+	void FullRefresh()
+	{
+		for (int i = 0; i < buffer_length; ++i)
+		{
+			buffer_indices[i] = -2;
+		}
+	}
+
+	void Update(float dt)
+	{
+		int index = GetFirstVisibleIndex();
+
+		if (index < 0)
+		{
+			index = 0;
+		}
+
+		const int visible_count = GetVisibleCount();
+		const int total_count = source.GetElementCount();
+
+		int buffer_index = index % buffer_length;
+
+		for (int i = 0; i < visible_count; i++)
+		{
+			if (index < total_count)
+			{
+				if (buffer_indices[buffer_index] != index)
+				{
+					source.UpdateElement(GetVisibleOffset(index), buffer_index, index, true);
+
+					buffer_indices[buffer_index] = index;
+
+					// core.Trace("For " + buffer_index + " setted " + index);
+				}
+			}
+			else
+			{
+				if (buffer_indices[buffer_index] != -1)
+				{
+					source.UpdateElement(0.0f, buffer_index, index, false);
+
+					buffer_indices[buffer_index] = -1;
+
+					// core.Trace("For " + buffer_index + " reseted");
+				}
+			}
+
+			buffer_index++;
+			if (buffer_index >= buffer_length)
+			{
+				buffer_index = 0;
+			}
+
+			index++;
+		}
+
+		source.UpdateWidgets(dt);
+
+		scroller.scrollSize = GetScrollSize() + source.GetExtraScrollSize();
+	}
+
+	int GetFirstVisibleIndex()
+	{
+		const float pos = scroller.GetPosition() + source.GetScrollerOffset();
+		const float offset = source.GetInitialOffset();
+
+		const float top_border_y = -screens::top.height;
+
+		if (pos >= top_border_y)
+		{
+			return 0;
+		}
+
+		if (-pos <= offset)
+		{
+			return 0;
+		}
+
+		return -(pos + offset) / source.GetElementHeight();
+	}
+
+	float GetVisibleOffset(int index)
+	{
+		return index * source.GetElementHeight();
+	}
+
+	int GetVisibleCount()
+	{
+		return buffer_length;
+	}
+
+	float GetScrollSize()
+	{
+		return source.GetInitialOffset() + (source.GetElementCount() * source.GetElementHeight());
+	}
+};
+
+class DynamicRingBuffer : StaticRingBuffer
+{
+	private int prev_total_count = 0;
+	private int elements_length = 0;
+	private int last_elemnt_index = 0;
+
+	private float last_elemnt_offset = 0.0f;
+
+	private array<float> offsets;
+	private array<float> heights;
+
+	DynamicRingBuffer(int length, IBufferSource@ source, NGUIScroller@ scroller)
+	{
+		super(length, source, scroller);
+	}
+
+	void FullRefresh() override
+	{
+		StaticRingBuffer::FullRefresh();
+
+		prev_total_count = 0;
+		elements_length = 0;
+
+		last_elemnt_index = 0;
+		last_elemnt_offset = 0.0f;
+
+		offsets.resize(0);
+		heights.resize(0);
+	}
+
+	void Update(float dt) override
+	{
+		const int count = source.GetElementCount();
+		if (count != prev_total_count)
+		{
+			prev_total_count = count;
+			elements_length = count;
+
+			if (count > offsets.length())
+			{
+				const int from = offsets.length();
+
+				offsets.resize(count);
+				heights.resize(count);
+
+				for (int i = from; i < count; ++i)
+				{
+					offsets[i] = GetElementOffset(i);
+					heights[i] = source.GetElementHeight(i);
+				}
+			}
+		}
+
+		StaticRingBuffer::Update(dt);
+	}
+
+	private float GetElementOffset(int index)
+	{
+		float y = source.GetInitialOffset();
+		int from = 0;
+
+		if (index > last_elemnt_index)
+		{
+			from = last_elemnt_index;
+			y = last_elemnt_offset;
+		}
+
+		for (int i = from; i < index; ++i)
+		{
+			y += source.GetElementHeight(i) + source.GetElementPadding(i);
+		}
+
+		last_elemnt_index = index;
+		last_elemnt_offset = y;
+
+		return y;
+	}
+
+	private int SearchIndex(float pos, float height, int index)
+	{
+		const float abs_offset = pos + offsets[index];
+		const float h = heights[index];
+
+		const float top_border_y = -screens::top.height;
+
+		if (abs_offset < height && abs_offset + h > top_border_y)
+		{
+			if (index - 1 < 0)
+			{
+				return index;
+			}
+
+			const float prev_abs_offset = pos + offsets[index - 1];
+			const float prev_h = heights[index - 1];
+
+			if (prev_abs_offset < top_border_y && prev_abs_offset + prev_h <= top_border_y)
+			{
+				return index;
+			}
+
+			return -1;
+		}
+
+		return abs_offset > height ? -1 : -2;
+	}
+
+	int GetFirstVisibleIndex() override
+	{
+		const float pos = scroller.GetPosition() + source.GetScrollerOffset();
+		const float height = scroller.height;
+
+		int from = 0;
+		int to = elements_length;
+
+		int prev_dist = -1;
+
+		while (to - from > 1)
+		{
+			const int dist = to - from;
+			const int index = from + (dist / 2);
+
+			if (dist == 1)
+			{
+				const int tmp = SearchIndex(pos, height, from);
+				if (tmp >= 0)
+				{
+					return tmp;
+				}
+
+				return SearchIndex(pos, height, to);
+			}
+
+			const int tmp = SearchIndex(pos, height, index);
+
+			if (tmp >= 0)
+			{
+				return tmp;
+			}
+
+			if (tmp == -1)
+			{
+				to = index;
+			}
+			else
+			{
+				from = index;
+			}
+		}
+
+		return 0;
+	}
+
+	float GetVisibleOffset(int index) override
+	{
+		return offsets[index];
+	}
+
+	float GetScrollSize() override
+	{
+		return elements_length > 0 ? (offsets[elements_length-1] + heights[elements_length-1]) : 0.0f;
+	}
+};

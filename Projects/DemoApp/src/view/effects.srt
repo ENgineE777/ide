@@ -1,0 +1,1461 @@
+//===============================================================
+//
+//								BASE
+//
+//===============================================================
+
+class EffectTarget
+{
+	float x_ = 0.0f;
+	float y_ = 0.0f;
+	float width_ = 0.0f;
+	float height_ = 0.0f;
+	float alpha_ = 0.0f;
+	float angle_ = 0.0f;
+
+	EffectTarget()
+	{
+	}
+
+	void Activate(bool Active) {}
+	void Show(bool show) {}
+
+	float angle { get { return angle_; } set { angle_ = value; } }
+	float alpha { get { return alpha_; } set { alpha_ = value; } }
+	float height { get { return height_; } set { height_ = value; } }
+	float width { get { return width_; } set { width_ = value; } }
+	float x { get { return x_; } set { x_ = value; } }
+	float y { get { return y_; } set { y_ = value; } }
+};
+
+class WidgetEffectTarget : EffectTarget
+{
+	NGUIWidget@ target_;
+
+	WidgetEffectTarget()
+	{
+		@target_ = null;
+	}
+
+	WidgetEffectTarget(NGUIWidget@ t)
+	{
+		@target_ = t;
+	}
+
+	void Activate(bool Active) override { target_.Activate(Active); }
+	void Show(bool show) override { target_.Show(show); }
+
+	float angle { get override { return target_.rot_z; } set override { target_.rot_z = value; } }
+	float alpha { get override { return target_.alpha; } set override { target_.alpha = value; } }
+	float height { get override { return target_.height; } set override { target_.height = value; } }
+	float width { get override { return target_.width; } set override { target_.width = value; } }
+	float x { get override { return target_.x; } set override { target_.x = value; } }
+	float y { get override { return target_.y; } set override { target_.y = value; } }
+};
+
+class Effect
+{
+	Effect()
+	{
+		@target_ = null;
+		duration_ = -1.0f;
+	}
+
+	Effect(ref@ target, float duration)
+	{
+		@target_ = WidgetEffectTarget(cast<NGUIWidget>(target));
+		duration_ = duration;
+	}
+
+	Effect(Symbol@ target, float duration)
+	{
+		@target_ = WidgetEffectTarget(target.symbol);
+		duration_ = duration;
+	}
+
+	Effect(EffectTarget@ target, float duration)
+	{
+		@target_ = target;
+		duration_ = duration;
+	}
+
+	void Update(float dt)
+	{
+		if (target_ !is null)
+		{
+			target_.Activate(false);
+		}
+	}
+
+	void Stop()
+	{
+		stopped_ = true;
+		Done();
+	}
+
+	void Done()
+	{
+		done_ = true;
+		in_progress_ = false;
+
+		if (target_ !is null)
+		{
+			target_.Activate(true);
+		}
+	}
+	
+	bool IsDone()
+	{
+		return done_;
+	}
+
+	void Reset()
+	{
+		done_ = false;
+		stopped_ = false;
+		in_progress_ = true;
+	}
+
+	void Show(bool show)
+	{
+		// TODO: http://jira.appnow.com:8777/browse/AION-128
+		WidgetEffectTarget@ wgt = cast<WidgetEffectTarget>(target_);
+		if (wgt !is null)
+		{
+			ScreenSymbol@ screen = screens::FindSymbol(wgt.target_);
+
+			if (screen !is null)
+			{
+				screen.Show(show);
+			}
+			else
+			{
+				target_.Show(show);
+			}
+		}
+	}
+
+	void Perform()
+	{
+		view.PerformEffect(this);
+	}
+
+	void PerformSeq()
+	{
+		view.PerformEffectSeq(this);
+	}
+
+	void PerformNonBlock()
+	{
+		view.PerformEffectNonBlock(this);
+	}
+
+	bool stopped_ = false;
+	bool done_ = false;
+	bool in_progress_ = true;
+	bool can_start_again_ = false;
+
+	float duration_ = 0.0f;
+	float vel_ = 0.0f;
+
+	EffectTarget@ target_;
+};
+
+class EffectSequence : Effect
+{
+	EffectSequence()
+	{
+	}
+
+	EffectSequence(Effect@ e1, Effect@ e2)
+	{
+		Append(e1);
+		Append(e2);
+	}
+
+	EffectSequence(Effect@ e1, Effect@ e2, Effect@ e3)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+	}
+
+	void Clear() 
+	{
+		effects_count_ = 0;
+		effects_.resize(0);
+	}
+
+	int Length() 
+	{
+		return effects_.length();
+	}
+
+	void Reset() override
+	{
+		Effect::Reset();
+		
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			effects_[i].Reset();
+		}
+	}
+
+	void Stop() override
+	{
+		Effect::Stop();
+
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			effects_[i].Stop();
+		}
+
+		Clear();
+	}
+
+	bool IsEmpty()
+	{
+		return effects_count_ <= 0;
+	}
+
+	void Append(Effect@ effect)
+	{
+		effects_.insertLast(effect);
+		++effects_count_;
+	}
+
+	void Remove(int i)
+	{
+		effects_.removeAt(i);
+		--effects_count_;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			Effect@ e = @effects_[i];
+
+			if (e.in_progress_)
+			{
+				e.Update(dt);
+				break;
+			}
+
+			if (stopped_)
+			{
+				break;
+			}
+
+			if (e.done_)
+			{
+				Remove(i);
+				break;
+			}
+		}
+
+		if (effects_count_ <= 0 || stopped_)
+		{
+			Done();
+		}
+	}
+
+	protected int effects_count_ = 0;
+	protected array<Effect@> effects_;
+};
+
+class EffectResetableSequence : EffectSequence
+{
+	EffectResetableSequence()
+	{
+	}
+
+	EffectResetableSequence(Effect@ e1, Effect@ e2)
+	{
+		Append(e1);
+		Append(e2);
+	}
+
+	EffectResetableSequence(Effect@ e1, Effect@ e2, Effect@ e3)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		int done_count = 0;
+
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			Effect@ e = @effects_[i];
+
+			if (e.in_progress_ && !e.done_)
+			{
+				e.Update(dt);
+				break;
+			}
+
+			if (stopped_)
+			{
+				break;
+			}
+
+			if (e.done_)
+			{
+				++done_count;
+				
+			}
+		}
+
+		if (done_count == effects_count_ || stopped_)
+		{
+			Done();
+		}
+	}
+};
+
+class EffectPrecedence : EffectSequence
+{
+	EffectPrecedence()
+	{
+	}
+
+	EffectPrecedence(Effect@ e1, Effect@ e2)
+	{
+		Append(e1);
+		Append(e2);
+	}
+
+	EffectPrecedence(Effect@ e1, Effect@ e2, Effect@ e3)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+	}
+
+	EffectPrecedence(Effect@ e1, Effect@ e2, Effect@ e3, Effect@ e4)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+		Append(e4);
+	}
+
+	EffectPrecedence(Effect@ e1, Effect@ e2, Effect@ e3, Effect@ e4, Effect@ e5)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+		Append(e4);
+		Append(e5);
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		bool all_can_start_again = true;
+
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			Effect@ e = @effects_[i];
+
+			if (e.in_progress_ || e.can_start_again_)
+			{
+				e.Update(dt);
+			}
+
+			if (stopped_)
+			{
+				break;
+			}
+
+			if (e.done_)
+			{
+				if (!e.can_start_again_)
+				{
+					all_can_start_again = false;
+
+					Remove(i);
+				
+					--i;
+					--size;
+				}
+			}
+			else
+			{
+				all_can_start_again = false;
+			}
+		}
+
+		if (effects_count_ <= 0 || all_can_start_again || stopped_)
+		{
+			Done();
+		}
+	}
+};
+
+class EffectLoop : EffectSequence
+{
+	EffectLoop()
+	{
+	}
+
+	EffectLoop(Effect@ e1, Effect@ e2)
+	{
+		Append(e1);
+		Append(e2);
+	}
+
+	EffectLoop(Effect@ e1, Effect@ e2, Effect@ e3)
+	{
+		Append(e1);
+		Append(e2);
+		Append(e3);
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		for (int i = 0, size = effects_count_; i < size; ++i)
+		{
+			Effect@ e = @effects_[i];
+			e.Update(dt);
+
+			if (stopped_)
+			{
+				break;
+			}
+
+			if (e.done_)
+			{
+				e.Reset();
+			}
+		}
+	}
+};
+
+//===============================================================
+//
+//								EFFECTS
+//
+//===============================================================
+
+funcdef void EffectCallback();
+
+class Callback : Effect
+{
+	EffectCallback@ callback_;
+
+	Callback(EffectCallback@ callback)
+	{
+		can_start_again_ = true;
+		@callback_ = callback;
+	}
+
+	void Update(float dt) override
+	{
+		callback_();
+		Done();
+	}
+};
+
+class Timeout : Effect
+{
+	float t_ = 0;
+
+	Timeout(float duration)
+	{
+		duration_ = duration;
+		t_ = duration_;
+	}
+
+	void Reset() override
+	{
+		Effect::Reset();
+
+		t_ = duration_;
+	}
+
+	void Update(float dt) override
+	{
+		t_ -= dt;
+
+		if (t_ <= 0.0f)
+		{
+			Done();
+		}
+	}
+};
+
+
+class Fade : Effect
+{
+	bool use_filled = false;
+	float r_ = 0.0f;
+	float g_ = 0.0f;
+	float b_ = 0.0f;
+
+	float goal_alpha_ = -1.0f;
+
+	Fade(ref@ target, float duration, float alpha, bool use_filled = false)
+	{
+		super(target, duration);
+		if (alpha >= 0.0f)
+		{
+			target_.alpha = alpha;
+		}
+
+		this.use_filled = use_filled;
+
+		if (use_filled)
+		{
+			float dummy = 0.0f;
+			cast<NGUILabel>(target).GetFilledColor(r_, g_, b_, dummy);
+
+			if (alpha >= 0.0f)
+			{
+				cast<NGUILabel>(target).SetFilledColor(r_, g_, b_, alpha);
+			}
+		}
+	}
+
+	Fade(Symbol@ target, float duration, float alpha)
+	{
+		super(target, duration);
+		if (alpha >= 0.0f)
+		{
+			target_.alpha = alpha;
+		}
+	}
+
+	Fade(EffectTarget@ target, float duration, float alpha)
+	{
+		super(target, duration);
+		if (alpha >= 0.0f)
+		{
+			target_.alpha = alpha;
+		}
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		float a = target_.alpha + vel_ * dt;
+
+		if (a >= goal_alpha_ && vel_ >= 0.0f)
+		{
+			a = goal_alpha_;
+			Done();
+		}
+		else if (a <= goal_alpha_ && vel_ <= 0.0f)
+		{
+			a = goal_alpha_;
+			Done();
+		}
+
+		if (use_filled)
+		{
+			cast<NGUILabel>(cast<WidgetEffectTarget>(target_).target_).SetFilledColor(r_, g_, b_, a);
+		}
+		
+		target_.alpha = a;
+	}
+};
+
+class FadeIn : Fade
+{
+	FadeIn(ref@ target, float duration, float alpha = -1.0f, float goal_alpha = 1.0f, bool use_filled = false)
+	{
+		super(target, duration, alpha, use_filled);
+		vel_ = (goal_alpha - target_.alpha) / duration;
+		Show(true);
+
+		goal_alpha_ = goal_alpha;
+	}
+
+	FadeIn(Symbol@ target, float duration, float alpha = -1.0f, float goal_alpha = 1.0f)
+	{
+		super(target, duration, alpha);
+		vel_ = (goal_alpha - target_.alpha) / duration;
+		Show(true);
+
+		goal_alpha_ = goal_alpha;
+	}
+
+	FadeIn(EffectTarget@ target, float duration, float alpha = -1.0f, float goal_alpha = 1.0f)
+	{
+		super(target, duration, alpha);
+		vel_ = (goal_alpha - target_.alpha) / duration;
+		Show(true);
+
+		goal_alpha_ = goal_alpha;
+	}
+};
+
+class FadeOut : Fade
+{
+	FadeOut(ref@ target, float duration, float alpha = -1.0f, bool use_filled = false)
+	{
+		super(target, duration, alpha, use_filled);
+		vel_ = (0.0f - target_.alpha) / duration;
+		goal_alpha_ = 0.0f;
+	}
+
+	FadeOut(Symbol@ target, float duration, float alpha = -1.0f)
+	{
+		super(target, duration, alpha);
+		vel_ = (0.0f - target_.alpha) / duration;
+		goal_alpha_ = 0.0f;
+	}
+
+	FadeOut(EffectTarget@ target, float duration, float alpha = -1.0f)
+	{
+		super(target, duration, alpha);
+		vel_ = (0.0f - target_.alpha) / duration;
+		goal_alpha_ = 0.0f;
+	}
+
+	void Done() override
+	{
+		Show(false);
+		Fade::Done();
+	}
+};
+
+class MoveTo : Effect
+{
+	protected Symbol@ symbol_;
+
+	protected bool hide_after_done_ = false;
+
+	protected float t_ = 0.0f;
+	protected float t_step_ = 0.0f;
+
+	protected float from_x_ = 0.0f;
+	protected float from_y_ = 0.0f;
+
+	protected float to_x_ = 0.0f;
+	protected float to_y_ = 0.0f;
+
+	MoveTo(ref@ target, float x, float y, float duration = 0.3f)
+	{
+		super(target, duration);
+
+		to_x_ = x;
+		to_y_ = y;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		from_x_ = target_.x;
+		from_y_ = target_.y;
+
+		Show(true);
+	}
+
+	MoveTo(Symbol@ target, float x, float y, float duration = 0.3f)
+	{
+		super(target, duration);
+
+		@symbol_ = target;
+
+		to_x_ = x;
+		to_y_ = y;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		from_x_ = symbol_.x;
+		from_y_ = symbol_.y;
+
+		Show(true);
+	}
+
+	MoveTo(EffectTarget@ target, float x, float y, float duration = 0.3f)
+	{
+		super(target, duration);
+
+		to_x_ = x;
+		to_y_ = y;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		from_x_ = target_.x;
+		from_y_ = target_.y;
+
+		Show(true);
+	}
+
+	MoveTo@ HideAfterDone()
+	{
+		hide_after_done_ = true;
+		return this;
+	}
+
+	MoveTo@ StartPoint(float p, float from_x, float from_y)
+	{
+		t_ = InvCubicEaseOut(p);
+
+		from_x_ = from_x;
+		from_y_ = from_y;
+
+		return this;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+
+		float x = from_x_ + (to_x_ - from_x_) * p;
+		float y = from_y_ + (to_y_ - from_y_) * p;
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			x = to_x_;
+			y = to_y_;
+
+			Done();
+		}
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (symbol_ is null)
+		{
+			target_.x = x;
+			target_.y = y;
+		}
+		else
+		{
+			symbol_.x = x;
+			symbol_.y = y;
+		}
+	}
+
+	void Done() override
+	{
+		if (hide_after_done_)
+		{
+			Show(false);
+		}
+
+		Effect::Done();
+	}
+};
+
+class MoveHeightTo : MoveTo
+{
+	MoveHeightTo(ref@ target, float h, float duration = 0.3f)
+	{
+		super(target, 0.0f, h, duration);
+
+		from_x_ = 0.0f;
+		from_y_ = target_.height;
+
+		Show(true);
+	}
+
+	MoveHeightTo(Symbol@ target, float h, float duration = 0.3f)
+	{
+		super(target, 0.0f, h, duration);
+
+		@symbol_ = target;
+
+		from_x_ = 0.0f;
+		from_y_ = symbol_.height;
+
+		Show(true);
+	}
+
+	MoveHeightTo(EffectTarget@ target, float h, float duration = 0.3f)
+	{
+		super(target, 0.0f, h, duration);
+
+		from_x_ = 0.0f;
+		from_y_ = target_.height;
+
+		Show(true);
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+
+		float y = from_y_ + (to_y_ - from_y_) * p;
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			y = to_y_;
+
+			Done();
+		}
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (symbol_ is null)
+		{
+			target_.height = y;
+		}
+		else
+		{
+			symbol_.height = y;
+		}
+	}
+};
+
+class MoveWidthTo : MoveTo
+{
+	MoveWidthTo(ref@ target, float w, float duration = 0.3f)
+	{
+		super(target, 0.0f, w, duration);
+
+		from_x_ = 0.0f;
+		from_y_ = target_.width;
+
+		Show(true);
+	}
+
+	MoveWidthTo(Symbol@ target, float w, float duration = 0.3f)
+	{
+		super(target, 0.0f, w, duration);
+
+		@symbol_ = target;
+
+		from_x_ = 0.0f;
+		from_y_ = symbol_.width;
+
+		Show(true);
+	}
+
+	MoveWidthTo(EffectTarget@ target, float w, float duration = 0.3f)
+	{
+		super(target, 0.0f, w, duration);
+
+		from_x_ = 0.0f;
+		from_y_ = target_.width;
+
+		Show(true);
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+
+		float y = from_y_ + (to_y_ - from_y_) * p;
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			y = to_y_;
+
+			Done();
+		}
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (symbol_ is null)
+		{
+			target_.width = y;
+		}
+		else
+		{
+			symbol_.width = y;
+		}
+	}
+};
+
+enum PulsePhase
+{
+	kPulseGrow,
+	kPulseShrink
+}
+
+class Pulse : Effect
+{
+	protected PulsePhase phase_ = kPulseGrow;
+
+	protected float size_ = 0.0f;
+	protected float start_size_ = 0.0f;
+
+	protected float t_ = 0.0f;
+	protected float t_step_ = 0.0f;
+
+	protected float w_ = 0.0f;
+	protected float h_ = 0.0f;
+
+	Pulse(ref@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 0.0f;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+
+	Pulse(Symbol@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 0.0f;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+
+	Pulse(EffectTarget@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 0.0f;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		Show(true);
+
+		float p = 0.0f;
+
+		if (phase_ == kPulseGrow)
+		{
+			p = core.Utils.CubicEaseOut(t_);
+
+			size_ = start_size_ + (1.3f - start_size_) * p;
+		}
+		else if (phase_ == kPulseShrink)
+		{
+			p = core.Utils.CubicEaseOut(t_);
+
+			size_ = 1.3f + (1.0f - 1.3f) * p;
+		}
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (phase_ == kPulseGrow && t_ >= 1.0f)
+		{
+			t_ = 0.0f;
+			size_ = 1.3f;
+
+			phase_ = kPulseShrink;
+		}
+		else if (phase_ == kPulseShrink && t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			size_ = 1.0f;
+
+			Done();
+		}
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+};
+
+class HalfPulse : Pulse
+{
+	HalfPulse(ref@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		start_size_ = 1.0f;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+
+	HalfPulse(Symbol@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		start_size_ = 1.0f;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+
+	HalfPulse(EffectTarget@ target, float duration = 0.2f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		start_size_ = 1.0f;
+
+		target_.width = w_ * size_;
+		target_.height = h_ * size_;
+	}
+};
+
+class Shrink : Effect
+{
+	protected float size_ = 1.0f;
+	private float goal_size_ = 0.0f;
+
+	private float t_ = 0.0f;
+	private float t_step_ = 0.0f;
+
+	private float w_ = 0.0f;
+	private float h_ = 0.0f;
+
+	Shrink(ref@ target, float duration = 0.1f, float goal_size = 0.0f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		goal_size_ = goal_size;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+	}
+
+	Shrink(Symbol@ target, float duration = 0.1f, float goal_size = 0.0f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		goal_size_ = goal_size;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+	}
+
+	Shrink(EffectTarget@ target, float duration = 0.1f, float goal_size = 0.0f)
+	{
+		super(target, duration);
+
+		size_ = 1.0f;
+		goal_size_ = goal_size;
+
+		t_ = 0.0f;
+		t_step_ = 1.0f / duration_;
+
+		w_ = target_.width;
+		h_ = target_.height;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		Show(true);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+		size_ = 1.0f + (goal_size_ - 1.0f) * p;
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			size_ = 0.0f;
+
+			Done();
+		}
+
+		if (done_)
+		{
+			Show(false);
+
+			target_.width = w_;
+			target_.height = h_;
+		}
+		else
+		{
+			target_.width = w_ * size_;
+			target_.height = h_ * size_;
+		}
+	}
+};
+
+class ShrinkText : Shrink
+{
+	NGUILabel@ label_;
+
+	ShrinkText(ref@ target, float duration = 0.1f, float goal_size = 0.0f)
+	{
+		super(target, duration, goal_size);
+
+		@label_ = cast<NGUILabel>(target);
+	}
+
+	void Update(float dt) override
+	{
+		Shrink::Update(dt);
+
+		if (done_)
+		{
+			label_.fontScale = 1.0f;
+		}
+		else
+		{
+			label_.fontScale = size_;
+		}
+	}
+};
+
+// class Grow : Effect
+// {
+// 	protected float size_ = 0.0f;
+// 	protected float start_size_ = 0.0f;
+// 	protected float goal_size_ = 0.0f;
+
+// 	protected float t_ = 0.0f;
+// 	protected float t_step_ = 0.0f;
+
+// 	protected float w_ = 0.0f;
+// 	protected float h_ = 0.0f;
+
+// 	Grow(ref@ target, float duration = 0.2f, float goal_size = 0.0f)
+// 	{
+// 		super(target, duration);
+
+// 		size_ = 0.0f;
+
+// 		t_ = 0.0f;
+// 		t_step_ = 1.0f / duration_;
+
+// 		goal_size_ = goal_size;
+
+// 		w_ = target_.width;
+// 		h_ = target_.height;
+
+// 		target_.width = w_ * size_;
+// 		target_.height = h_ * size_;
+// 	}
+
+// 	Grow(Symbol@ target, float duration = 0.2f, float goal_size = 0.0f)
+// 	{
+// 		super(target, duration);
+
+// 		size_ = 0.0f;
+
+// 		t_ = 0.0f;
+// 		t_step_ = 1.0f / duration_;
+
+// 		goal_size_ = goal_size;
+
+// 		w_ = target_.width;
+// 		h_ = target_.height;
+
+// 		target_.width = w_ * size_;
+// 		target_.height = h_ * size_;
+// 	}
+
+// 	void Update(float dt) override
+// 	{
+// 		Effect::Update(dt);
+
+// 		Show(true);
+
+// 		float p = 0.0f;
+
+// 		if (phase_ == kPulseGrow)
+// 		{
+// 			p = core.Utils.CubicEaseOut(t_);
+
+// 			size_ = start_size_ + (1.3f - start_size_) * p;
+// 		}
+// 		else if (phase_ == kPulseShrink)
+// 		{
+// 			p = core.Utils.CubicEaseOut(t_);
+
+// 			size_ = 1.3f + (1.0f - 1.3f) * p;
+// 		}
+
+// 		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+// 		if (phase_ == kPulseGrow && t_ >= 1.0f)
+// 		{
+// 			t_ = 0.0f;
+// 			size_ = 1.3f;
+
+// 			phase_ = kPulseShrink;
+// 		}
+// 		else if (phase_ == kPulseShrink && t_ >= 1.0f)
+// 		{
+// 			t_ = 1.0f;
+
+// 			size_ = 1.0f;
+
+// 			Done();
+// 		}
+
+// 		target_.width = w_ * size_;
+// 		target_.height = h_ * size_;
+// 	}
+// };
+
+class RotateBy : Effect
+{
+	private float start_angle_ = 0.0f;
+	private float end_angle_ = 0.0f;
+
+	private float t_ = 0.0f;
+	private float t_step_ = 0.0f;
+
+	RotateBy(ref@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = start_angle_ + angle;
+
+		t_ = 0.0f;
+		t_step_ = abs(end_angle_ - start_angle_) / duration_;
+	}
+
+	RotateBy(Symbol@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = start_angle_ + angle;
+
+		t_ = 0.0f;
+		t_step_ = abs(end_angle_ - start_angle_) / duration_;
+	}
+
+	RotateBy(EffectTarget@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = start_angle_ + angle;
+
+		t_ = 0.0f;
+		t_step_ = abs(end_angle_ - start_angle_) / duration_;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+		float a = start_angle_ + (end_angle_ - start_angle_) * p;
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			a = end_angle_;
+			Done();
+		}
+
+		target_.angle = a;
+	}
+};
+
+class RotateTo : Effect
+{
+	private float start_angle_ = 0.0f;
+	private float end_angle_ = 0.0f;
+
+	private float t_ = 0.0f;
+	private float t_step_ = 0.0f;
+
+	RotateTo(ref@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = angle;
+
+		t_ = 0.0f;
+		// t_step_ = abs(end_angle_ - start_angle_) / duration_;
+		t_step_ = 1.0f / duration_;
+	}
+
+	RotateTo(Symbol@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = angle;
+
+		t_ = 0.0f;
+		// t_step_ = abs(end_angle_ - start_angle_) / duration_;
+		t_step_ = 1.0f / duration_;
+	}
+
+	RotateTo(EffectTarget@ target, float angle, float duration)
+	{
+		super(target, duration);
+
+		start_angle_ = target_.angle;
+		end_angle_ = angle;
+
+		t_ = 0.0f;
+		t_step_ = abs(end_angle_ - start_angle_) / duration_;
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		const float p = core.Utils.CubicEaseOut(t_);
+		float a = start_angle_ + (end_angle_ - start_angle_) * p;
+
+		t_ = clampf(t_ + t_step_ * dt, 0.0f, 1.0f);
+
+		if (t_ >= 1.0f)
+		{
+			t_ = 1.0f;
+
+			a = end_angle_;
+			Done();
+		}
+
+		target_.angle = a;
+	}
+};
+
+class SegmentRotate : Effect
+{
+	SegmentRotate(ref@ target, float segment, float duration)
+	{
+		super(target, duration);
+
+		segment_ = segment;
+		target_.angle = 0.0f;
+
+		segment_dt_ = duration_ * segment_ / 360.0f;
+	}
+
+	SegmentRotate(Symbol@ target, float segment, float duration)
+	{
+		super(target, duration);
+
+		segment_ = segment;
+		target_.angle = 0.0f;
+
+		segment_dt_ = duration_ * segment_ / 360.0f;
+	}
+
+	SegmentRotate(EffectTarget@ target, float segment, float duration)
+	{
+		super(target, duration);
+
+		segment_ = segment;
+		target_.angle = 0.0f;
+
+		segment_dt_ = duration_ * segment_ / 360.0f;
+	}
+
+	void Reset() override
+	{
+		Effect::Reset();
+	}
+
+	void Update(float dt) override
+	{
+		Effect::Update(dt);
+
+		total_dt_ += dt;
+
+		if (total_dt_ > duration_)
+		{
+			total_dt_ -= duration_; 
+		}
+
+		target_.angle = floor(total_dt_ / segment_dt_) * segment_;
+	}
+
+	private float segment_ = 0.0f;
+	private float segment_dt_ = 0.0f;
+	private float total_dt_ = 0.0f;
+};
+
+//===============================================================
+//
+//								FACTORY
+//
+//===============================================================
+
+Effect@ MoveToWithCallback(NGUIWidget@ symbol, float x, float y, float duration, EffectCallback@ callback)
+{
+	return EffectSequence(MoveTo(symbol, x, y, duration), Callback(callback));
+}
+
+Effect@ MoveToWithCallback(Symbol@ symbol, float x, float y, float duration, EffectCallback@ callback)
+{
+	return EffectSequence(MoveTo(symbol, x, y, duration), Callback(callback));
+}
+
+Effect@ EffectWithCallback(Effect@ e, EffectCallback@ callback)
+{
+	return EffectSequence(e, Callback(callback));
+}
+
+Effect@ EffectWithTimeout(Effect@ e, float timeout)
+{
+	return EffectResetableSequence(Timeout(timeout), e);	
+}
+
+Effect@ CallbackWithTimeout(EffectCallback@ callback, float timeout)
+{
+	return EffectSequence(Timeout(timeout), Callback(callback));	
+}
+
+Effect@ EffectLike(ref@ normal, ref@ active)
+{
+	return EffectSequence(Shrink(normal), Pulse(active));
+}
+
+Effect@ EffectLike(Symbol@ normal, Symbol@ active)
+{
+	return EffectSequence(Shrink(normal), Pulse(active));
+}

@@ -1,0 +1,24 @@
+
+
+attribute vec4 position;
+attribute vec2 texCoord;
+
+varying vec2 DestinationUV;
+
+uniform vec4 desc[5];
+
+
+void main(void)
+{						   
+	vec4 posTemp = vec4 (desc[0].x * position.x + desc[0].y * position.y + desc[0].z * texCoord.x + desc[0].w * texCoord.y,
+				         desc[1].x * position.x + desc[1].y * position.y + desc[1].z * texCoord.x + desc[1].w * texCoord.y,
+				         0, 0);
+	
+	posTemp.z = -1.0 + posTemp.x/desc[4].x * 2.0;
+	posTemp.w =  1.0 - posTemp.y/desc[4].y * 2.0;
+	
+	gl_Position = vec4(posTemp.z, posTemp.w, desc[4].z, 1.0);
+
+	DestinationUV = vec2(desc[2].x * position.x + desc[2].y * position.y + desc[2].z * texCoord.x + desc[2].w * texCoord.y,
+			             desc[3].x * position.x + desc[3].y * position.y + desc[3].z * texCoord.x + desc[3].w * texCoord.y);    
+}

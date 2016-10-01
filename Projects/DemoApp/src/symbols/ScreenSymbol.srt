@@ -1,0 +1,45 @@
+enum TopMenuIcon
+{
+	kTopNone,
+	kTopCart,
+	kTopMenu,
+	kTopConfig,
+	kTopReward,
+};
+
+class ScreenSymbol : Symbol
+{
+	bool need_load_data = true;
+	bool loading = false;
+
+	ScreenSymbol(ref@ symbol)
+	{
+		super(symbol);
+
+		if (symbol !is null)
+		{
+			screens::screen_symbols.insertLast(this);
+		}
+	}
+
+	TopMenuIcon GetTopMenuIcon() { return kTopCart; }
+
+	bool HasBottomMenu() { return true; }
+	bool CanBackBySwipe() { return true; }
+	bool NeedConfirmHide(ScreenSymbol@ next_screen) { return false; }
+	bool CanBack() { return true; }
+	bool ProcessBack() { return false; }
+
+	void OnConfirmedHide() {}
+
+	void BeforeShow(EffectPrecedence@ combine) {}
+	void BeforeHide(EffectPrecedence@ combine) {}
+	void AfterShow(EffectPrecedence@ combine) {}
+	void AfterHide(EffectPrecedence@ combine) {}
+	void AfterHide() {}
+
+	void Refresh() {}
+
+	AppNowObject@ GetHistoryObject() { return null; }
+	void RestoreFromHistory(AppNowObject@ obj) {}
+};

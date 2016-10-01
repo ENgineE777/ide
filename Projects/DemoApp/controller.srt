@@ -1,0 +1,1586 @@
+#include "symbols";
+
+funcdef void PopupCallback(bool);
+funcdef void ClickCallback();
+funcdef void ClickObjectCallback(AppNowObject@);
+funcdef void ClickSymbolCallback(Symbol@);
+funcdef void ClickIndexCallback(int);
+
+enum EventType
+{
+	kModelReady,
+	kModelNewsReady,
+
+	kViewKeyboardOpened,
+	kViewKeyboardClosed,
+
+	kControllerResume,
+	kControllerPause,
+
+	kControllerStartPullToRefreshTop,
+	kControllerStartPullToRefreshBottom,
+	kControllerStopPullToRefresh,
+};
+
+class WidgetHolder : AppNowObject
+{
+	NGUIWidget@ widget;
+
+	WidgetHolder(NGUIWidget@ wgt)
+	{
+		@widget = wgt;
+	}
+};
+
+class Event
+{
+	Event()
+	{
+
+	}
+
+	void Set(int set_code, AppNowObject@ set_object)
+	{
+		code = set_code;
+		@object = set_object;
+	}
+
+	void Trace()
+	{
+		core.Trace("*** Event: " + code);
+	}
+
+	int code;
+	AppNowObject@ object;
+};
+
+class EventTracker
+{
+	private dictionary params_;
+
+	void Track(const string&in event)
+	{
+		core.TraceTo("Track", "*** TRACK: "+event);
+
+		string deviceid;
+		core.GetDeviceID(deviceid);
+
+		Add("UID", deviceid);
+		Add("user_id", deviceid);
+
+		const int platform = core.GetCurrentPlatform();
+		if (platform == platform_ios)
+		{
+			Add("Platform", "IOS");
+		}
+		else if (platform == platform_android)
+		{
+			Add("Platform", "Android");
+		}
+		else
+		{
+			Add("Platform", "PC");
+		}
+
+		string args;
+
+		dict2post(params_, args);
+
+		// core.Network.StartRequest("GET", "http://logstash.appnow.com/app"+config.appid+"/"+event+"?template=1&timestamp="+core.Utils.GetSystemTime()+"&"+args, kEmpty, kEmpty, null);
+
+		params_.deleteAll();
+	}
+
+	void Track(const string&in event, const string&in param, const string&in value)
+	{
+		Add(param, value);
+		Track(event);
+	}
+
+	void Add(const string&in param, const string&in value)
+	{
+		core.TraceTo("Track", "*** PARAM: "+param+" = "+value);
+		params_.set(param, value);
+	}
+
+	void Track(Event@ event)
+	{
+	}
+};
+
+interface IDragListener
+{
+	void OnStartDrag(NGUIButton@ button, float x, float y);
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir);
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir);
+};
+
+interface IEventListener
+{
+	void Process(Event@ event);
+};
+
+interface ITask
+{
+	void Update(float dt);
+};
+
+interface IHoverListener
+{
+	void OnHover(NGUIButton@ button, bool hover);
+	void OnHover(NGUIButtonInstances@ button, bool hover, int index);
+};
+
+class HoverTarget
+{
+	protected bool inited_ = false;
+
+	protected float r_ = 0.0f;
+	protected float g_ = 0.0f;
+	protected float b_ = 0.0f;
+
+	protected float font_r_ = 0.0f;
+	protected float font_g_ = 0.0f;
+	protected float font_b_ = 0.0f;
+
+	NGUIWidget@ target;
+
+	HoverTarget(NGUIWidget@ target)
+	{
+		@this.target = target;
+	}
+
+	void InitColor()
+	{
+		if (inited_)
+		{
+			return;
+		}
+
+		inited_ = true;
+
+		target.GetColor(r_, g_, b_);
+	}
+
+	void SetColor(float r, float g, float b)
+	{
+		target.SetColor(r/255.0f, g/255.0f, b/255.0f);
+	}
+
+	void ResetColor()
+	{
+		target.SetColor(r_, g_, b_);
+	}
+
+	bool IsVisible()
+	{
+		return target.IsVisible();
+	}
+
+	float alpha
+	{
+		get const { return target.alpha; }
+		set { target.alpha = value; }
+	}
+};
+
+class HoverTargetLabel : HoverTarget
+{
+	HoverTargetLabel(NGUILabel@ target)
+	{
+		super(cast<NGUIWidget>(target));
+	}
+
+	void InitColor() override
+	{
+		if (inited_)
+		{
+			return;
+		}
+
+		HoverTarget::InitColor();
+
+		cast<NGUILabel>(target).GetFontColor(font_r_, font_g_, font_b_);
+	}
+
+	void SetColor(float r, float g, float b) override
+	{
+		HoverTarget::SetColor(r, g, b);
+
+		cast<NGUILabel>(target).SetFontColor(r/255.0f, g/255.0f, b/255.0f);
+	}
+
+	void ResetColor() override
+	{
+		HoverTarget::ResetColor();
+
+		cast<NGUILabel>(target).SetFontColor(font_r_, font_g_, font_b_);
+	}
+};
+
+class HoverTargetImage : HoverTargetLabel
+{
+	HoverTargetImage(NGUILabel@ target)
+	{
+		super(target);
+	}
+
+	void SetColor(float r, float g, float b) override
+	{
+		cast<NGUILabel>(target).SetFontColor(r/255.0f, g/255.0f, b/255.0f);
+	}
+
+	void ResetColor() override
+	{
+		cast<NGUILabel>(target).SetFontColor(font_r_, font_g_, font_b_);
+	}
+};
+
+class HoverTargetRich : HoverTarget
+{
+	HoverTargetRich(NGUILabelRich@ target)
+	{
+		super(cast<NGUIWidget>(target));
+	}
+
+	void InitColor() override
+	{
+		if (inited_)
+		{
+			return;
+		}
+
+		HoverTarget::InitColor();
+
+		cast<NGUILabelRich>(target).GetFontColor(font_r_, font_g_, font_b_);
+	}
+
+	void SetColor(float r, float g, float b) override
+	{
+		HoverTarget::SetColor(r, g, b);
+
+		cast<NGUILabelRich>(target).SetFontColor(r/255.0f, g/255.0f, b/255.0f);
+	}
+
+	void ResetColor() override
+	{
+		HoverTarget::ResetColor();
+
+		cast<NGUILabelRich>(target).SetFontColor(font_r_, font_g_, font_b_);
+	}
+};
+
+class HoverEffect : IHoverListener
+{
+	bool enable_style = true;
+
+	array<HoverTarget@> targets;
+
+	void SetColor(float r, float g, float b)
+	{
+		for (int i = 0, size = targets.length(); i < size; ++i)
+		{
+			targets[i].SetColor(r, g, b);
+		}
+	}
+
+	void InitColor()
+	{
+		for (int i = 0, size = targets.length(); i < size; ++i)
+		{
+			targets[i].InitColor();
+		}
+	}
+
+	void ApplyStyle()
+	{
+		if (!enable_style)
+		{
+			return;
+		}
+
+		for (int i = 0, size = targets.length(); i < size; ++i)
+		{
+			view.style.Apply(targets[i].target, kStyleHoverOut);
+		}
+	}
+
+	void Add(NGUILabel@ target, bool image = false)
+	{
+		HoverTarget@ hover_target;
+
+		if (image)
+		{
+			@hover_target = HoverTargetImage(target);
+		}
+		else
+		{
+			@hover_target = HoverTargetLabel(target);
+		}
+
+		targets.insertLast(hover_target);
+		
+		HoverOut(hover_target);
+	}
+
+	void Add(NGUILabelRich@ target)
+	{
+		HoverTargetRich hover_target(target);
+
+		targets.insertLast(hover_target);
+		
+		HoverOut(hover_target);
+	}
+
+	void OnHover(NGUIButton@ button, bool hover)
+	{
+		HoverTarget@ target;
+		for (int i = 0, size = targets.length(); i < size; ++i)
+		{
+			@target = targets[i];
+			target.InitColor();
+
+			if (hover)
+			{
+				if (target.IsVisible() && target.alpha > 0.0f)
+				{
+					HoverIn(target);
+				}
+			}
+			else
+			{
+				if (target.IsVisible() && target.alpha > 0.0f)
+				{
+					HoverOut(target);
+				}
+			}
+		}
+	}
+
+	void OnHover(NGUIButtonInstances@ button, bool hover, int index)
+	{
+	}
+
+	void HoverIn(HoverTarget@ target)
+	{
+		target.SetColor(255, 255, 255);
+		target.alpha = 1.0f;
+
+		if (enable_style)
+		{
+			view.style.Apply(target.target, kStyleHoverIn);
+		}
+	}
+
+	void HoverOut(HoverTarget@ target)
+	{
+		target.SetColor(224, 224, 224);
+		target.alpha = 0.75f;
+
+		if (enable_style)
+		{
+			view.style.Apply(target.target, kStyleHoverOut);
+		}
+	}
+};
+
+interface ICallbackHolder
+{
+	void Exec();
+};
+
+class ClickCallbackHolder : ICallbackHolder
+{
+	ClickCallback@ callback;
+
+	void Exec() override
+	{
+		callback();
+	}
+};
+
+class ClickObjectCallbackHolder : ICallbackHolder
+{
+	AppNowObject@ object;
+	ClickObjectCallback@ callback;
+
+	void Exec() override
+	{
+		callback(object);
+	}
+};
+
+class ClickSymbolCallbackHolder : ICallbackHolder
+{
+	Symbol@ symbol;
+	ClickSymbolCallback@ callback;
+
+	void Exec() override
+	{
+		callback(symbol);
+	}
+};
+
+class ClickIndexCallbackHolder : ICallbackHolder
+{
+	int index = 0;
+	ClickIndexCallback@ callback;
+
+	void Exec() override
+	{
+		callback(index);
+	}
+};
+
+class BaseController
+{
+	private bool first_run_ = true;
+
+	private array<Event> events_;
+	private int events_count_ = 0;
+
+	private bool drag_ = false;
+
+	private float drag_x_ = 0.0f;
+	private float drag_y_ = 0.0f;
+
+	private float swipe_dt_ = 0.2f;
+	private float drag_dt_ = 0.0f;
+
+	private DragDirection drag_dir_ = kDragUnknown;
+
+	protected PopupCallback@ popup_callback_;
+
+	private EventTracker event_tracker_;
+
+	private array<NGUIButton@> manual_check_for_click_;
+
+	private dictionary click_callbacks;
+	private dictionary hover_callbacks;
+
+	BaseController()
+	{
+	}
+
+	void Init()
+	{
+		InitLocale();
+		
+		DoCreateModelView();
+
+		view.style.Init(kEmpty);
+
+		screens::Init();
+
+		model.Init();
+		view.Init();
+
+		core.Mobile.SetOnPauseCallback(::OnPause);
+		core.Mobile.SetOnResumeCallback(::OnResume);
+		core.Mobile.SetPushListener(OnPushClick);
+
+		event_tracker_.Track("app_load");
+	}
+
+	void InitLocale()
+	{
+		locale.LoadData("AppNow/Click/projects/SigalApp/data/locale.json");
+	}
+
+	void DoCreateModelView()
+	{
+		@model = BaseModel();
+		@view = BaseView();
+	}
+
+	private bool process_my_info_event_ = false;
+
+	private bool show_demo_popup_ = true;
+	private float demo_timeout = 60.0f;
+
+	private float eula_timeout = 0.8f;
+
+	void ProcessEvent(Event@ event)
+	{
+		event.Trace();
+		event_tracker_.Track(event);
+	}
+
+	private bool any_drag_ = false;
+	private bool any_double_click_ = false;
+
+	private float any_drag_sx_ = 0.0f;
+	private float any_drag_sy_ = 0.0f;
+
+	private float any_swipe_dt_ = 0.2f;
+	private float any_drag_dt_ = 0.0f;
+	private float any_double_tap_dt_ = 10.0f;
+
+	private DragDirection any_drag_dir_ = kDragUnknown;
+
+	DragDirection GetDragDirection()
+	{
+		return any_drag_ ? any_drag_dir_ : kDragUnknown;
+	}
+
+	float GetDragTime(bool any)
+	{
+		return any ? any_drag_dt_ : drag_dt_;
+	}
+
+	bool IsDrag(bool any)
+	{
+		return any ? any_drag_ : drag_;
+	}
+
+	HoverEffect@ CreateHoverEffect()
+	{
+		return HoverEffect();
+	}
+
+	void UpdateDragStart()
+	{
+		any_drag_dt_ = 0.0f;
+		any_drag_sx_ = core.Controls.GetTouchX(0) * kScreenToRef;
+		any_drag_sy_ = core.Controls.GetTouchY(0) * kScreenToRef;
+
+		if (any_double_tap_dt_ <= 0.5f)
+		{
+			any_double_click_ = true;
+		}
+
+		any_double_tap_dt_ = 0.0f;
+	}
+
+	void Update(float dt)
+	{
+		main_queue.Update(dt);
+		extra_queue.Update(dt);
+
+		if (core.Controls.IsBackPressed())
+		{
+		 	view.ShowPopup(true, kPopupOKCancel, kEmpty, "Are you sure you want to exit the application?", kOK, "Yes", "No", PopupCallback(this.OnClickPopupExit));
+		}
+
+		if (NoInternet() && core.Controls.IsShowSoftKeyboard())
+		{
+			core.Controls.HideSoftKeyboard();
+		}
+
+		const float touch_y = core.Controls.GetTouchY(0) * kScreenToRef;
+
+		if (current_edit_ !is null && !any_drag_ && core.Controls.CheckTouch(0, alias_active) && touch_y < (kScreenHeight - view.GetSoftKeyboardHeight()) && view.CanCloseKeyboard())
+		{	
+			CloseKeyboard();
+		}
+
+		if (core.Controls.CheckTouch(0, alias_active))
+		{
+			if (any_drag_)
+			{
+				const float dx = core.Controls.GetTouchX(0) * kScreenToRef - any_drag_sx_;
+				const float dy = core.Controls.GetTouchY(0) * kScreenToRef - any_drag_sy_;
+
+				any_drag_dt_ += dt;
+				if (any_drag_dir_ == kDragUnknown)
+				{
+					if (dx != 0.0f && (abs(dx) >= 2.0f || abs(dy) >= 2.0f))
+					{
+						if (abs(dy / dx) < 1.0f)
+						{
+							any_drag_dir_ = kDragHorz;
+						}
+						else
+						{	
+							any_drag_dir_ = kDragVert;
+						}
+					}
+				}
+				else
+				{
+					OnDrag(dx, dy, any_drag_dir_);
+				}
+			}
+			else
+			{
+				any_drag_ = true;
+				any_drag_dir_ = kDragUnknown;
+
+				UpdateDragStart();
+
+				OnStartDrag(any_drag_sx_, any_drag_sy_);
+			}
+		}
+		else
+		{
+			if (any_double_tap_dt_ < 10.0f)
+			{
+				any_double_tap_dt_ += dt;
+			}
+
+			if (any_drag_)
+			{
+				any_drag_ = false;
+
+				SwipeDirection dir = kSwipeUnknown;
+
+				const float stop_x = core.Controls.GetTouchX(0) * kScreenToRef;
+				const float stop_y = core.Controls.GetTouchY(0) * kScreenToRef;
+
+				if (any_drag_dt_ <= any_swipe_dt_ && any_swipe_dt_ > 0.0f)
+				{
+					const float dx = stop_x - any_drag_sx_;
+					const float dy = stop_y - any_drag_sy_;
+
+					const float swipe_vel = len(dx, dy) / any_swipe_dt_;
+
+					if (dx != 0.0f && swipe_vel > 400.0f && (abs(dx) >= 2.0f || abs(dy) >= 2.0f))
+					{
+						if (abs(dy / dx) < 1.0f)
+						{
+							if (dx < 0.0f)
+							{
+								dir = kSwipeLeft;
+							}
+							else
+							{
+								dir = kSwipeRight;
+							}
+						}
+						else
+						{	
+							if (dy < 0.0f)
+							{
+								dir = kSwipeUp;
+							}
+							else
+							{
+								dir = kSwipeDown;
+							}
+						}
+					}
+				}
+
+				if (any_double_click_)
+				{
+					any_double_click_ = false;
+
+					if (any_drag_dir_ == kDragUnknown)
+					{
+						OnDoubleClickButton(any_drag_sx_, any_drag_sy_);
+					}
+				}
+				OnStopDrag(stop_x, stop_y, any_drag_dir_, dir);
+			}
+		}
+
+		if (core.Controls.IsBackPressed() && view.NoActiveEffects())
+		{
+			// const bool processed = ProcessBackButton();
+
+			// if (!processed && view.GetCurrentScreen() !is screens::front)
+			// {
+			// 	view.Back();
+			// }
+			// else
+			// {
+			// 	view.ShowPopup(true, kPopupOKCancel, kEmpty, _("ExipApp"), kOK, _("Yes"), _("No"), PopupCallback(this.OnClickPopupExit));
+			// }
+		}
+
+		for (int i = 0; i < events_count_; ++i)
+		{
+			ProcessEvent(events_[i]);
+			model.ProcessEvent(events_[i]);
+		}
+
+		model.Update(dt);
+
+		for (int i = 0; i < events_count_; ++i)
+		{
+			view.ProcessEvent(events_[i]);
+			for (int j = 0, jsize = event_listeners_.length(); j < jsize; ++j)
+			{
+				event_listeners_[j].Process(events_[i]);
+			}
+		}
+
+		events_count_ = 0;
+
+		view.Update(dt);
+
+		for (int i = 0, size = tasks_.length(); i < size; ++i)
+		{
+			tasks_[i].Update(dt);
+		}
+	}
+	
+	void AddClickCallback(NGUIButton@ button, ClickCallback@ callback)
+	{
+		ClickCallbackHolder holder;
+		@holder.callback = callback;
+
+		AddClickCallback(button, holder);
+	}
+
+	void AddClickCallback(NGUIButton@ button, ClickObjectCallback@ callback, AppNowObject@ object)
+	{
+		ClickObjectCallbackHolder holder;
+		@holder.object = object;
+		@holder.callback = callback;
+
+		AddClickCallback(button, holder);
+	}
+
+	void AddClickCallback(NGUIButton@ button, ClickSymbolCallback@ callback, Symbol@ symbol)
+	{		
+		ClickSymbolCallbackHolder holder;
+		@holder.symbol = symbol;
+		@holder.callback = callback;
+
+		AddClickCallback(button, holder);
+	}
+
+	void AddReturnCallback(NGUIEditBox@ edit, ClickCallback@ callback)
+	{
+		ClickCallbackHolder holder;
+		@holder.callback = callback;
+
+		AddClickCallback(edit, holder);
+	}
+
+	void AddLinkCallback(NGUILabelRich@ label, ClickIndexCallback@ callback)
+	{
+		ClickIndexCallbackHolder holder;
+		@holder.callback = callback;
+
+		AddClickCallback(label, holder);
+	}
+
+	void AddClickCallback(NGUIButtonInstances@ button, ClickIndexCallback@ callback)
+	{
+		ClickIndexCallbackHolder holder;
+		@holder.callback = callback;
+
+		AddClickCallback(button, holder);
+	}
+
+	private int click_id_ = 0;
+
+	private void AddClickCallback(NGUIButton@ wgt, ICallbackHolder@ holder)
+	{
+		string id = kEmpty + (++click_id_);
+		wgt.SetData(id);
+		click_callbacks.set(id, @holder);
+	}
+
+	private void AddClickCallback(NGUIButtonInstances@ wgt, ICallbackHolder@ holder)
+	{
+		string id = kEmpty + (++click_id_);
+		wgt.SetData(id);
+		click_callbacks.set(id, @holder);
+	}
+
+	private void AddClickCallback(NGUILabelRich@ wgt, ICallbackHolder@ holder)
+	{
+		string id = kEmpty + (++click_id_);
+		wgt.SetData(id);
+		click_callbacks.set(id, @holder);
+	}
+
+	private void AddClickCallback(NGUIEditBox@ wgt, ICallbackHolder@ holder)
+	{
+		string id = kEmpty + (++click_id_);
+		wgt.SetData(id);
+		click_callbacks.set(id, @holder);
+	}
+
+	void SetPopupCallback(PopupCallback@ cb)
+	{
+		@popup_callback_ = cb;
+	}
+
+	void PostEvent(int code, AppNowObject@ object = null)
+	{
+		if (events_count_ + 1 >= int(events_.length()))
+		{
+			events_.resize(events_count_ + 16);
+		}
+
+		events_[events_count_].Set(code, object);
+
+		++events_count_;
+	}
+
+	void Track(const string&in event)
+	{
+		event_tracker_.Track(event);
+	}
+
+	void Track(const string&in event, const string&in param, const string&in value)
+	{
+		event_tracker_.Track(event, param, value);
+	}
+
+	void OnClickPopupNetworkError(bool ok)
+	{
+		no_internet_popup_visible_ = false;
+	}
+
+	void OnShare(string&in share_type)
+	{
+		event_tracker_.Track("Share_action", "name", share_type);
+	}
+
+	void OnClickPopupOKButton()
+	{
+		if (popup_callback_ !is null)
+		{
+			popup_callback_(true);
+		}
+
+		view.ShowPopup(false);
+		@popup_callback_ = null;
+
+		view.UpdatePopupCalls();
+	}
+
+	void OnClickPopupCancelButton()
+	{
+		if (popup_callback_ !is null)
+		{
+			popup_callback_(false);
+		}
+
+		view.ShowPopup(false);
+		@popup_callback_ = null;
+
+		view.UpdatePopupCalls();
+	}
+
+	void OnClickPopupExit(bool ok)
+	{
+		if (ok)
+		{
+			core.Exit();
+		}
+	}
+
+	void OnDoubleClickButton(float x, float y)
+	{
+		core.Trace("OnDoubleClickButton");
+	}
+
+	void OnClickButton(NGUIButtonInstances@ button, int index)
+	{
+		if (index >= 0)
+		{
+			string button_id;
+			button.GetData(button_id);
+
+			ICallbackHolder@ callback_holder;
+			if (click_callbacks.get(button_id, @callback_holder))
+			{
+				cast<ClickIndexCallbackHolder>(callback_holder).index = index;
+				callback_holder.Exec();
+			}
+		}
+	}
+	
+	bool OnClickLink(NGUILabelRich@ label, int index = -1)
+	{
+		const int link_idx = index >= 0 ? index : label.CheckLinksId();
+
+		LOG("OnClickLink: "+link_idx);
+
+		if (link_idx >= 0)
+		{
+			string button_id;
+			label.GetData(button_id);
+
+			ICallbackHolder@ callback_holder;
+			if (click_callbacks.get(button_id, @callback_holder))
+			{
+				cast<ClickIndexCallbackHolder>(callback_holder).index = link_idx;
+				callback_holder.Exec();
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	void OnClickButton(NGUIButton@ button)
+	{
+		CloseKeyboard();
+
+		string button_id;
+		button.GetData(button_id);
+
+		ICallbackHolder@ callback_holder;
+		if (click_callbacks.get(button_id, @callback_holder))
+		{
+			callback_holder.Exec();
+		}
+	}
+
+	private bool prev_no_inet_state_ = true;
+	private bool no_internet_popup_visible_ = false;
+
+	bool NoInternet()
+	{
+		if (core.Network.IsInternetConnected())
+		{
+			prev_no_inet_state_ = true;
+			return false;
+		}
+
+		if (prev_no_inet_state_ != core.Network.IsInternetConnected())
+		{
+			prev_no_inet_state_ = core.Network.IsInternetConnected();
+
+			if (!no_internet_popup_visible_)
+			{
+				no_internet_popup_visible_ = true;
+				view.ShowPopup(text: "No internet connection", callback: PopupCallback(this.OnClickPopupNetworkError));
+			}
+		}
+
+		return true;
+	}
+
+	bool IsTouchActive(int index = 0)
+	{
+		return core.Controls.CheckTouch(index, alias_active);
+	}
+
+	bool IsClicked(ref@ wgt)
+	{
+		return IsClicked(core.Controls.GetTouchX(0), core.Controls.GetTouchY(0), wgt);
+	}
+
+	bool IsClicked(NGUIPager@ wgt)
+	{
+		const float click_x = core.Controls.GetTouchX(0);
+		const float click_y = core.Controls.GetTouchY(0);
+
+		return IsClicked(click_x, click_y, wgt);
+	}
+
+	bool IsClicked(NGUIEditBox@ wgt)
+	{
+		const float click_x = core.Controls.GetTouchX(0);
+		const float click_y = core.Controls.GetTouchY(0);
+
+		return IsClicked(click_x, click_y, wgt);
+	}
+
+	bool IsClicked(Symbol@ wgt)
+	{
+		return IsClicked(core.Controls.GetTouchX(0), core.Controls.GetTouchY(0), wgt);
+	}
+
+	bool IsClicked(float click_x, float click_y, ref@ r)
+	{
+		NGUIWidget@ wgt = cast<NGUIWidget>(r);
+
+		click_x *= kScreenToRef;
+		click_y *= kScreenToRef;
+
+		const float x = wgt.GetAbsoluteX();
+		const float y = wgt.GetAbsoluteY();
+		const float w = wgt.width;
+		const float h = wgt.height;
+
+		return (wgt.IsVisible() && wgt.IsActive() && click_x >= x && click_x <= x + w && click_y >= y && click_y <= y + h);
+	}
+
+	bool IsClicked(float click_x, float click_y, NGUIEditBox@ wgt)
+	{
+		click_x *= kScreenToRef;
+		click_y *= kScreenToRef;
+
+		const float x = wgt.GetAbsoluteX();
+		const float y = wgt.GetAbsoluteY();
+		const float w = wgt.width;
+		const float h = wgt.height + wgt.GetExtendedHeight();
+
+		return (wgt.IsVisible() && click_x >= x && click_x <= x + w && click_y >= y && click_y <= y + h);
+	}
+
+	bool IsClicked(float click_x, float click_y, NGUIPager@ wgt)
+	{
+		click_x *= kScreenToRef;
+		click_y *= kScreenToRef;
+
+		const float x = wgt.GetAbsoluteX() - wgt.Border;
+		const float y = wgt.GetAbsoluteY();
+		const float w = wgt.width +  2.0f * wgt.Border;
+		const float h = wgt.height;
+
+		return (wgt.IsVisible() && click_x >= x && click_x <= x + w && click_y >= y && click_y <= y + h);
+	}
+
+	bool IsClicked(float click_x, float click_y, Symbol@ wgt)
+	{
+		return IsClicked(click_x, click_y, wgt.symbol);
+	}
+
+	bool IsAnyButtonHovered(bool auto_click = false)
+	{
+		const float click_x = core.Controls.GetTouchX(0);
+		const float click_y = core.Controls.GetTouchY(0);
+
+		for (int i = 0, size = manual_check_for_click_.length(); i < size; ++i)
+		{
+			if (IsClicked(click_x, click_y, manual_check_for_click_[i]))
+			{
+				if (auto_click)
+				{
+					OnClickButton(manual_check_for_click_[i]);
+				}
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void OnStartDrag(float x, float y)
+	{
+		view.OnStartDrag(x, y);
+
+		for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+		{
+			drag_listeners_[i].OnStartDrag(null, x, y);
+		}
+	}
+
+	void OnDrag(float dx, float dy, DragDirection dir)
+	{
+		view.OnDrag(dx, dy, dir);
+
+		for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+		{
+			drag_listeners_[i].OnDrag(null, dx, dy, dir);
+		}
+	}
+
+	void OnStopDrag(float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir)
+	{
+		view.OnStopDrag(x, y, drag_dir, swipe_dir);
+
+		for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+		{
+			drag_listeners_[i].OnStopDrag(null, x, y, drag_dir, swipe_dir);
+		}
+	}
+
+	void OnStartDrag(NGUIButton@ button)
+	{
+		if (IsAnyButtonHovered())
+		{
+			return;
+		}
+
+		drag_ = true;
+		drag_dir_ = kDragUnknown;
+		drag_dt_ = 0.0f;
+		drag_x_ = core.Controls.GetTouchX(0) * kScreenToRef;
+		drag_y_ = core.Controls.GetTouchY(0) * kScreenToRef;
+
+		view.OnStartDrag(button, drag_x_, drag_y_);
+
+		for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+		{
+			drag_listeners_[i].OnStartDrag(button, drag_x_, drag_y_);
+		}
+	}
+
+	void OnDrag(NGUIButton@ button)
+	{ 
+		if (IsAnyButtonHovered())
+		{
+			return;
+		}
+
+		if (drag_)
+		{
+			const float dx = core.Controls.GetTouchX(0) * kScreenToRef - drag_x_;
+			const float dy = core.Controls.GetTouchY(0) * kScreenToRef - drag_y_;
+
+			drag_dt_ += core.GetDeltaTime();
+
+			if (drag_dir_ == kDragUnknown)
+			{
+				if (dx != 0.0f && (abs(dx) >= 5.0f || abs(dy) >= 5.0f))
+				{
+					if (abs(dy / dx) < 1.0f)
+					{
+						drag_dir_ = kDragHorz;
+					}
+					else
+					{	
+						drag_dir_ = kDragVert;
+					}
+				}
+			}
+			else
+			{
+				view.OnDrag(button, dx, dy, drag_dir_);
+
+				for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+				{
+					drag_listeners_[i].OnDrag(button, dx, dy, drag_dir_);
+				}
+			}
+		}
+	}
+
+	void OnStopDrag(NGUIButton@ button)
+	{
+		if (IsAnyButtonHovered(true))
+		{
+			return;
+		}
+
+		if (drag_)
+		{
+			SwipeDirection dir = kSwipeUnknown;
+
+			const float stop_x = core.Controls.GetTouchX(0) * kScreenToRef;
+			const float stop_y = core.Controls.GetTouchY(0) * kScreenToRef;
+
+			if (drag_dt_ <= swipe_dt_ && swipe_dt_ > 0.0f)
+			{
+				const float dx = stop_x - drag_x_;
+				const float dy = stop_y - drag_y_;
+
+				const float swipe_vel = len(dx, dy) / swipe_dt_;
+
+				if (dx != 0.0f && swipe_vel > 400.0f && (abs(dx) >= 5.0f || abs(dy) >= 5.0f))
+				{
+					if (abs(dy / dx) < 1.0f)
+					{
+						if (dx < 0.0f)
+						{
+							dir = kSwipeLeft;
+						}
+						else
+						{
+							dir = kSwipeRight;
+						}
+					}
+					else
+					{	
+						if (dy < 0.0f)
+						{
+							dir = kSwipeUp;
+						}
+						else
+						{
+							dir = kSwipeDown;
+						}
+					}
+				}
+			}
+
+			view.OnStopDrag(button, stop_x, stop_y, drag_dir_, dir);
+
+			for (int i = 0, size = drag_listeners_.length(); i < size; ++i)
+			{
+				drag_listeners_[i].OnStopDrag(button, stop_x, stop_y, drag_dir_, dir);
+			}
+		}
+
+		drag_ = false;
+	}
+
+	private NGUIEditBox@ current_edit_;
+
+	NGUIEditBox@ GetCurrentEdit()
+	{
+		return current_edit_;
+	}
+
+	void OnEditFocusIn(NGUIEditBox@ edit)
+	{
+		// core.Trace("OnEditFocusIn");
+
+		@current_edit_ = edit;
+
+		view.OnStartEdit(edit);
+	}
+
+	void OnEditReturnKey(NGUIEditBox@ edit)
+	{
+		skip_edit_focus_out_ = true;
+		OnStopEdit(edit, true);
+
+		string button_id;
+		edit.GetData(button_id);
+
+		ICallbackHolder@ callback_holder;
+		if (click_callbacks.get(button_id, @callback_holder))
+		{
+			callback_holder.Exec();
+			return;
+		}
+	}
+
+	void OnEditFocusOut(NGUIEditBox@ edit)
+	{
+		// core.Trace("OnEditFocusOut");
+
+		if (skip_edit_focus_out_)
+		{
+			skip_edit_focus_out_ = false;
+			return;
+		}
+
+		OnStopEdit(edit, false);
+
+		@current_edit_ = null;
+	}
+
+	void OnStopEdit(NGUIEditBox@ edit, bool return_key_pressed)
+	{
+		string str;
+		edit.GetText(str);
+		edit.SetText(kEmpty);
+
+		view.OnStopEdit(edit, str, return_key_pressed);
+	}
+
+	private bool skip_edit_focus_out_ = false;
+
+	void DoneEdit()
+	{
+		// core.Trace("DoneEdit");
+
+		if (current_edit_ !is null)
+		{
+			skip_edit_focus_out_ = true;
+			// current_edit_.SetFocused(false);
+		}
+
+		@current_edit_ = null;
+		CloseKeyboard();
+	}
+
+	void CloseKeyboard(bool force = false)
+	{
+		if (!view.CanCloseKeyboard())
+		{
+			return;
+		}
+
+		if (current_edit_ !is null)
+		{
+			if (force || !any_drag_)
+			{
+				// current_edit_.SetFocused(false);
+			}
+		}
+		else
+		{
+			// core.Controls.HideSoftKeyboard();
+		}
+	}
+
+	private int hover_id_ = 0;
+
+	void AddHoverListener(NGUIButtonInstances@ button, IHoverListener@ listener)
+	{
+		string id = kEmpty + (++hover_id_);
+		button.SetText(id);
+		hover_callbacks.set(id, @listener);
+	}
+
+	void AddHoverListener(NGUIButton@ button, IHoverListener@ listener)
+	{
+		string id = kEmpty + (++hover_id_);
+		button.SetText(id);
+		hover_callbacks.set(id, @listener);
+	}
+
+	void OnHoverIn(NGUIButton@ button)
+	{
+		string id;
+		button.GetText(id);
+
+		IHoverListener@ listener;
+		if (hover_callbacks.get(id, @listener) && listener !is null)
+		{
+			listener.OnHover(button, true);
+		}
+	}
+
+	void OnHoverOut(NGUIButton@ button)
+	{
+		string id;
+		button.GetText(id);
+
+		IHoverListener@ listener;
+		if (hover_callbacks.get(id, @listener) && listener !is null)
+		{
+			listener.OnHover(button, false);
+		}
+	}
+
+	void OnHoverIn(NGUIButtonInstances@ button, int index)
+	{
+		string id;
+		button.GetText(id);
+
+		IHoverListener@ listener;
+		if (hover_callbacks.get(id, @listener) && listener !is null)
+		{
+			listener.OnHover(button, true, index);
+		}
+	}
+
+	void OnHoverOut(NGUIButtonInstances@ button, int index)
+	{
+		string id;
+		button.GetText(id);
+
+		IHoverListener@ listener;
+		if (hover_callbacks.get(id, @listener) && listener !is null)
+		{
+			listener.OnHover(button, false, index);
+		}
+	}
+
+	void OnResume()
+	{
+		event_tracker_.Track("app_load");
+	}
+
+	void OnPause()
+	{
+		event_tracker_.Track("app_exit");
+	}
+
+	void OnStartRefresh(NGUIScroller@ scroller, int type)
+	{
+		if (scroller is screens::news.scroller && type == 1)
+		{
+			screens::news.StartPullToGo();
+		}
+		else if (scroller is screens::philantropy.scroller && type == 1)
+		{
+			screens::philantropy.StartPullToGo();
+		}
+		else if (scroller is screens::biography.scroller && type == 1)
+		{
+			screens::biography.StartPullToGo();
+		}
+		else if (scroller is screens::events_and_news.scroller && type == 1)
+		{
+			screens::events_and_news.StartPullToGo();
+		}
+		else if (scroller is screens::events_and_news.scroller && type == 0)
+		{
+			screens::events_and_news.StartRefresh();
+		}
+		else if (scroller is screens::music.scroller && type == 1)
+		{
+			screens::music.StartPullToGo();
+		}
+	}
+
+	void OnRubberStop(NGUIScroller@ scroller)
+	{
+		if (scroller is screens::news.scroller)
+		{
+			screens::news.RunPullToGo();
+		}
+		else if (scroller is screens::philantropy.scroller)
+		{
+			screens::philantropy.RunPullToGo();
+		}
+		else if (scroller is screens::biography.scroller)
+		{
+			screens::biography.RunPullToGo();
+		}
+		else if (scroller is screens::events_and_news.scroller)
+		{
+			screens::events_and_news.RunPullToGo();
+		}
+		else if (scroller is screens::music.scroller)
+		{
+			screens::music.RunPullToGo();
+		}
+	}
+
+	private array<IDragListener@> drag_listeners_;
+	private array<IEventListener@> event_listeners_;
+	private array<ITask@> tasks_;
+
+	void AddDragListener(IDragListener@ listener)
+	{
+		drag_listeners_.insertLast(listener);
+	}
+
+	void AddEventListener(IEventListener@ listener)
+	{
+		event_listeners_.insertLast(listener);
+	}
+
+	void AddTask(ITask@ task)
+	{
+		tasks_.insertLast(task);
+	}
+
+	bool ProcessBackButton()
+	{
+		return false;
+	}
+};
+
+BaseController@ controller;
+
+//===============================================================
+//
+//								COMMON
+//
+//===============================================================
+
+void OnClickButton(NGUIButton@ button)
+{
+	if (controller is null) return;
+	controller.OnClickButton(button);
+}
+
+void OnClickButton(NGUIButtonInstances@ button, int index)
+{
+	LOG("OnClickButton: "+index);
+
+	if (controller is null) return;
+	controller.OnClickButton(button, index);
+}
+
+void OnStartDrag(NGUIButton@ button)
+{
+	if (controller is null) return;
+	controller.OnStartDrag(button);
+}
+
+void OnDrag(NGUIButton@ button, float x, float y)
+{
+	if (controller is null) return;
+	controller.OnDrag(button);
+}
+
+void OnStopDrag(NGUIButton@ button)
+{
+	if (controller is null) return;
+	controller.OnStopDrag(button);
+}
+
+void OnShare(string&in share_type)
+{
+	if (controller is null) return;
+	controller.OnShare(share_type);
+}
+
+void OnEditFocusIn(NGUIEditBox@ edit)
+{
+	if (controller is null) return;
+	controller.OnEditFocusIn(edit);
+}
+
+void OnEditReturnKey(NGUIEditBox@ edit)
+{
+	if (controller is null) return;
+	controller.OnEditReturnKey(edit);
+}
+
+void OnEditFocusOut(NGUIEditBox@ edit)
+{
+	if (controller is null) return;
+	controller.OnEditFocusOut(edit);
+}
+
+void OnClickPopupOKButton()
+{
+	if (controller is null) return;
+	controller.OnClickPopupOKButton();
+}
+		
+void OnClickPopupCancelButton()
+{
+	if (controller is null) return;
+	controller.OnClickPopupCancelButton();
+}
+
+void OnHoverIn(NGUIButton@ button)
+{
+	if (controller is null) return;
+	controller.OnHoverIn(button);
+}
+
+void OnHoverOut(NGUIButton@ button)
+{
+	if (controller is null) return;
+	controller.OnHoverOut(button);
+}
+
+void OnHoverIn(NGUIButtonInstances@ button, int index)
+{
+	if (controller is null) return;
+	controller.OnHoverIn(button, index);
+}
+
+void OnHoverOut(NGUIButtonInstances@ button, int index)
+{
+	if (controller is null) return;
+	controller.OnHoverOut(button, index);
+}
+
+void OnResume()
+{
+	core.Trace("*** OnResume");
+
+	if (controller is null) return;
+	controller.OnResume();
+
+	controller.PostEvent(kControllerResume);
+}
+
+void OnPause()
+{
+	core.Trace("*** OnPause");
+
+	if (controller is null) return;
+	controller.OnPause();
+
+	controller.PostEvent(kControllerPause);
+}
+
+void OnPushClick(string&in srt)
+{
+	if (controller is null) return;
+	controller.Track("PushClick");
+}
+
+void OnClickLink(NGUILabelRich@ wgt, int index)
+{
+	if (controller is null) return;
+	controller.OnClickLink(wgt, index);
+}
+
+void OnStartRefresh(NGUIScroller@ scroller, int type)
+{
+	if (controller is null) return;
+	controller.OnStartRefresh(scroller, type);
+}
+
+void OnRubberStop(NGUIScroller@ scroller)
+{
+	if (controller is null) return;
+	controller.OnRubberStop(scroller);
+}

@@ -1,0 +1,340 @@
+enum AppNowCommand
+{
+	kCmdAny,
+	kCmdCount,
+	kCustomCommands
+};
+
+const string kServerUrl = "http://cpdev.appnow.com/core/seagal";
+const string kLastFile = "last_request_response";
+const string kLastFile1 = "last_request_response1";
+const string kReqIndex0 = "?req_index=";
+const string kReqIndex1 = "&req_index=";
+const string kPost = "";
+const string kAnd = "&";
+
+funcdef void NetworkCallback(int, string&in, AppNowObject@);
+
+void ProcessNetworkRequest(RequestQueue@ queue, int fail, string&in file)
+{
+	RequestData@ r = queue.current_request;
+
+	bool try_again = false;
+
+	if (!r.ignore_fail)
+	{
+		if (fail != 0)
+		{
+			if (--r.tries_count >= 0)
+			{
+				try_again = true;
+				queue.TryAgain(r);
+			}
+		}
+	}
+
+	core.TraceTo("AppNow", "Done: " + r.cmd + "; Time: " + (core.Utils.GetSystemTime() - r.start_ts) + "s");
+
+	if (r.callback !is null && !try_again)
+	{
+		r.callback(fail, file, r.object);
+	}
+
+	queue.QueuePop(try_again);
+	queue.QueueContinue();
+}
+
+void OnNetworkRequest(int fail, string&in file)
+{
+	ProcessNetworkRequest(main_queue, fail, file);
+}
+
+void OnNetworkRequest1(int fail, string&in file)
+{
+	ProcessNetworkRequest(extra_queue, fail, file);
+}
+
+const float kRequestTryInterval = 2.0f; // 2 sec
+
+class RequestData
+{
+	bool free = true;
+
+	bool try_again = false;
+	bool ignore_fail = false;
+
+	int tries_count = 3;
+	float next_try_timeout = kRequestTryInterval;
+
+	uint start_ts = 0;
+
+	int cmd = kCmdCount;
+
+	NetworkCallback@ callback;
+	AppNowObject@ object;
+
+	string method; // Fucking Facebook :(
+	string post_data; // Fucking Facebook :(
+	string data;
+};
+
+class RequestQueue
+{
+	private int req_index_ = 0;
+
+	private string common_;
+	private Callback1I1S@ callback_;
+	private string file_;
+
+	private array<RequestData> queue_;
+	private array<RequestData@> try_queue_;
+
+	RequestData@ current_request;
+
+	RequestData@ free_request
+	{
+		get
+		{
+			RequestData@ r;
+
+			for (int i = 0, size = queue_.length(); i < size; ++i)
+			{
+				@r = queue_[i];
+				if (r.free)
+				{
+					return r;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	RequestData@ next_request
+	{
+		get
+		{
+			RequestData@ r;
+
+			for (int i = 0, size = queue_.length(); i < size; ++i)
+			{
+				@r = queue_[i];
+				if (!r.free && !r.try_again)
+				{
+					return r;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	RequestQueue(Callback1I1S@ callback, const string&in file)
+	{
+		@callback_ = callback;
+		file_ = file;
+	}
+
+	void SetCommon(const string&in common)
+	{
+		common_ = common;
+	}
+
+	void TryAgain(RequestData@ r)
+	{
+		if (core.GetCurrentPlatform() == platform_pc)
+		{
+			string cmd;
+			// CmdToString(r, r.cmd, cmd);
+			core.TraceTo("AppNow", "TryAgain: Start Timeout: Cmd:" + cmd + "; Data: " + r.data);
+		}
+
+		r.try_again = true;
+		r.next_try_timeout = kRequestTryInterval;
+		try_queue_.insertLast(r);
+	}
+
+	void Update(float dt)
+	{
+		RequestData@ r;
+		for (int i = 0, size = try_queue_.length(); i < size; ++i)
+		{
+			@r = try_queue_[i];
+
+			r.next_try_timeout -= dt;
+			if (r.next_try_timeout <= 0.0f)
+			{
+				r.try_again = false;
+				r.next_try_timeout = 0.0f;
+
+				if (core.GetCurrentPlatform() == platform_pc)
+				{
+					string cmd;
+					// CmdToString(r, r.cmd, cmd);
+					core.TraceTo("AppNow", "TryAgain: End Timeout: Cmd:" + cmd + "; Data: " + r.data);
+				}
+
+				try_queue_.removeAt(i);
+				--i;
+				--size;
+
+				QueueContinue();
+			}
+		}
+	}
+
+	void Call(int cmd, NetworkCallback@ callback, string&in data, AppNowObject@ object = null, string&in method = kEmpty, string&in post_data = kEmpty)
+	{
+		if (cmd == kCmdCount)
+		{
+			return;
+		}
+
+		Queue(cmd, callback, data, object, method, post_data);
+		QueueContinue();
+	}
+
+	void QueueContinue()
+	{
+		if (current_request !is null)
+		{
+			return;
+		}
+
+		RequestData@ r = next_request;
+
+		if (r is null)
+		{
+			return;
+		}
+
+		@current_request = r;
+		
+		string cmd;
+		// CmdToString(r, r.cmd, cmd);
+
+		// if (config.make_shoots_mode || core.GetCurrentPlatform() == platform_pc)
+		// {
+			core.TraceTo("AppNow", "StartRequest: Cmd:" + cmd + " (" + r.cmd + "); Data: " + r.data);
+		// }
+
+		r.start_ts = core.Utils.GetSystemTime();
+
+		string tmp = kReqIndex0;
+		if (kServerUrl.findFirst('?') >= 0)
+		{
+			tmp = kReqIndex1;
+		}
+		core.Network.StartRequest(kPost, kServerUrl + tmp + (++req_index_), common_ + cmd + (r.data.isEmpty() ? kEmpty : kAnd + r.data), file_, callback_);
+	}
+
+	void QueuePop(bool try_again)
+	{
+		current_request.free = !try_again;
+		if (current_request.free)
+		{
+			current_request.tries_count = 3;
+		}
+		
+		@current_request = null;
+	}
+
+	private void Queue(int cmd, NetworkCallback@ callback, string&in data, AppNowObject@ object, string&in method, string&in post_data)
+	{
+		RequestData@ d = free_request;
+
+		if (d is null)
+		{
+			int idx = queue_.length();
+			queue_.resize(idx + 16);
+
+			@d = queue_[idx];
+		}
+
+		d.free = false;
+
+		d.cmd = cmd;
+		d.method = method;
+		d.post_data = post_data;
+		d.data = data;
+		@d.callback = callback;
+		@d.object = object;
+	}
+};
+
+RequestQueue main_queue(OnNetworkRequest, kLastFile);
+RequestQueue extra_queue(OnNetworkRequest1, kLastFile1);
+
+class AppNowApi
+{
+	private string common_;
+	private RequestQueue@ queue_;
+
+	AppNowApi()
+	{
+		@queue_ = main_queue;
+
+		common_ = "";
+		queue_.SetCommon(common_);
+	}
+
+	void UseExtra()
+	{
+		SetQueue(extra_queue);
+	}
+
+	void SetQueue(RequestQueue@ quque)
+	{
+		@queue_ = quque;
+		queue_.SetCommon(common_);
+	}
+
+	void Reset()
+	{
+		@queue_ = main_queue;
+	}
+
+	void CmdToString(int cmd, string&out str)
+	{
+	}
+
+	void Call(int cmd, NetworkCallback@ callback, string&in data, AppNowObject@ object = null, string&in method = kEmpty, string&in post_data = kEmpty)
+	{
+		queue_.Call(cmd, callback, data, object, method, post_data);
+	}
+
+	void GetData(NetworkCallback@ callback, AppNowObject@ object = null)
+	{
+		dictionary args;
+
+		string deviceid;
+		core.GetDeviceID(deviceid);
+
+		args.set("cmd", "get_data");
+
+		string post;
+		dict2post(args, post);
+
+		Call(kCmdAny, callback, post, object);
+	}
+
+	void GetNews(uint64 since = 0, uint64 until = 0, int count = 0, NetworkCallback@ callback = null, AppNowObject@ object = null)
+	{
+		dictionary args;
+
+		string deviceid;
+		core.GetDeviceID(deviceid);
+
+		args.set("cmd", "get_news");
+		args.set("since", kEmpty+since);
+		args.set("until", kEmpty+until);
+		args.set("count", kEmpty+count);
+
+		string post;
+		dict2post(args, post);
+
+		Call(kCmdAny, callback, post, object);
+	}
+};
+
+AppNowApi api;

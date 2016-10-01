@@ -1,0 +1,1 @@
+0:0.000 - RenderServiceD3D::ApplyVideoMode: 818 x 531

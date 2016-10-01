@@ -1,0 +1,14 @@
+
+attribute vec4 position;
+attribute vec4 normal;
+attribute vec2 tex;
+
+varying vec2 DestinationUV;
+
+uniform mat4 modelViewProj;
+
+void main(void)
+{
+	gl_Position = modelViewProj * position;
+	DestinationUV = tex;
+}

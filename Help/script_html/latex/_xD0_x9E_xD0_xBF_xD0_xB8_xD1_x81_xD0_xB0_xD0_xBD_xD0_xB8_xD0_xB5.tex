@@ -1,0 +1,48 @@
+Форматирование текста поддерживается виджетом \hyperlink{class_n_g_u_i_label_rich}{N\+G\+U\+I\+Label\+Rich} скриптовой функцией Set\+Text.~\newline
+ \begin{DoxyItemize}
+\item Данный формат основан на добовление в текст тэгов.~\newline
+ \item Упровляющие символы \char`\"{}\# \{ \}\char`\"{}. ~\newline
+ \item Для отображения данных символов в текст нужно записать \char`\"{}\textbackslash{}\# \textbackslash{}\{ \textbackslash{}\}\char`\"{}. ~\newline
+ \item Тэги начинаются с сивола \# и заканчивается разделителем пробелом. ~\newline
+ ~\newline
+ Пример\+:~\newline
+ skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#fonttbl\{\#fn\{dejavu serif\}\#fi\#sh\#r200\#g200\#b200\}\#colortbl\{\#r0\#g0\#b0;\#r255\#g0\#b0;\#g255\} \#tab2\#fi\#g255 sdg\#fi0 Abc\#f0 Abcsdg \#b255\#lnk\{test1\} yhe wrt eut \#lnk0\#clr1\#fz26 F\+T\+Y \#alg\+C R\+V\+W fghr \#alg\+L\#fz20 juhdsf \#scl2 sdufyh \#scl1\#alg\+R ewu   dgh \#ln iurtg rh rfr4\char`\"{});~\newline
+~\newline
+ Список тэгов\+: ~\newline
+ \item \#tab -\/ Вставляет пробелы в текст, по умолчанию вставляется 4 пробела. Кол-\/во пробелов можно указать цифрой после имени тэга \#tab2~\newline
+ \item \#ln -\/ Переход на новую строчку.~\newline
+ \item \#algL -\/ Выравнивание текста Align left Aвтоматически переводит на новую строчкку~\newline
+ \item \#algR -\/ Выравнивание текста Align right Aвтоматически переводит на новую строчкку~\newline
+ \item \#algC -\/ Выравнивание текста Align center Aвтоматически переводит на новую строчкку~\newline
+ \item \#r \#b \#g \#a-\/ Задают цвет и прозоачность текста. ~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#r255 A\+B\+C\#g255 D\+E\+F\char`\"{}); Tекст A\+BC -\/ рисуется зеленым, текст D\+EF рисуется зеленым.~\newline
+ \item \#sh -\/ Включение отрисовки тени текста~\newline
+ \item \#sh0 -\/ Выключение отрисовки тени текста~\newline
+ \item \#shr \#shb \#shg \#sha-\/ Задают цвет и прозоачность тени текста.~\newline
+ \item \#fn\{имя\} -\/ Установка имени фонта для текста~\newline
+ \item \#fz -\/ Установка высоты фонта текста ~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#fz20 A\+B\+C\#fz26 D\+E\+F\char`\"{});~\newline
+ \item \#fi -\/ Включение режима italic для фонта ~\newline
+ \item \#fi0 -\/ Выключение режима italic для фонта ~\newline
+ \item \#fb -\/ Включение режима bold для фонта ~\newline
+ \item \#fb0 -\/ Выключение режима bold для фонта ~\newline
+ \item \#gap -\/ Установка межстрочного интервала для фонта. ~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#gap0.\+2 A\+B\+C\#gap0.\+9 D\+E\+F\char`\"{});~\newline
+ \item \#lnk\{имя\} -\/ Начинает кликабельную зону текста. В скобка имя функции которая будет вызываться при клике по тексту.~\newline
+ \item \#lnk\{имя,index\} -\/ Начинает кликабельную зону текста. В скобка имя функции которая будет вызываться при клике по тексту и параметр для этой функци , типа int .~\newline
+ \item \#lnk0 -\/ Заканчивает кликабельную зону текста.~\newline
+~\newline
+ Список специальных тэгов\+: ~\newline
+ \item \#colortbl\{...\} -\/ Задает таблицу цветов. Каждый цвет разделяется символом ;~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#colortbl\{\#r255;\#g255\}\char`\"{});~\newline
+ \item \#clr -\/ Устанавливает табличный цвет текст. Индексация в таблице начинается с 0.~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#clr0 A\+B\+C\#clr1 D\+E\+F\char`\"{});~\newline
+ \item \#shclr -\/ Устанавливает табличный цвет тени текст. Индексация в таблице начинается с 0.~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#shclr0 A\+B\+C\#shclr1 D\+E\+F\char`\"{});~\newline
+ \item \#fonttbl\{...\} -\/ Задает таблицу фонтов. Каждый фонт разделяется символом; Внутри символов \{\} можно исполбзовать тэги\+: ~\newline
+ \#fn\{имя\} \#r \#b \#g \#a \#shr \#shb \#shg \#sha \#sh \#fi \#fb \#fz \#gap~\newline
+ Пример\+:~\newline
+ skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text("\#fonttbl\{\#fn\{dejavu serif\}\#fi\#sh\#r200\#g200\#b200;\#fn\{dejavu serif\}\#fi\#fb\#fz30\}~\newline
+ \item \#f -\/ Устанавливает табличный цвет текст. Индексация в таблице начинается с 0. ~\newline
+ Пример\+: skin\+::\+N\+G\+U\+I\+Label\+Rich0.\+Set\+Text(\char`\"{}\#f0 A\+B\+C\#f1 D\+E\+F\char`\"{});~\newline
+\end{DoxyItemize}

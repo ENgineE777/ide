@@ -1,0 +1,19 @@
+I\+DE for mobile applications.
+
+This I\+DE suited for a development of mobile applications. i\+OS and Android are supported as target platform. It is possible to create installation packages (ipa for i\+OS and apk for Android) directly from I\+DE. Angel script was used as programming language of application. Base part of application is a scene. Application may consists from several scenes. For exmaple one scene contain loading screen and another scene contain all application objects and logic. Each scene always have one script file. Logic of scene lies in this script file. Script file may include another script files. All scenes and included script files must be added in project.
+
+All objects added to scene can be accesses from script. For example if scene named Test contain object named Label of type \hyperlink{class_n_g_u_i_label}{N\+G\+U\+I\+Label} than with followed line of code we can change x coordinate\+:
+
+Test\+::\+Label.\+x += 10;
+
+All system function can be accesses from object named core. For example with followed line of code we can Log some message\+:
+
+core.\+Trace(\char`\"{}\char`\"{}Hello world);
+
+All available methods of scene objects and core object listed in help.
+
+For setting entry point function in script file object Script\+Executer must be added to scene. Entry point will execute once or every frame depend on Act\+Once property of Script\+Executer object.
+
+Build contains some sample projects and one full application.
+
+For generating install packages from I\+DE you will need to place valid certificates into folder \textquotesingle{}Bin/cert\textquotesingle{}. Also you will need set certificats name and password in setting.\+ini. For generating apk I\+DE need Java S\+DK to be installed. 

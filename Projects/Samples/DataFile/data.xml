@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<skin>
+<Texture>Games/Gap Monsters/gui/lines.png</Texture>
+  <Elem>
+    <type>1</type>
+    
+    <u>9</u>
+    <v>15</v>
+    
+    <tile>      
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+    <tile>
+      <du>38</du>
+      <dv>4</dv>      
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+  </Elem>
+  <Elem>
+    <type>2</type>
+
+    <u>10</u>
+    <v>23</v>
+
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>20</dv>
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+  </Elem>
+
+  <Elem>
+    <type>1</type>
+
+    <u>25</u>
+    <v>25</v>
+
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+    <tile>
+      <du>18</du>
+      <dv>4</dv>
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+  </Elem>
+  <Elem>
+    <type>2</type>
+
+    <u>19</u>
+    <v>30</v>
+
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>20</dv>
+    </tile>
+    <tile>
+      <du>4</du>
+      <dv>4</dv>
+    </tile>
+  </Elem>
+  <Elem>
+    <type>0</type>
+    
+    <u>30</u>
+    <v>41</v>
+    
+    <tile>      
+      <du>33</du>
+      <dv>16</dv>
+    </tile>
+
+  </Elem>
+
+</skin>

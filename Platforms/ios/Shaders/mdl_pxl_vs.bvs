@@ -1,0 +1,26 @@
+
+attribute vec4 position;
+attribute vec3 normal;
+attribute vec2 tex;
+
+varying vec2 oTex;
+varying vec3 oNormal;
+varying vec3 oLight1;
+
+uniform mat4 modelViewProj;
+uniform mat4 modelMat;
+uniform vec3 lightPos1;
+
+void main(void)
+{
+	gl_Position = modelViewProj * position;
+	oTex = tex;
+	
+	vec4 tmp_nrm = modelMat * vec4(normal, 1); 
+	oNormal = tmp_nrm.xyz;
+	
+	vec4 pos = modelMat * position;
+	
+	vec3 nrm = lightPos1.xyz - pos.xyz;
+	oLight1 = normalize(nrm);
+}

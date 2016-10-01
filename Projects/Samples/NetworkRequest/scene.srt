@@ -1,0 +1,19 @@
+const string kServerUrl = "http://google.com";
+const string kPost = "";
+
+void StartRequest()
+{
+	core.Network.StartRequest(kPost, kServerUrl, "", "res_file", RequestResp1);
+}
+
+void RequestResp1(int res, string&in file_name)
+{
+	if (res ==  0)
+	{
+		core.Trace("succes request1");
+	}
+	else
+	{
+		core.Trace("failed request1");
+	}
+}

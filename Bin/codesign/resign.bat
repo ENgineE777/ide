@@ -1,0 +1,1 @@
+ldid.exe -k../cert/ios -SAN_air.cer:AppleIncRootCertificate.cer:AppleWWDRCA.cer:AN_key.key:123 -C -E -I app/Payload/TheRoom.app/TheRoom

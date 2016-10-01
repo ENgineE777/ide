@@ -1,0 +1,11 @@
+
+attribute vec4 position;
+attribute vec4 color;
+
+varying mediump vec4 dest_color;
+
+void main(void)
+{	
+	gl_Position = position;
+	dest_color = color;    
+}

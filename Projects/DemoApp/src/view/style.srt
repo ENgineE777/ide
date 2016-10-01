@@ -1,0 +1,796 @@
+const string kStyleGlobal = "__GLOBAL__";
+const string kStyleRuleAny = "*";
+const string kStyleStateHoverIn = ":hover-in";
+const string kStyleStateHoverOut = ":hover-out";
+const string kNGUIWidget = "NGUIWidget";
+const string kNGUILabel = "NGUILabel";
+const string kNGUILabelRich = "NGUILabelRich";
+const string kNGUIEditBox = "NGUIEditBox";
+const string kNGUIButton = "NGUIButton";
+const string kNGUISymbolInstance = "NGUISymbolInstance";
+const string kNGUITextDrawer = "NGUITextDrawer";
+const string kNGUICalendar = "NGUICalendar";
+const string kNGUIPager = "NGUIPager";
+
+enum StyleRuleState
+{
+	kStyleAll,
+	kStyleHoverIn,
+	kStyleHoverOut,
+};
+
+enum StyleColorType
+{
+	kColorCommon,
+	kColorFont,
+	kColorCaption,
+	kColorCell,
+	kColorCellSelected,
+	kColorCellDisabled,
+	kColorLine,
+	kColorDateMarked,
+	kColorCursor,
+	kColorPager,
+	kColorFill,
+}
+
+class PaletteColor
+{
+	float r = -1.0f;
+	float g = -1.0f;
+	float b = -1.0f;
+	float a = -1.0f;
+
+	bool IsValid()
+	{
+		return r >= 0.0f && g >= 0.0f && b >= 0.0f;
+	}
+};
+
+class StyleTexture
+{
+	string texture;
+
+	bool IsValid()
+	{
+		return !texture.isEmpty();
+	}
+
+	bool IsURL()
+	{
+		return texture.findFirst("://") >= 0;
+	}
+};
+
+class StyleRule
+{
+	bool any = false;
+	bool complex = false;
+
+	int priority = 0;
+
+	PaletteColor@ color;
+	StyleTexture@ texture;
+
+	StyleRuleState state = kStyleAll;
+	StyleColorType color_mode = kColorCommon;
+
+	string target;
+	string class_name;
+
+	array<string>@ complex_path;
+
+	int opCmp(StyleRule@ rhs)
+	{
+		if (this.priority < rhs.priority) return -1;
+		if (this.priority > rhs.priority) return 1;
+		return 0;
+	}
+
+	bool opEquals(StyleRule@ rhs)
+	{
+		return this.priority == rhs.priority;
+	}
+
+	void Apply(NGUIWidget@ wgt)
+	{
+		string type;
+		wgt.GetType(type);
+
+		if (color_mode == kColorCommon && color !is null && color.IsValid())
+		{
+			wgt.SetColor(color.r, color.g, color.b);
+		}
+
+		if (color !is null && color.a >= 0.0f)
+		{
+			wgt.alpha = color.a;
+		}
+
+		if (type == kNGUILabel)
+		{
+			NGUILabel@ label = cast<NGUILabel>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				if (color_mode == kColorFill)
+				{
+					label.SetFilledColor(color.r, color.g, color.b, color.a > 0.0f ? color.a : 1.0f);
+				}
+				else
+				{
+					label.SetFontColor(color.r, color.g, color.b);
+				}
+			}
+
+			if (texture !is null && texture.IsValid())
+			{
+				if (texture.IsURL())
+				{
+					label.SetTextureURL(texture.texture);
+				}
+				else
+				{
+					label.SetTexture(texture.texture);
+				}
+			}
+		}
+		else if (type == kNGUILabelRich)
+		{
+			NGUILabelRich@ label = cast<NGUILabelRich>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				label.SetFontColor(color.r, color.g, color.b);
+			}			
+		}
+		else if (type == kNGUITextDrawer)
+		{
+			NGUITextDrawer@ label = cast<NGUITextDrawer>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				label.SetFontColor(color.r, color.g, color.b);
+			}	
+		}
+		else if (type == kNGUIEditBox)
+		{
+			NGUIEditBox@ label = cast<NGUIEditBox>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				if (color_mode == kColorCursor)
+				{
+					label.SetCursoColor(color.r, color.g, color.b);
+				}
+				else
+				{
+					label.SetFontColor(color.r, color.g, color.b);
+				}
+			}
+		}
+		else if (type == kNGUICalendar)
+		{
+			NGUICalendar@ label = cast<NGUICalendar>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				if (color_mode == kColorCaption)
+				{
+					label.SetCaptionFontColor(color.r, color.g, color.b);
+				}
+				else if (color_mode == kColorCell)
+				{
+					label.SetCellFontColor(color.r, color.g, color.b);
+				}
+				else if (color_mode == kColorCellSelected)
+				{
+					label.SetCellSelTexColor(color.r, color.g, color.b);
+				}
+				else if (color_mode == kColorCellDisabled)
+				{
+					label.SetCellPrevFontColor(color.r, color.g, color.b);
+				}
+				else if (color_mode == kColorLine)
+				{
+					label.SetLineTexColor(color.r, color.g, color.b);
+				}	
+				else if (color_mode == kColorDateMarked)
+				{
+					label.SetCellSelFontColor(color.r, color.g, color.b);
+				}
+			}
+		}
+		else if (type == kNGUIPager)
+		{
+			NGUIPager@ label = cast<NGUIPager>(wgt);
+
+			if (color !is null && color.IsValid())
+			{
+				if (color_mode == kColorPager)
+				{
+					label.SetDotTexColor(color.r, color.g, color.b);
+				}
+			}
+		}
+	}
+};
+
+class Style
+{
+	dictionary palette;
+	dictionary textures;
+	dictionary class_by_child;
+	dictionary rules_by_name;
+	dictionary rules_exclude_by_name;
+	dictionary global_rules_by_name;
+
+	array<string>@ force_includes;
+
+	void Init(const string&in root_file, array<string>@ force_includes = null)
+	{
+		if (!root_file.isEmpty())
+		{
+			@this.force_includes = force_includes;
+			ReadFile(root_file);
+			@this.force_includes = null;
+
+			ReadFile("template.xml", data_xml, "locale");
+			ReadFile("extra_style.xml", data_xml, "root");
+		}
+	}
+
+	void ReadFile(const string&in file, int data_type = data_json, const string&in root = kEmpty)
+	{
+		ReadRefs(file, 0, data_type, root);
+		ReadRules(file, 0, data_type, root);	
+	}
+
+	private void ReadRefs(const string&in file, int depth = 0, int data_type = data_json, const string&in root = kEmpty)
+	{
+		array<string> incs;
+
+		if (core.DataFile.Start(file, root, data_type))
+		{
+			if (depth == 0 && force_includes !is null)
+			{
+				incs = force_includes;
+			}
+			else
+			{
+				for (; core.DataFile.EnterBlock("include"); core.DataFile.LeaveBlock())
+				{
+					string inc;
+					core.DataFile.Read("path", inc);
+
+					incs.insertLast(inc);
+				}
+			}
+
+			for (; core.DataFile.EnterBlock("textures"); core.DataFile.LeaveBlock())
+			{
+				string key;
+				core.DataFile.Read("key", key);
+
+				StyleTexture@ texture;
+				if (!textures.get(key, @texture))
+				{
+					@texture = StyleTexture();
+					textures.set(key, @texture);
+				}
+
+				core.DataFile.Read("value", texture.texture);
+			}
+
+			for (; core.DataFile.EnterBlock("palette"); core.DataFile.LeaveBlock())
+			{
+				string key;
+				core.DataFile.Read("key", key);
+
+				PaletteColor@ color;
+				if (!palette.get(key, @color))
+				{
+					@color = PaletteColor();
+					palette.set(key, @color);
+				}
+
+				if (core.DataFile.EnterBlock("value"))
+				{
+					core.DataFile.Read("r", color.r);
+					core.DataFile.Read("g", color.g);
+					core.DataFile.Read("b", color.b);
+
+					color.r /= 255.0f;
+					color.g /= 255.0f;
+					color.b /= 255.0f;
+
+					if (!core.DataFile.Read("a", color.a))
+					{
+						color.a = -1.0f;
+					}
+
+					core.DataFile.LeaveBlock(); // value
+				}
+			}
+
+			core.DataFile.Finish();
+		}
+
+		for (int i = 0, size = incs.length(); i < size; ++i)
+		{
+			ReadRefs(incs[i], depth + 1, data_type, root);
+		}
+	}
+
+	private void ReadRules(const string&in file, int depth = 0, int data_type = data_json, const string&in root = kEmpty)
+	{
+		array<string> incs;
+
+		if (core.DataFile.Start(file, root, data_type))
+		{
+			if (depth == 0 && force_includes !is null)
+			{
+				incs = force_includes;
+			}
+			else
+			{
+				for (; core.DataFile.EnterBlock("include"); core.DataFile.LeaveBlock())
+				{
+					string inc;
+					core.DataFile.Read("path", inc);
+
+					incs.insertLast(inc);
+				}
+			}
+
+			for (; core.DataFile.EnterBlock("rules"); core.DataFile.LeaveBlock())
+			{
+				string target;
+				core.DataFile.Read("target", target);
+
+				dictionary@ excludes;
+				if (!rules_exclude_by_name.get(target, @excludes))
+				{
+					@excludes = dictionary();
+					rules_exclude_by_name.set(target, @excludes);
+				}
+
+				for (; core.DataFile.EnterBlock("exclude"); core.DataFile.LeaveBlock())
+				{
+					string exclude;
+					core.DataFile.Read("target", exclude);
+
+					excludes.set(exclude, true);
+				}
+
+				if (excludes.isEmpty())
+				{
+					rules_exclude_by_name.delete(target);
+				}
+
+				array<StyleRule@>@ sub_rules;
+				if (!rules_by_name.get(target, @sub_rules))
+				{
+					@sub_rules = array<StyleRule@>();
+					rules_by_name.set(target, @sub_rules);
+				}
+
+				for (; core.DataFile.EnterBlock("rules"); core.DataFile.LeaveBlock())
+				{
+					StyleRule rule;
+
+					int priority = 0;
+					if (core.DataFile.Read("priority", priority))
+					{
+						rule.priority = priority;
+					}
+					
+					sub_rules.insertLast(rule);
+					sub_rules.sortAsc();
+
+					core.DataFile.Read("target", rule.target);
+
+					string texture_key;
+					if (core.DataFile.Read("texture", texture_key))
+					{
+						textures.get(texture_key, @rule.texture);
+					}
+
+					int pos = 0;
+					if ((pos = rule.target.findFirst(kStyleStateHoverIn)) >= 0)
+					{
+						rule.target = rule.target.substr(0, pos);
+						rule.state = kStyleHoverIn;
+					}
+					else if ((pos = rule.target.findFirst(kStyleStateHoverOut)) >= 0)
+					{
+						rule.target = rule.target.substr(0, pos);
+						rule.state = kStyleHoverOut;
+					}
+
+					rule.any = (rule.target == kStyleRuleAny);
+
+					rule.complex = rule.target.findFirst(".") >= 0;
+					if (rule.complex)
+					{
+						@rule.complex_path = split(rule.target, ".");
+					}
+
+					string color_value;
+					if (core.DataFile.Read("font-color", color_value))
+					{
+						rule.color_mode = kColorFont;
+					}
+					else if (core.DataFile.Read("color", color_value))
+					{
+						rule.color_mode = kColorCommon;
+					}
+					else if (core.DataFile.Read("caption-color", color_value))
+					{
+						rule.color_mode = kColorCaption;
+					}
+					else if (core.DataFile.Read("cell-color", color_value))
+					{
+						rule.color_mode = kColorCell;
+					}
+					else if (core.DataFile.Read("cell-selected-color", color_value))
+					{
+						rule.color_mode = kColorCellSelected;
+					}
+					else if (core.DataFile.Read("cell-disabled-color", color_value))
+					{
+						rule.color_mode = kColorCellDisabled;
+					}
+					else if (core.DataFile.Read("line-color", color_value))
+					{
+						rule.color_mode = kColorLine;
+					}
+					else if (core.DataFile.Read("date-marked", color_value))
+					{
+						rule.color_mode = kColorDateMarked;
+					}
+					else if (core.DataFile.Read("cursor-color", color_value))
+					{
+						rule.color_mode = kColorCursor;
+					}
+					else if (core.DataFile.Read("pager-color", color_value))
+					{
+						rule.color_mode = kColorPager;
+					}
+					else if (core.DataFile.Read("fill-color", color_value))
+					{
+						rule.color_mode = kColorFill;
+					}
+
+					if (!color_value.isEmpty())
+					{
+						palette.get(color_value, @rule.color);
+					}
+				}
+			}
+
+			core.DataFile.Finish();
+
+			core.TraceTo("Style", "*** INITED: "+file+" ***");
+		}
+		else
+		{
+			core.TraceTo("Style", "*** FAILED: "+file+" ***");
+		}
+
+		for (int i = 0, size = incs.length(); i < size; ++i)
+		{
+			ReadRules(incs[i], depth + 1, data_type, root);
+		}
+	}
+
+	bool debug_mode = false;
+
+	void EnableDebug(bool value)
+	{
+		debug_mode = value;
+	}
+
+	void DebugLog(const string&in msg)
+	{
+		if (debug_mode)
+		{
+			core.TraceTo("Style", "*** DEBUG: "+msg);
+		}
+	}
+
+	void ReadChildren(NGUIWidget@ wgt, const string&in set_class_name = kEmpty)
+	{
+		string type;
+		wgt.GetType(type);
+
+		string class_name = set_class_name;
+		if (type == kNGUISymbolInstance && set_class_name.isEmpty())
+		{
+			main::SymbolInstMainScreenSymbol@ instance = cast<main::SymbolInstMainScreenSymbol>(cast<ref>(wgt));
+			instance.GetSymbolName(class_name);
+		}
+		else if (type == kNGUISymbolInstance || class_name.isEmpty())
+		{
+			return;
+		}
+
+		string name;
+		for (int i = 0, size = wgt.GetChildCount(); i < size; ++i)
+		{
+			NGUIWidget@ child = wgt.GetChild(i);
+
+			ReadChildren(child, class_name);
+
+			child.GetName(name);
+			class_by_child.set(name, class_name);
+		}
+	}
+
+	void GetSymbolName(NGUIWidget@ wgt, string&out name)
+	{
+		name = kEmpty;
+
+		string type;
+		wgt.GetType(type);
+
+		if (type == kNGUISymbolInstance)
+		{
+			main::SymbolInstMainScreenSymbol@ instance = cast<main::SymbolInstMainScreenSymbol>(cast<ref>(wgt));
+			instance.GetSymbolName(name);
+		}
+	}
+
+	bool IsExcluded(const string&in class_name, const string&in name)
+	{
+		dictionary@ excludes;
+		return rules_exclude_by_name.get(class_name, @excludes) && excludes.exists(name);
+	}
+
+	StyleRule@ Apply(ref@ trg, StyleRuleState state = kStyleAll)
+	{
+		NGUIWidget@ wgt = cast<NGUIWidget>(trg);
+
+		string type;
+		string wgt_name;
+		wgt.GetType(type);
+
+		string name;
+		if (type == kNGUISymbolInstance)
+		{
+			wgt.GetName(wgt_name);
+
+			// FIXME: NGUISymbolInstance must be in script
+			main::SymbolInstMainScreenSymbol@ instance = cast<main::SymbolInstMainScreenSymbol>(cast<ref>(wgt));
+			instance.GetSymbolName(name);
+		}
+		else
+		{
+			wgt.GetName(name);
+			wgt_name = name;
+		}
+
+		DebugLog("name: "+name);
+
+		dictionary@ excludes;
+		if (!rules_exclude_by_name.get(kNGUILabel, @excludes) || (!excludes.exists(name) && !excludes.exists(wgt_name)))
+		{
+			DebugLog("apply NGUILabel rules");
+			ApplyTypeRules(wgt, kNGUILabel, state);
+		}
+		if (!rules_exclude_by_name.get(kNGUILabelRich, @excludes) || (!excludes.exists(name) && !excludes.exists(wgt_name)))
+		{
+			DebugLog("apply NGUILabelRich rules");
+			ApplyTypeRules(wgt, kNGUILabelRich, state);
+		}
+
+		if (rules_exclude_by_name.get(name, @excludes) && excludes.exists(wgt_name))
+		{
+			DebugLog("rules_exclude_by_name");
+			return null;
+		}
+
+		bool use_wgt = false;
+
+		array<StyleRule@>@ rules;
+		if (!rules_by_name.get(name, @rules))
+		{
+			DebugLog("rules by name '"+name+"' not found");
+
+			string class_name;
+			if (!class_by_child.get(name, class_name))
+			{
+				DebugLog("not found: class_by_child");
+				return null;
+			}
+
+			if (!rules_by_name.get(class_name, @rules))
+			{
+				DebugLog("not found: rules_by_name");
+				return null;
+			}
+
+			use_wgt = true;
+		}
+
+		StyleRule@ rule;
+		StyleRule@ last_rule;
+
+		if (use_wgt)
+		{
+			for (int i = 0, size = rules.length(); i < size; ++i)
+			{
+				@rule = rules[i];
+
+				if ((rule.any || rule.target == name) && rule.state == state)
+				{
+					rule.Apply(wgt);
+					@last_rule = rule;
+				}
+			}
+		}
+		else
+		{
+			DebugLog("rules count: "+rules.length());
+
+			NGUIWidget@ child;
+			for (int i = 0, size = rules.length(); i < size; ++i)
+			{
+				@rule = rules[i];
+
+				if (rule.state != state)
+				{
+					continue;
+				}
+
+				if (rule.any)
+				{
+					DebugLog("apply any rule["+i+"]");
+
+					for (int j = 0, jsize = wgt.GetChildCount(); j < jsize; ++j)
+					{
+						ApplyAnyRule(wgt.GetChild(j), rule, excludes);
+					}
+				}
+				else if (rule.complex)
+				{
+					DebugLog("apply complex rule["+i+"]");
+
+					@child = wgt;
+
+					int k = 0;
+					const int count = rule.complex_path.length();
+
+					do 
+					{
+						@child = FindChild(child, rule.complex_path[k++]);
+					}
+					while (child !is null && k < count);
+
+					if (child !is null)
+					{
+						rule.Apply(child);
+						@last_rule = rule;
+					}
+				}
+				else
+				{
+					if (rule.color !is null && rule.color.IsValid())
+					{
+						DebugLog("apply rule["+i+"][color]: "+rule.target+"; color: ("+rule.color.r+","+rule.color.g+","+rule.color.b+")");
+					}
+					else if (rule.color !is null && rule.color.IsValid() && rule.texture !is null && rule.texture.IsValid())
+					{
+						DebugLog("apply rule["+i+"][color,texture]: "+rule.target+"; color: ("+rule.color.r+","+rule.color.g+","+rule.color.b+"); texture: "+rule.texture.texture);
+					}
+					else
+					{
+						DebugLog("apply rule["+i+"][nothing]: "+rule.target);
+					}
+
+					@child = FindChild(wgt, rule.target);
+					if (child !is null)
+					{
+						rule.Apply(child);
+						@last_rule = rule;
+					}
+				}
+			}
+		}
+
+		return last_rule;
+	}
+
+	private void ApplyAnyRule(ref@ trg, StyleRule@ rule, dictionary@ excludes)
+	{
+		NGUIWidget@ wgt = cast<NGUIWidget>(trg);
+
+		if (excludes !is null)
+		{
+			string name;
+			GetSymbolName(wgt, name);
+
+			if (excludes.exists(name))
+			{
+				return;
+			}
+		}
+
+		rule.Apply(wgt);
+
+		for (int j = 0, jsize = wgt.GetChildCount(); j < jsize; ++j)
+		{
+			ApplyAnyRule(wgt.GetChild(j), rule, excludes);
+		}
+	}
+
+	private void ApplyTypeRules(ref@ trg, const string&in type, StyleRuleState state)
+	{
+		array<StyleRule@>@ type_rules;
+		if (!rules_by_name.get(type, @type_rules))
+		{
+			return;
+		}
+
+		NGUIWidget@ wgt = cast<NGUIWidget>(trg);
+		StyleRule@ rule;
+		NGUIWidget@ child;
+
+		string child_type;
+
+		wgt.GetType(child_type);
+		if (child_type == type)
+		{
+			for (int i = 0, size = type_rules.length(); i < size; ++i)
+			{
+				@rule = type_rules[i];
+
+				if (rule.any && rule.state == state)
+				{
+					rule.Apply(wgt);
+				}
+			}
+		}
+
+		for (int j = 0, jsize = wgt.GetChildCount(); j < jsize; ++j)
+		{
+			@child = wgt.GetChild(j);
+
+			child.GetType(child_type);
+			if (child_type != kNGUISymbolInstance)
+			{
+				ApplyTypeRules(child, type, state);
+			}
+		}
+	}
+};
+
+NGUIWidget@ FindChild(NGUIWidget@ wgt, const string&in name)
+{
+	NGUIWidget@ child = wgt.GetChild(name);
+	if (child !is null)
+	{
+		return child;
+	}
+
+	for (int i = 0, size = wgt.GetChildCount(); i < size; ++i)
+	{
+		NGUIWidget@ src = wgt.GetChild(i);
+
+		string type;
+		src.GetType(type);
+		if (type == kNGUISymbolInstance)
+		{
+			continue;
+		}
+
+		NGUIWidget@ child = FindChild(src, name);
+		if (child !is null)
+		{
+			return child;
+		}
+	}
+
+	return null;
+}
+ 

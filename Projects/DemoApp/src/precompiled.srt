@@ -1,0 +1,95 @@
+#define DEBUG
+
+#ifdef DEBUG
+	#define _CLR view.ClearLog();
+	#define _LOG(msg) view.Log(msg);
+
+	#define _POINT(x,y) view.DebugPoint(x, y);
+	#define _POINT_SMB(wgt,x,y) view.DebugPoint(wgt, x, y);
+	#define _POINT_WGT(wgt,x,y) view.DebugPoint(cast<NGUIWidget>(wgt), x, y);
+
+	#define _RECT(x,y,w,h) view.DebugRect(x, y, w, h);
+	#define _RECT_SMB(wgt,x,y) view.DebugRect(wgt, x, y);
+	#define _RECT_WGT(wgt,x,y) view.DebugRect(cast<NGUIWidget>(wgt), x, y);
+
+	#define _LINE(x1,y1,x2,y2) view.DebugLine(x1, y1, x2, y2);
+	#define _HORZ_RAY(y) view.DebugLine(0.0f, y, kScreenWidth, y);
+	#define _VERT_RAY(x) view.DebugLine(x, 0.0f, x, kScreenHeight);
+
+	#define LOG(msg) core.Trace(msg);
+	#define LOGTO(to,msg) core.TraceTo(to, msg);
+	#define LOGGUI(wgt,msg) {string _n; wgt.GetName(_n); core.Trace("*** "+_n+":"+msg);}
+	#define LOG_WGT(to,wgt,msg) {string _n; wgt.GetName(_n); core.TraceTo(to, "*** "+_n+":"+msg);}
+
+	#define LOG_CALL core.Utils.PrintCallStack();
+#elseif
+	#define _CLR
+	#define _LOG(msg)
+
+	#define _POINT(x,y)
+	#define _POINT_SMB(wgt,x,y)
+	#define _POINT_WGT(wgt,x,y)
+
+	#define _RECT(x,y,w,h)
+	#define _RECT_SMB(wgt,x,y)
+	#define _RECT_WGT(wgt,x,y)
+
+	#define _LINE(x1,y1,x2,y2)
+	#define _VERT_RAY(x)
+	#define _HORZ_RAY(y)
+
+	#define LOG(msg)
+	#define LOGTO(to,msg)
+	#define LOGGUI(wgt,msg)
+	#define LOG_WGT(to,wgt,msg)
+
+	#define LOG_CALL
+#endif
+
+#define INFO(msg) core.Trace(msg);
+#define INFOTO(to,msg) core.TraceTo(to, msg);
+
+#define ERROR(msg) core.TraceTo("Errors", msg);
+
+#define SWAP(x,y) {x = x ^ y; y = x ^ y; x = x ^ y; }
+#define BIND_ARRAY(arr,count,inst,symbol_class) { inst.ResizeInstances(count); for (int i = 0, size = inst.GetInstancesCount(); i < size; ++i) { arr.insertLast(symbol_class( inst.GetInstance(i) )); } }
+#define LOOP(arr) for (int i = 0, size = arr.length(); i < size; ++i)
+#define LOOP1(arr) for (int j = 0, jsize = arr.length(); j < jsize; ++j)
+#define LOOP2(arr) for (int k = 0, ksize = arr.length(); k < ksize; ++k)
+#define LOOP3(arr) for (int m = 0, msize = arr.length(); m < msize; ++m)
+#define ILOOP1(arr) for (int j = arr.length() - 1; j >= 0; --j)
+#define ILOOP2(arr) for (int k = arr.length() - 1; k >= 0; --k)
+#define ILOOP3(arr) for (int m = arr.length() - 1; m >= 0; --m)
+#define LOOP_IDX(arr,idx) for (int idx = 0; idx < arr.length(); ++idx)
+#define ILOOP(arr) for (int i = arr.length() - 1; i >= 0; --i)
+
+#define LOOP_DATA(arr) for (;core.DataFile.EnterBlock(arr); core.DataFile.LeaveBlock())
+#define READ_DATA(k,v) core.DataFile.Read(k,v)
+
+#define READ_STRING(k,v) string v; core.DataFile.Read(k,v);
+#define READ_INT(k,v) int v = 0; if (!core.DataFile.Read(k,v)) { v = 0; };
+#define READ_FLOAT(k,v) float v = 0.0f; if (!core.DataFile.Read(k,v)) { v = 0.0f; };
+#define READ_BOOL(k,v) bool v = false; { string __tmp = 0; if (!core.DataFile.Read(k,__tmp)) { v = false; } else { v = (__tmp == "1"); } };
+
+#define READ_PROP_STRING(k,v) core.DataFile.Read(k,v);
+#define READ_PROP_INT(k,v) if (!core.DataFile.Read(k,v)) { v = 0; };
+#define READ_PROP_FLOAT(k,v) if (!core.DataFile.Read(k,v)) { v = 0.0f; };
+#define READ_PROP_BOOL(k,v) { string __tmp = 0; if (!core.DataFile.Read(k,__tmp)) { v = false; } else { v = (__tmp == "1"); } };
+
+#define STOP {break; core.DataFile.LeaveBlock();}
+
+#define NETWORK_CB(cb) void cb(int fail, string&in file, AppNowObject@ object)
+#define CLICK(btn,cb) controller.AddClickCallback(btn, ClickCallback(cb));
+#define CLICK_INDEX(btn,cb) controller.AddClickCallback(btn, ClickIndexCallback(cb));
+#define CLICK_LINK(btn,cb) controller.AddLinkCallback(btn, ClickIndexCallback(cb));
+#define CLICK_OBJECT(btn,cb,obj) controller.AddClickCallback(btn, ClickObjectCallback(cb), obj);
+#define CLICK_SYMBOL(btn,cb,obj) controller.AddClickCallback(btn, ClickSymbolCallback(cb), obj);
+
+#define TIMEOUT_CB(cb,dt) view.PerformEffectNonBlock(CallbackWithTimeout(EffectCallback(cb), dt));
+
+#define REG_TASK controller.AddTask(this);
+#define REG_EVENT controller.AddEventListener(this);
+#define REG_DRAG controller.AddDragListener(this);
+
+#define ONLY_VISIBLE if (!this.IsVisible()) { return; }
+#define SCREEN_SELF view.GetCurrentScreen() is this

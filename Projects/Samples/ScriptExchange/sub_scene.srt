@@ -1,0 +1,13 @@
+
+#include "imprt"
+
+float delta = 0.0f;
+
+void SubSceneFunc(TestClass&in value)
+{
+	delta += value.dt;
+
+	value.item.fontScale = 1.0f + 0.5f * sin(delta);
+	value.item.width =  512.0f + 256.0f * sin(delta);
+	value.item.height =  512.0f + 256.0f * sin(delta);
+}

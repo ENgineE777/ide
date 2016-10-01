@@ -1,0 +1,13 @@
+
+varying mediump vec2 DestinationUV;
+varying mediump vec2 DestinationUV2;
+uniform sampler2D diffuseMap;
+uniform sampler2D maskMap;
+uniform mediump vec4 color;
+
+void main(void)
+{	
+	gl_FragColor = texture2D(diffuseMap, DestinationUV) * color;
+	gl_FragColor.w *= texture2D (maskMap, DestinationUV2).x;
+}
+

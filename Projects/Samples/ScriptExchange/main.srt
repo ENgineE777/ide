@@ -1,0 +1,23 @@
+
+#include "imprt"
+
+import void SubSceneFunc(TestClass&in value) from "sub_scene";
+
+void Caller(float dt)
+{
+	float progress = core.Scene.GetLoadingProgress("sub_scene");
+
+	if (progress<-0.5f)
+	{
+		core.Scene.LoadScene("sub_scene");
+	}
+	else
+	if (!core.Scene.IsSceneLoading("sub_scene"))
+	{
+		TestClass test;
+		test.dt = dt;
+		@test.item = @main::Label;
+
+		SubSceneFunc(test);
+	}
+}

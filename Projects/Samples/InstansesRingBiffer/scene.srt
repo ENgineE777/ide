@@ -1,0 +1,16 @@
+#include "ItemsListRingBuffer"
+
+ItemsReservListRingBuffer ringbuffer;
+
+bool inited = false;
+int num_items = 50;
+
+void Update(float dt)
+{
+    if (!inited)
+    {
+		ringbuffer.Init(4);    
+    }
+
+	ringbuffer.Update();    
+}

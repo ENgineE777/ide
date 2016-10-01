@@ -1,0 +1,918 @@
+class DataImage : AppNowObject
+{
+	bool video;
+
+	string image;
+	string url;
+};
+
+class DataBlock
+{
+	float height = 0.0f;
+	
+	string text;
+	array<DataImage@> images;
+
+	array<string> urls;
+};
+
+class DataBlockContainer
+{
+	string title;
+
+	array<DataBlock@> blocks;
+};
+
+class DataEvent : AppNowObject
+{
+	int day_idx = 0;
+	int month_idx = 0;
+	int year_idx = 0;
+	int hour = 0;
+	int minute = 0;
+
+	string image;
+	string title;
+	string desc;
+	string day;
+	string month;
+
+	array<DataBlock@> blocks;
+};
+
+enum NewsType
+{
+	kNewsText,
+	kNewsImage,
+	kNewsLink,
+	kNewsVideo,
+};
+
+class DataNews : AppNowObject
+{
+	NewsType type = kNewsText;
+
+	uint date = 0;
+
+	string source;
+
+	string id;
+	string text;
+	string initial_text;
+	string date_str;
+	string image;
+	string link;
+	string share_url;
+
+	array<string> urls;
+
+	array<DataBlock@> blocks;
+
+	bool IsImage()
+	{
+		return !image.isEmpty();
+	}
+
+	bool IsText()
+	{
+		return image.isEmpty();
+	}
+};
+
+class DataSong : AppNowObject
+{
+	string title;
+	string duration;
+	string url;
+};
+
+class DataFilm : AppNowObject
+{
+	string image;
+	string small_image;
+	string title;
+	string duration;
+	string year;
+	string about;
+	string desc;
+
+	array<DataImage@> images;
+
+	string itunes_link;
+	string netflix_link;
+};
+
+class BaseModel
+{
+	array<DataBlockContainer@> philantropy;
+	array<DataBlockContainer@> biography;
+	array<DataEvent@> events;
+	array<DataNews@> news;
+	array<DataSong@> songs;
+	array<DataFilm@> films;
+	array<string> quotes;
+
+	BaseModel()
+	{
+	}
+
+	void Init()
+	{
+		api.GetData(NetworkCallback(this.OnGetData));
+		LoadNews();
+
+		DataBlockContainer@ container;
+		DataBlock@ block;
+		DataImage@ img;
+		DataEvent@ event;
+		DataNews@ page;
+		DataSong@ song;
+		DataFilm@ film;
+
+		// Philantropy
+		// @container = DataBlockContainer();
+		// philantropy.insertLast(container);
+
+		// container.title = "Philantropy";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Some of Steven Seagal’s greatest accomplishments in life are with the charities he supports and has started. Steven is a man who extends his success to various philanthropic causes, including needy children around the world, the environment, animal rights and AIDS projects. His deep love and care for his family and the human race is exemplified in his commitment to do his part to make this a better world. Steven has supported many charities including several environmental causes to protect what he feels is “the world that has been bestowed upon us – natural beauty and gifts from our land”. Steven always makes time for charitable causes, first and foremost, he is a human being with a deep devotion for his fellow man and the environment around us. Please find below in more detail just “some” of Steven’s Humanitarian achievements of which he is deeply proud.";
+
+		// @container = DataBlockContainer();
+		// philantropy.insertLast(container);
+
+		// container.title = "Awards";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Here are just a few awards that Steven has been honoured with over the years:";
+
+		// @container = DataBlockContainer();
+		// philantropy.insertLast(container);
+
+		// container.title = "Activity";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven is also a frequent visitor to many Children’s Homes, Orphanages and Hospitals the world over where he brings gifts and his love to the sick and disadvantaged Children.“My devotion to the children stems directly from my devotion to the Divine,” “The Buddhist philosophy is to put others before ourselves.”Steven helps and supports The ‘Save A Millions Lives Campaign’ a project initiated by the Neko Tech Centre in the Ada region of Ghana. It is primarily a health project that deals with a wide range of issues affecting the community due to the HIV & AIDS epidemic in the region.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.video = true;
+		// img.url = "http://www.youtube.com/watch?v=OxDKVPj11jQ";
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/f5e4c51b6de3d0d09a6f58a0c3b5a990c194f05e.jpeg";
+		// block.images.insertLast(img);
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven visited patients of the Bakulev Cardio-Vascular Surgery Center in Moscow, and attend The International Golden Heart Prize award ceremony for the “Service to the highest ideals of mankind”. May 21, 2006.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/f5e4c51b6de3d0d09a6f58a0c3b5a990c194f05e.jpeg";
+		// block.images.insertLast(img);
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven also put his name to a the campaign “Be Intelligent, Not Violent” initiated by the Bucharest police in Romania.The launch took place at an orphanage and the ten children were invited by Steven to attend the shooting of several scenes from his movie. Steven said his intention was to prove to children that the “fights” in the movies are not real and that violence is always defeated by intelligence.";
+
+		// @img = DataImage();
+		// img.video = true;
+		// img.url = "http://www.youtube.com/watch?v=OxDKVPj11jQ";
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_2377136.jpg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Closer to home Steven was deeply saddened by the after the Hurricane Katrina Disaster and attended various events to raise support and awareness, he attended the Mardi Gras Parades on February 27, 2006, he then decided to come back and make a film at New Orleans and Gulf Coast area.Steven then became a member the Rebuilding New Orleans & LA Community , also getting involved with the local SWAT teams and helping donate $250.000 for a Children’s Hospital in New Orleans with Jefferson Parish Sheriff Harry Lee and Country legend Willie Nelson.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_1001409.jpg";
+		// block.images.insertLast(img);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_435030.jpg";
+		// block.images.insertLast(img);
+
+		// Biography
+		// @container = DataBlockContainer();
+		// biography.insertLast(container);
+
+		// container.title = "Early life";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Some of Steven Seagal’s greatest accomplishments in life are with the charities he supports and has started. Steven is a man who extends his success to various philanthropic causes, including needy children around the world, the environment, animal rights and AIDS projects. His deep love and care for his family and the human race is exemplified in his commitment to do his part to make this a better world. Steven has supported many charities including several environmental causes to protect what he feels is “the world that has been bestowed upon us – natural beauty and gifts from our land”. Steven always makes time for charitable causes, first and foremost, he is a human being with a deep devotion for his fellow man and the environment around us. Please find below in more detail just “some” of Steven’s Humanitarian achievements of which he is deeply proud.";
+
+		// @container = DataBlockContainer();
+		// biography.insertLast(container);
+
+		// container.title = "Martial arts";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Here are just a few awards that Steven has been honoured with over the years:";
+
+		// @container = DataBlockContainer();
+		// biography.insertLast(container);
+
+		// container.title = "Activity";
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven is also a frequent visitor to many Children’s Homes, Orphanages and Hospitals the world over where he brings gifts and his love to the sick and disadvantaged Children.“My devotion to the children stems directly from my devotion to the Divine,” “The Buddhist philosophy is to put others before ourselves.”Steven helps and supports The ‘Save A Millions Lives Campaign’ a project initiated by the Neko Tech Centre in the Ada region of Ghana. It is primarily a health project that deals with a wide range of issues affecting the community due to the HIV & AIDS epidemic in the region.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.video = true;
+		// img.url = "http://www.youtube.com/watch?v=OxDKVPj11jQ";
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/f5e4c51b6de3d0d09a6f58a0c3b5a990c194f05e.jpeg";
+		// block.images.insertLast(img);
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven visited patients of the Bakulev Cardio-Vascular Surgery Center in Moscow, and attend The International Golden Heart Prize award ceremony for the “Service to the highest ideals of mankind”. May 21, 2006.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/f5e4c51b6de3d0d09a6f58a0c3b5a990c194f05e.jpeg";
+		// block.images.insertLast(img);
+		// @img = DataImage();
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Steven also put his name to a the campaign “Be Intelligent, Not Violent” initiated by the Bucharest police in Romania.The launch took place at an orphanage and the ten children were invited by Steven to attend the shooting of several scenes from his movie. Steven said his intention was to prove to children that the “fights” in the movies are not real and that violence is always defeated by intelligence.";
+
+		// @img = DataImage();
+		// img.video = true;
+		// img.url = "http://www.youtube.com/watch?v=OxDKVPj11jQ";
+		// img.image = "http://seagal.appnow.com/uploads/cache/crop_preview/uploads/AppBundle/Entity/Philanthropy/3c5afeef4b6a6673120357b202a941056e0b22b7.jpeg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_2377136.jpg";
+		// block.images.insertLast(img);
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+		// block.text = "Closer to home Steven was deeply saddened by the after the Hurricane Katrina Disaster and attended various events to raise support and awareness, he attended the Mardi Gras Parades on February 27, 2006, he then decided to come back and make a film at New Orleans and Gulf Coast area.Steven then became a member the Rebuilding New Orleans & LA Community , also getting involved with the local SWAT teams and helping donate $250.000 for a Children’s Hospital in New Orleans with Jefferson Parish Sheriff Harry Lee and Country legend Willie Nelson.";
+
+		// @block = DataBlock();
+		// container.blocks.insertLast(block);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_1001409.jpg";
+		// block.images.insertLast(img);
+
+		// @img = DataImage();
+		// img.image = "http://st.kp.yandex.net/images/kadr/sm_435030.jpg";
+		// block.images.insertLast(img);
+
+		// Events
+		// @event = DataEvent();
+		// events.insertLast(event);
+		// event.title = "Tornado 2014";
+		// event.desc = "International Aikido Festival";
+		// event.day = "1";
+		// event.month = "OCT";
+
+		// @event = DataEvent();
+		// events.insertLast(event);
+		// event.title = "Tornado 2015";
+		// event.desc = "International Aikido Festival";
+		// event.day = "2";
+		// event.month = "NOV";
+
+		// @event = DataEvent();
+		// events.insertLast(event);
+		// event.title = "Tornado 2016";
+		// event.desc = "International Aikido Festival";
+		// event.day = "3";
+		// event.month = "DEC";
+
+		// News
+		// @page = DataNews();
+		// news.insertLast(page);
+		// page.text = "Aikido is not merely about fighting and the development of the physical self but the perfection of the spiritual man at";
+		// page.date = 0;
+		// page.source = "facebook";
+
+		// @page = DataNews();
+		// news.insertLast(page);
+		// page.text = "Urgent message from Team Seagal It has come to our attention that a ";
+		// page.date = 0;
+		// page.image = "http://st.kp.yandex.net/images/kadr/sm_1001409.jpg";
+		// page.source = "twitter";
+
+		// @page = DataNews();
+		// news.insertLast(page);
+		// page.text = "Dear Worldwide Seagal Fans Team Seagal is back with some very exciting news. Steven will be staring in a new action movie to be filmed in... ///..Utah, USA hopefully starting in 3-4 we";
+		// page.date = 0;
+		// page.source = "twitter";
+
+		// @page = DataNews();
+		// news.insertLast(page);
+		// page.text = "Photos of Steven";
+		// page.date = 0;
+		// page.image = "http://st.kp.yandex.net/images/kadr/sm_435030.jpg";
+		// page.source = "instagram";
+
+		// LOOP(news)
+		// {
+		// 	FormatDate(news[i].date, news[i].date_str);
+		// }
+
+		// Songs
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Girl It's Alright";
+		song.duration = "3:52";
+		song.url = "https://geo.itunes.apple.com/us/album/girl-its-alright/id881030197?i=881030282&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Don't You Cry";
+		song.duration = "4:59";
+		song.url = "https://geo.itunes.apple.com/us/album/dont-you-cry/id881030197?i=881030287&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Music";
+		song.duration = "4:15";
+		song.url = "https://geo.itunes.apple.com/us/album/music/id881030197?i=881030296&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Better Man";
+		song.duration = "4:29";
+		song.url = "https://geo.itunes.apple.com/us/album/better-man/id881030197?i=881030326&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Route 23";
+		song.duration = "4:32";
+		song.url = "https://geo.itunes.apple.com/us/album/route-23/id881030197?i=881030332&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "My God";
+		song.duration = "3:59";
+		song.url = "https://geo.itunes.apple.com/us/album/my-god-feat.-stevie-wonder/id881030197?i=881030336&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Lollipop";
+		song.duration = "4:36";
+		song.url = "https://geo.itunes.apple.com/us/album/lollipop/id881030197?i=881030340&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Not for Sale";
+		song.duration = "4:58";
+		song.url = "https://itunes.apple.com/ru/album/songs-from-the-crystal-cave/id881768854";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Dance";
+		song.duration = "3:34";
+		song.url = "https://geo.itunes.apple.com/us/album/dance/id881030197?i=881030347&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Jealousy";
+		song.duration = "4:22";
+		song.url = "https://geo.itunes.apple.com/us/album/jealousy/id881030197?i=881030351&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "War";
+		song.duration = "3:47";
+		song.url = "https://geo.itunes.apple.com/us/album/war/id881030197?i=881030363&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Strut";
+		song.duration = "3:06";
+		song.url = "https://geo.itunes.apple.com/us/album/strut/id881030197?i=881030375&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Goree";
+		song.duration = "6:00";
+		song.url = "https://geo.itunes.apple.com/us/album/goree/id881030197?i=881030377&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "The Light";
+		song.duration = "4:55";
+		song.url = "https://geo.itunes.apple.com/us/album/the-light/id881030197?i=881030379&mt=1&app=music";
+
+		@song = DataSong();
+		songs.insertLast(song);
+		song.title = "Red Rooster";
+		song.duration = "3:27";
+		song.url = "https://geo.itunes.apple.com/us/album/red-rooster/id881030197?i=881030382&mt=1&app=music";
+
+		// Films
+		// @film = DataFilm();
+		// films.insertLast(film);
+		// film.title = "The Keeper";
+		// film.year = "2009";
+		// film.duration = "94";
+		// film.image = "https://upload.wikimedia.org/wikipedia/en/b/bd/Poster_of_The_Keeper_(2009_film).jpg";
+		// film.itunes_link = "https://itunes.apple.com/us/movie/the-keeper/id338767478";
+
+		// @film = DataFilm();
+		// films.insertLast(film);
+		// film.title = "Above the law";
+		// film.year = "1988";
+		// film.duration = "99";
+		// film.image = "https://upload.wikimedia.org/wikipedia/en/thumb/a/a1/Abovethelaw.jpg/220px-Abovethelaw.jpg";
+		// film.itunes_link = "https://itunes.apple.com/us/movie/the-keeper/id338767478";
+	}
+
+	void ProcessEvent(Event@ event)
+	{
+	}
+
+	void Update(float dt)
+	{
+	}
+
+	void LoadNews()
+	{
+		api.GetNews(since: news_since, count: 16, callback: NetworkCallback(this.OnGetNews));
+	}
+
+	void ContinueNews()
+	{
+		api.GetNews(until: news_until, count: 16, callback: NetworkCallback(this.OnGetNews));
+	}
+
+	uint64 news_since = 0;
+	uint64 news_until = 0;
+
+	NETWORK_CB(OnGetNews)
+	{
+		if (core.DataFile.Start(file, kEmpty, data_json))
+		{
+			LOOP_DATA("data")
+			{
+				DataNews page;
+
+				core.DataFile.Read("source_id", page.id);
+				core.DataFile.Read("image", page.image);
+				core.DataFile.Read("text", page.text);
+
+				int ival = 0;
+				core.DataFile.Read("timestamp", ival);
+				page.date = ival;
+
+				core.DataFile.Read("source", page.source);
+				core.DataFile.Read("source_url", page.share_url);
+
+				// if (page.source == "facebook")
+				// {
+				// 	page.share_url = "http://facebook.com/"+page.id;
+				// }
+				// else if (page.source == "twitter")
+				// {
+				// 	page.share_url = "http://twitter.com/"+page.id;
+				// }
+				// else if (page.source == "instagram")
+				// {
+				// 	page.share_url = "http://instagram.com/"+page.id;
+				// }
+
+				if (!news.isEmpty() && news[0].date < page.date)
+				{
+					news.insertAt(0, page);	
+				}
+				else
+				{
+					news.insertLast(page);
+				}
+
+				page.initial_text = page.text;
+
+				LOOP_DATA("images")
+				{
+					string type;
+					core.DataFile.Read("type", type);
+
+					core.DataFile.Read("image", page.image);
+
+					if (type == "url")
+					{
+						page.type = kNewsLink;
+						core.DataFile.Read("url", page.link);
+						
+						page.text += "\\n"+page.link;
+					}
+					else if (type == "image")
+					{
+						page.type = kNewsImage;
+					}
+					else if (type == "video")
+					{
+						page.type = kNewsVideo;
+						core.DataFile.Read("url", page.link);
+					}
+				}
+
+				if (page.text.isEmpty() && !page.image.isEmpty())
+				{
+					page.text = "Photos of Steven";
+					page.initial_text = page.text;
+				}
+
+				WrapAllURLs(page.text, page.urls, cut_links: true, r: 182, g: 128, b: 36);
+
+				DataBlock block;
+				page.blocks.insertLast(block);
+
+				block.text = page.text;
+				block.urls = page.urls;
+
+				LOOP_DATA("blocks")
+				{
+					DataBlock@ block;
+
+					@block = DataBlock();
+					core.DataFile.Read("text", block.text);
+
+					if (!block.text.isEmpty())
+					{
+						page.blocks.insertLast(block);
+
+						@block = DataBlock();
+					}
+
+					LOOP_DATA("images")
+					{
+						DataImage img;
+						block.images.insertLast(img);
+						
+						core.DataFile.Read("image", img.image);
+						core.DataFile.Read("url", img.url);
+						img.video = (!img.url.isEmpty());
+					}
+
+					if (!block.images.isEmpty())
+					{
+						page.blocks.insertLast(block);
+					}
+				}
+			}
+
+			news_since = news[0].date;
+			news_until = news[news.length() - 1].date;
+
+			core.DataFile.Finish();
+		}
+
+		LOOP(news)
+		{
+			FormatDate(news[i].date, news[i].date_str);
+		}
+
+		controller.PostEvent(kModelNewsReady);
+	}
+
+	NETWORK_CB(OnGetData)
+	{
+		string data_file = file;
+		if (fail != 0)
+		{
+			data_file = "seagal-data-cache.json";
+		}
+
+		if (core.DataFile.Start(data_file, kEmpty, data_json))
+		{
+			LOOP_DATA("quotes")
+			{
+				string q;
+				core.DataFile.Read("", q);
+				quotes.insertLast(q);
+			}
+
+			LOOP_DATA("biography")
+			{
+				DataBlockContainer container;
+				biography.insertLast(container);
+
+				core.DataFile.Read("title", container.title);
+
+				LOOP_DATA("blocks")
+				{
+					DataBlock@ block;
+
+					@block = DataBlock();
+					core.DataFile.Read("text", block.text);
+
+					if (!block.text.isEmpty())
+					{
+						container.blocks.insertLast(block);
+
+						@block = DataBlock();
+					}
+
+					LOOP_DATA("images")
+					{
+						DataImage img;
+						block.images.insertLast(img);
+						
+						core.DataFile.Read("image", img.image);
+						core.DataFile.Read("url", img.url);
+						img.video = (!img.url.isEmpty());
+					}
+
+					if (!block.images.isEmpty())
+					{
+						container.blocks.insertLast(block);
+					}
+				}
+			}
+
+			LOOP_DATA("philantropy")
+			{
+				DataBlockContainer container;
+				philantropy.insertLast(container);
+
+				core.DataFile.Read("title", container.title);
+
+				LOOP_DATA("blocks")
+				{
+					DataBlock@ block;
+
+					@block = DataBlock();
+					core.DataFile.Read("text", block.text);
+
+					if (!block.text.isEmpty())
+					{
+						container.blocks.insertLast(block);
+
+						@block = DataBlock();
+					}
+
+					LOOP_DATA("images")
+					{
+						DataImage img;
+						block.images.insertLast(img);
+						
+						core.DataFile.Read("image", img.image);
+						core.DataFile.Read("url", img.url);
+						img.video = (!img.url.isEmpty());
+					}
+
+					if (!block.images.isEmpty())
+					{
+						container.blocks.insertLast(block);
+					}
+				}
+			}
+
+			LOOP_DATA("filmography")
+			{
+				DataFilm film;
+				films.insertLast(film);
+
+				core.DataFile.Read("title", film.title);
+				core.DataFile.Read("year", film.year);
+				core.DataFile.Read("duration", film.duration);
+				core.DataFile.Read("image", film.image);
+				core.DataFile.Read("small_image", film.small_image);
+				core.DataFile.Read("itunes_link", film.itunes_link);
+				core.DataFile.Read("netflix_link", film.netflix_link);
+				core.DataFile.Read("about", film.about);
+				core.DataFile.Read("desc", film.desc);
+
+				LOOP_DATA("blocks")
+				{
+					DataImage img;
+					film.images.insertLast(img);
+					
+					core.DataFile.Read("image", img.image);
+					core.DataFile.Read("url", img.url);
+					img.video = (!img.url.isEmpty());
+				}
+			}
+
+			LOOP_DATA("events")
+			{
+				DataEvent event;
+				events.insertLast(event);
+
+				core.DataFile.Read("image", event.image);
+				core.DataFile.Read("title", event.title);
+				core.DataFile.Read("desc", event.desc);
+
+				string date;
+				//2016-01-30T14:40
+				core.DataFile.Read("date", date);
+
+				array<string>@ arr = split(date, "-");
+				if (arr.length() >= 3)
+				{
+					event.day = kEmpty+parseInt(arr[2]);
+					string m;
+					FormatMonth(parseInt(arr[1]), m);
+					event.month = m;
+
+					event.day_idx = parseInt(arr[2]);
+					event.month_idx = parseInt(arr[1]);
+					event.year_idx = parseInt(arr[0]);
+
+					@arr = split(date.substr(date.findFirst('T')+1), ":");
+					if (arr.length() >= 2)
+					{
+						event.hour = parseInt(arr[0]);
+						event.minute = parseInt(arr[1]);
+					}
+				}
+
+				LOOP_DATA("blocks")
+				{
+					DataBlock@ block;
+
+					@block = DataBlock();
+					core.DataFile.Read("text", block.text);
+
+					if (!block.text.isEmpty())
+					{
+						event.blocks.insertLast(block);
+
+						@block = DataBlock();
+					}
+
+					LOOP_DATA("images")
+					{
+						DataImage img;
+						block.images.insertLast(img);
+						
+						core.DataFile.Read("image", img.image);
+						core.DataFile.Read("url", img.url);
+						img.video = (!img.url.isEmpty());
+					}
+
+					if (!block.images.isEmpty())
+					{
+						event.blocks.insertLast(block);
+					}
+				}
+			}
+
+			core.Utils.CopyFile(file, "seagal-data-cache.json");
+			core.DataFile.Finish();
+		}
+
+		controller.PostEvent(kModelReady);
+	}
+
+	void FormatMonth(int month, string&out tm_out)
+	{
+		tm_out = "";
+
+		if (month == 1)
+		{
+			tm_out += _("January");
+		}
+		else if (month == 2)
+		{
+			tm_out += _("February");
+		}
+		else if (month == 3)
+		{
+			tm_out += _("March");
+		}
+		else if (month == 4)
+		{
+			tm_out += _("April"); 
+		}
+		else if (month == 5)
+		{
+			tm_out += _("May");
+		}
+		else if (month == 6)
+		{
+			tm_out += _("June"); 
+		}
+		else if (month == 7)
+		{
+			tm_out += _("July");
+		}
+		else if (month == 8)
+		{
+			tm_out += _("August");
+		}
+		else if (month == 9)
+		{
+			tm_out += _("September");
+		}
+		else if (month == 10)
+		{
+			tm_out += _("October");
+		}
+		else if (month == 11)
+		{
+			tm_out += _("November");
+		}
+		else if (month == 12)
+		{
+			tm_out += _("December");
+		}
+	}
+
+	void FormatDate(uint64 date, string&out tm_out)
+	{
+		const int year = core.Utils.ParseUnixTime(5, date); 
+		const int month = core.Utils.ParseUnixTime(4, date);
+		const int day = core.Utils.ParseUnixTime(3, date);
+
+		const int hour = core.Utils.ParseUnixTime(0, date);
+		const int minute = core.Utils.ParseUnixTime(1, date);
+		const int second = core.Utils.ParseUnixTime(2, date);
+
+		tm_out = day + " ";
+
+		if (month == 1)
+		{
+			tm_out += _("January");
+		}
+		else if (month == 2)
+		{
+			tm_out += _("February");
+		}
+		else if (month == 3)
+		{
+			tm_out += _("March");
+		}
+		else if (month == 4)
+		{
+			tm_out += _("April"); 
+		}
+		else if (month == 5)
+		{
+			tm_out += _("May");
+		}
+		else if (month == 6)
+		{
+			tm_out += _("June"); 
+		}
+		else if (month == 7)
+		{
+			tm_out += _("July");
+		}
+		else if (month == 8)
+		{
+			tm_out += _("August");
+		}
+		else if (month == 9)
+		{
+			tm_out += _("September");
+		}
+		else if (month == 10)
+		{
+			tm_out += _("October");
+		}
+		else if (month == 11)
+		{
+			tm_out += _("November");
+		}
+		else if (month == 12)
+		{
+			tm_out += _("December");
+		}
+		
+		tm_out += " " + formatInt(hour, '0', 2) + ":" + formatInt(minute, '0', 2);
+	}
+};
+
+BaseModel@ model;

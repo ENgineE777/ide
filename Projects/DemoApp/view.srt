@@ -1,0 +1,1491 @@
+#include "effects";
+#include "style";
+
+const string kOK = "OK";
+
+enum DragDirection
+{
+	kDragUnknown,
+	kDragHorz,
+	kDragVert
+}
+
+enum SwipeDirection
+{
+	kSwipeUnknown,
+	kSwipeLeft,
+	kSwipeRight,
+	kSwipeUp,
+	kSwipeDown,
+}
+
+enum BottomMenu
+{
+	kBottomNone,
+	kBottomMain,
+	kBottomButton3,
+	kBottomButton3NoIcons,
+	kBottomButton1,
+	kBottomButton1WithFrame,
+	kBottomButton1WithShare,
+	kBottomButton1WithPlus,
+	kBottomFeed,
+	kBottomDish,
+	kBottomSearch,
+	kBottomCustom,
+};
+
+enum PopupType
+{
+	kPopupOK,
+	kPopupOKCancel,
+	kPopupLogin,
+	kPopupEula,
+};
+
+const string kAvatarDummy = "AppNow/Shop/images/noname.png";
+const string kPreviewDummy = "AppNow/Shop/images/grey_solid.png";
+const string kNoAvatar = "AppNow/Shop/images/main/no_user.png";
+
+const int kMaxSlotCount = 64;
+const int kMaxPageCount = 16;
+const int kPageNextDrawer = kMaxPageCount;
+const int kMaxPreviewPageCount = 32;
+const int kMaxPreviewCount = 32;
+const int kMaxAvatarCount = 16;
+const float kFadeInSpeed = 3.5f;
+const float kCommentsTopBorder = 600.0f;
+
+float kScreenHeight = core.Render.GetReferenceHeight();
+float kScreenWidth = core.Render.GetReferenceWidth();
+float kScreenToRef = kScreenHeight / core.Render.GetHeight();
+float kDesignToRef = kScreenWidth / 640.0f;
+
+enum ColorSchemeElement
+{
+	kColorText,
+	kColorLink,
+	kColorCategory,
+	kColorCategorySelected,
+	kColorCategoryExpanded,
+	kColorCategoryArrow,
+	kColorCategoryArrowExpanded,
+	kColorComments,
+	kColorLikeActive,
+	kColorLikeNonActive,
+	kColorLikeDisabled,
+	kColorPrviewText
+};
+
+enum AppNowObjectType
+{
+	kObjectAny,
+	kObjectPageData,
+	kObjectComment,
+	kObjectConfig,
+	kObjectUser,
+	kObjectIndex,
+	kObjectComboString,
+	kObjectTag,
+	kObjectMenuItem,
+	kObjectReserv,
+	kObjectMap,
+	kObjectOrderData,
+	kObjectReview,
+	kObjectScreen,
+	kObjectLocation,
+	kObjectAction,
+	kObjectChatUser,
+	kObjectChatMessage,
+	kObjectLoyaltyReward,
+	kObjectKaraokeAuthor,
+	kObjectKaraokeSong,
+	kObjectPriceVariant,
+	kObjectShopPriceVariant,
+	kObjectOrderItemHolder,
+};
+
+class AppNowObject
+{
+	AppNowObject()
+	{
+		object_type = kObjectAny;
+	}
+
+	AppNowObject(AppNowObjectType type)
+	{
+		object_type = type;
+	}
+
+	AppNowObjectType object_type;
+};
+
+class ColorScheme
+{
+	void Init() {}	
+};
+
+class DefaultScheme : ColorScheme
+{
+	void Init() override
+	{
+	}	
+};
+
+class LoginMenu
+{
+	Dict@ cfg_;
+
+	LoginMenu(Dict@ cfg = null)
+	{
+		@cfg_ = cfg;
+
+		if (cfg_ is null)
+		{
+			@cfg_ = Dict(null);
+		}
+	}
+
+	void Init()
+	{
+		// const float as = float(main::login_screen.login_bg.GetTextureWidth()) / float(main::login_screen.login_bg.GetTextureHeight());
+
+		// main::login_screen.login_bg.height = kScreenHeight;
+		// main::login_screen.login_bg.width = main::login_screen.login_bg.height * as;
+
+		// view.Clip(main::login_screen.login_bg, kScreenWidth, kScreenHeight);
+
+		// const float width = main::login_screen.login_bg.GetTextureWidth();
+		// const float height = main::login_screen.login_bg.GetTextureHeight();
+
+		// float aspect = width / height;
+
+		// const float trg_w = kScreenWidth;
+		// const float trg_h = kScreenHeight;
+
+		// float screen_h = trg_h;
+		// float screen_w = screen_h * aspect;
+
+		// if (screen_w < trg_w)
+		// {
+		// 	screen_w = trg_w;
+		// 	screen_h = screen_w / aspect;
+		// }
+
+		// const float tex_w = trg_w / screen_w;
+		// const float tex_h = trg_h / screen_h;
+		// const float tex_x = 0.5f * clampf(1.0f - tex_w, 0.0f, 1.0f);
+		// const float tex_y = 0.5f * clampf(1.0f - tex_h, 0.0f, 1.0f);
+
+		// main::login_screen.login_bg.width = trg_w;
+		// main::login_screen.login_bg.height = trg_h;
+
+		// main::login_screen.login_bg.SetTextureUV(tex_x, tex_y, tex_w, tex_h);
+	}
+
+	void Update(float dt)
+	{
+	}
+};
+
+class Spinner
+{
+	private bool drag_ = false;
+	private bool move_ = false;
+	private bool allow_spin_ = true;
+	private bool has_bounds_ = false;
+	private bool auto_scroll_ = false;
+
+	private float pos_ = 0.0f;
+	private float start_pos_ = 0.0f;
+	private float dist_ = 0.0f;
+	private float inertia_ = 0.0f;
+	private float auto_scroll_start_pos_ = 0.0f;
+	private float auto_scroll_pos_ = 0.0f;
+	private float auto_scroll_t_ = 0.0f;
+
+	private float x_ = 0.0f;
+	private float y_ = 0.0f;
+	private float width_ = 0.0f;
+	private float height_ = 0.0f;
+	private float drag_height_ = 0.0f;
+
+	private float start_touch_y_ = 0.0f;
+	private float touch_dt_ = 0.0f;
+
+	private float min_pos_ = -99.0f;
+	private float max_pos_ = -1.0f;
+
+	Spinner(float x, float y, float width, float height)
+	{
+		x_ = x;
+		y_ = y;
+		width_ = width;
+		height_ = 0.35f * height;
+		drag_height_ = height;
+	}
+
+	void Update(float dt)
+	{
+		const float touch_x = core.Controls.GetTouchX(0) * kScreenToRef;
+		const float touch_y = core.Controls.GetTouchY(0) * kScreenToRef;
+
+		if (core.Controls.CheckTouch(0, alias_active) && allow_spin_)
+		{
+			if (!drag_)
+			{
+				if (   touch_x < x_
+					|| touch_x > x_ + width_
+					|| touch_y < y_
+					|| touch_y > y_ + drag_height_)
+				{
+					return;
+				}
+
+				drag_ = true;
+				move_ = false;
+
+				start_touch_y_ = touch_y;
+				start_pos_ = pos_;
+			}
+			else
+			{
+				touch_dt_ += dt;
+			}
+		}
+		else
+		{
+			if (drag_)
+			{
+				move_ = true;
+
+				dist_ = abs(GetTargetPos() - pos_);
+
+				inertia_ = touch_dt_ > 0.0f ? (touch_y - start_touch_y_) / touch_dt_ : 0.0f;
+				touch_dt_ = 0.0f;
+			}
+
+			drag_ = false;
+		}
+
+		if (auto_scroll_)
+		{
+			drag_ = false;
+			move_ = false;
+
+			auto_scroll_t_ += 2.0f * dt;
+			if (auto_scroll_t_ >= 1.0f)
+			{
+				auto_scroll_ = false;
+				auto_scroll_t_ = 1.0f;
+			}
+
+			pos_ = auto_scroll_start_pos_ + auto_scroll_pos_ * core.Utils.CubicEaseInOut(auto_scroll_t_);
+		}
+
+		if (drag_)
+		{
+			pos_ = start_pos_ + (touch_y - start_touch_y_)/height_;
+
+			if (has_bounds_)
+			{
+				if (pos_ > max_pos_)
+				{
+					pos_ = max_pos_;
+				}
+
+				if (pos_ < min_pos_)
+				{
+					pos_ = min_pos_;
+				}
+			}
+		}
+		else if (move_)
+		{
+			if (inertia_ == 0.0f)
+			{
+				const float target = GetTargetPos();
+				const float delta = clampf_abs(15.0f * (target - pos_), 0.5f, 100.0f);
+
+				pos_ += delta * dt;
+				dist_ -= abs(delta) * dt;
+
+				if (dist_ < 0.02f)
+				{
+					move_ = false;
+
+					dist_ = 0.0f;
+					pos_ = target;
+				}
+			}
+			else
+			{
+				const float sgn = inertia_ < 0.0f ? -1.0f : 1.0f;
+				inertia_ -= sgn * 4000.0f * dt;
+
+				pos_ += 0.005f * inertia_ * dt;
+
+				if (abs(inertia_) < 100.0f || (has_bounds_ && (pos_ > 1.6f * max_pos_ || pos_ < 1.1f * min_pos_)))
+				{
+					inertia_ = 0.0f;
+					dist_ = abs(GetTargetPos() - pos_);
+				}
+			}
+		 }
+	}
+
+	void ScrollToPos(float p)
+	{
+		if (auto_scroll_)
+		{
+			return;
+		}
+
+		pos_ = round(pos_);
+
+		auto_scroll_ = true;
+		auto_scroll_t_ = 0.0f;
+		auto_scroll_start_pos_ = pos_;
+		auto_scroll_pos_ = p;
+	}
+
+	private float GetTargetPos()
+	{
+		float res = round(pos_);
+
+		if (has_bounds_)
+		{
+			if (res > max_pos_)
+			{
+				res = max_pos_;
+			}
+
+			if (res < min_pos_)
+			{
+				res = min_pos_;
+			}
+		}
+
+		return res;
+	}
+
+	float pos
+	{
+		get const { return pos_; }
+		set { pos_ = -value; if (drag_) { start_pos_ = pos_; } }
+	}
+
+	bool active
+	{
+		get const { return drag_; }
+	}
+
+	bool allow_spin
+	{
+		get const { return allow_spin_; }
+		set { allow_spin_ = value; }
+	}
+
+	float x
+	{
+		get const { return x_; }
+		set { x_ = value; }
+	}
+
+	float y
+	{
+		get const { return y_; }
+		set { y_ = value; }
+	}
+
+	float width
+	{
+		get const { return width_; }
+		set { width_ = value; }
+	}
+
+	float height
+	{
+		get const { return height_; }
+		set { height_ = value; }
+	}
+
+	float drag_height
+	{
+		get const { return drag_height_; }
+		set { drag_height_ = value; }
+	}
+
+	float min_pos
+	{
+		get const { return -max_pos_; }
+		set { max_pos_ = -value; }
+	}
+
+	float max_pos
+	{
+		get const { return -min_pos_; }
+		set { min_pos_ = -value; }
+	}
+
+	bool boundless
+	{
+		get const { return !has_bounds_; }
+		set { has_bounds_ = !value; }
+	}
+
+	bool auto_scroll
+	{
+		get const { return auto_scroll_; }
+	}
+
+	float auto_scroll_goal
+	{
+		get const { return auto_scroll_start_pos_ + auto_scroll_pos_; }	
+	}
+};
+
+class ScreenStackValue
+{
+	Screen@ screen;
+	AppNowObject@ object;
+
+	ScreenStackValue(Screen@ screen, AppNowObject@ object)
+	{
+		@this.screen = screen;
+		@this.object = object;
+	}
+};
+
+class ScreenStack
+{
+	ScreenStack()
+	{
+		capacity_ = 32;
+		stack_.resize(capacity_);
+	}
+
+	bool IsEmpty()
+	{
+		return top_ < 0;
+	}
+
+	int Count()
+	{
+		return top_ + 1;
+	}
+
+	void Clear()
+	{
+		top_ = -1;
+	}
+
+	void Push(Screen@ menu, AppNowObject@ obj = null)
+	{
+		++top_;
+		
+		if (top_ >= capacity_)
+		{
+			capacity_ += 32;
+			stack_.resize(capacity_);
+		}
+
+		@stack_[top_] = ScreenStackValue(menu, obj);
+	}
+
+	ScreenStackValue@ Pop()
+	{
+		if (top_ < 0)
+		{
+			top_ = -1;
+			return null;
+		}
+
+		return stack_[top_--];
+	}
+
+	private int top_ = -1;
+	private int capacity_ = 32;
+	private array<ScreenStackValue@> stack_;
+};
+
+class Screen : AppNowObject
+{
+	bool in_settings = false;
+
+	int weight = 0;
+
+	ScreenSymbol@ symbol;
+
+	Screen(int weight, ScreenSymbol@ symbol, bool in_settings = false)
+	{
+		super(kObjectScreen);
+
+		@this.symbol = symbol;
+		this.weight = weight;
+		this.in_settings = in_settings;
+	}
+};
+
+class Box
+{
+	float left_margin = 0.0f;
+	float top_margin = 0.0f;
+
+	protected float width_ = 0.0f;
+	protected float height_ = 0.0f;
+
+	float width
+	{
+		get const { return width_; }
+		set
+		{
+			width_ = value;
+
+			if (IsValid())
+			{
+				Adjust();
+			}
+		}
+	};
+
+	float height
+	{
+		get const { return height_; }
+		set
+		{
+			height_ = value;
+			
+			if (IsValid())
+			{
+				Adjust();
+			}
+		}
+	};
+
+	Box()
+	{
+	}
+
+	Box(float x, float y, float w, float h)
+	{
+		left_margin = x;
+		top_margin = y;
+		width_ = w;
+		height_ = h;
+	}
+
+	bool IsValid()
+	{
+		return width_ > 0.0f && height_ > 0.0f; 
+	}
+
+	protected void Adjust() {}
+};
+
+class QuadBox : Box
+{
+	protected void Adjust() override
+	{
+		if (!IsValid())
+		{
+			return;
+		}
+		
+		const float as = width_ / height_;
+		if (abs(1.0f - as) > 0.1f)
+		{
+			// Box is not quad. So make it quad.
+			height_ = width_;
+		}
+	}
+};
+
+class ShowPopupCall
+{
+	PopupType type;
+	string title;
+	string text;
+	string ok_text;
+	string left_text;
+	string right_text;
+
+	PopupCallback@ callback;
+
+	void Exec()
+	{
+		if (type == kPopupOK)
+		{
+			core.Mobile.ShowPopup(title, text, ok_text, OnClickPopupOKButton);
+		}
+		else if (type == kPopupOKCancel)
+		{
+			core.Mobile.ShowPopup(title, text, left_text, OnClickPopupOKButton, right_text, OnClickPopupCancelButton);
+		}
+
+		controller.SetPopupCallback(callback);
+	}
+};
+
+void RGBf(NGUILabel@ wgt, float r, float g, float b)
+{
+	wgt.SetColor(r, g, b);
+	wgt.SetFontColor(r, g, b);
+}
+
+void RGBf(NGUIEditBox@ wgt, float r, float g, float b)
+{
+	wgt.SetFontColor(r, g, b);
+}
+
+void RGBf(NGUITextDrawer@ wgt, float r, float g, float b)
+{
+	wgt.SetFontColor(r, g, b);
+}
+
+void RGBf(NGUIImageDrawer@ wgt, float r, float g, float b)
+{
+	wgt.SetColor(r, g, b);
+}
+
+void RGBf(NGUIImageListDrawer@ wgt, float r, float g, float b)
+{
+	wgt.SetColor(r, g, b);
+}
+
+void RGB(NGUILabel@ wgt, float r, float g, float b)
+{
+	RGBf(wgt, r/255.0f, g/255.0f, b/255.0f);
+}
+
+void RGB(NGUIEditBox@ wgt, float r, float g, float b)
+{
+	RGBf(wgt, r/255.0f, g/255.0f, b/255.0f);
+}
+
+void RGB(NGUITextDrawer@ wgt, float r, float g, float b)
+{
+	RGBf(wgt, r/255.0f, g/255.0f, b/255.0f);
+}
+
+void RGB(NGUIImageDrawer@ wgt, float r, float g, float b)
+{
+	RGBf(wgt, r/255.0f, g/255.0f, b/255.0f);
+}
+
+void RGB(NGUIImageListDrawer@ wgt, float r, float g, float b)
+{
+	RGBf(wgt, r/255.0f, g/255.0f, b/255.0f);
+}
+
+class BaseView
+{
+	private ScreenStack screen_stack_;
+	private ScreenStack forward_screen_stack_;
+
+	Style style;
+
+	BaseView()
+	{
+	}
+
+	void Init()
+	{
+		for (int i = 0, size = screens_.length(); i < size; ++i)
+		{
+			string name;
+			screens_[i].symbol.GetName(name);
+
+			core.Trace("# "+(i + 1)+": "+name);
+		}
+
+		ShowLoader(false, true);
+
+		for (int i = 0, size = screens::symbols.length(); i < size; ++i)
+		{
+			screens::symbols[i].Init();
+		}
+
+		Resize();
+	}
+
+	float screen_width = core.Render.GetWidth();
+	float screen_height = core.Render.GetHeight();
+
+	void Resize()
+	{
+		screen_width = core.Render.GetWidth();
+		screen_height = core.Render.GetHeight();
+
+		kScreenWidth = ceil(kScreenHeight * (core.Render.GetWidth() / core.Render.GetHeight())) + 2.0f;
+		kScreenToRef = kScreenHeight / core.Render.GetHeight();
+		kDesignToRef = kScreenWidth / 640.0f;
+
+		for (int i = 0, size = screens::symbols.length(); i < size; ++i)
+		{
+			screens::symbols[i].Resize();
+		}
+	}
+
+	void Clip(NGUILabel@ label, float trg_w, float trg_h, Box@ box = null, bool allow_vertical = false)
+	{
+		if (label.IsTextureLoading())
+		{
+			return;
+		}
+
+		float tex_x = 0.0f;
+		float tex_y = 0.0f;
+		float tex_w = 0.0f;
+		float tex_h = 0.0f;
+
+		ClipUV(label, trg_w, trg_h, tex_x, tex_y, tex_w, tex_h, box, allow_vertical);
+
+		label.width = trg_w;
+		label.height = trg_h;
+
+		label.SetTextureUV(tex_x, tex_y, tex_w, tex_h);
+	}
+
+	void ClipUV(NGUILabel@ label, float trg_w, float trg_h, float& tex_x, float& tex_y, float& tex_w, float& tex_h, Box@ box = null, bool allow_vertical = false)
+	{
+		const float width = label.GetTextureWidth();
+		const float height = label.GetTextureHeight();
+
+		if (height == 0.0f)
+		{
+			tex_x = 0.0f;
+			tex_y = 0.0f;
+			tex_w = 1.0f;
+			tex_h = 1.0f;
+			
+			return;
+		}
+
+		const float aspect = width / height;
+
+		float screen_h = trg_h;
+		float screen_w = screen_h * aspect;
+
+		if (screen_w < trg_w && !allow_vertical)
+		{
+			screen_w = trg_w;
+			screen_h = screen_w / aspect;
+		}
+
+		tex_x = 0.0f;
+		tex_y = 0.0f;
+		tex_w = clampf(trg_w / screen_w, 0.0f, 1.0f);
+		tex_h = clampf(trg_h / screen_h, 0.0f, 1.0f);
+
+		if (box !is null && box.IsValid())
+		{
+			tex_x = clampf(box.left_margin / width, 0.0f, 1.0f);
+			tex_y = clampf(box.top_margin / height, 0.0f, 1.0f);
+			tex_w = clampf(box.width / width, 0.0f, 1.0f);
+			tex_h = clampf(box.height / height, 0.0f, 1.0f);
+		}
+		else
+		{
+			tex_x = 0.5f * clampf(1.0f - tex_w, 0.0f, 1.0f);
+			tex_y = 0.5f * clampf(1.0f - tex_h, 0.0f, 1.0f);
+		}
+	}
+
+	void ClipUV(NGUIImageListDrawer@ label, int index, float trg_w, float trg_h, float& tex_x, float& tex_y, float& tex_w, float& tex_h, Box@ box = null)
+	{
+		const float width = label.GetTextureWidth(index);
+		const float height = label.GetTextureHeight(index);
+
+		if (height == 0.0f)
+		{
+			tex_x = 0.0f;
+			tex_y = 0.0f;
+			tex_w = 1.0f;
+			tex_h = 1.0f;
+			
+			return;
+		}
+
+		const float aspect = width / height;
+
+		float screen_h = trg_h;
+		float screen_w = screen_h * aspect;
+
+		if (screen_w < trg_w)
+		{
+			screen_w = trg_w;
+			screen_h = screen_w / aspect;
+		}
+
+		tex_x = 0.0f;
+		tex_y = 0.0f;
+		tex_w = trg_w / screen_w;
+		tex_h = trg_h / screen_h;
+
+		if (box !is null && box.IsValid())
+		{
+			tex_x = clampf(box.left_margin / width, 0.0f, 1.0f);
+			tex_y = clampf(box.top_margin / height, 0.0f, 1.0f);
+			tex_w = clampf(box.width / width, 0.0f, 1.0f);
+			tex_h = clampf(box.height / height, 0.0f, 1.0f);
+		}
+		else
+		{
+			tex_x = 0.5f * clampf(1.0f - tex_w, 0.0f, 1.0f);
+			tex_y = 0.5f * clampf(1.0f - tex_h, 0.0f, 1.0f);
+		}
+	}
+
+	void UseTexturePack(const string&in id)
+	{
+	}
+
+	ScreenSymbol@ GetCurrentScreen()
+	{
+		// if (current_screen_ is null)
+		// {
+		// 	@current_screen_ = cast<Screen>(screens::front.object);
+		// }
+
+		return current_screen_.symbol;
+	}
+
+	ScreenSymbol@ GetPrevScreen()
+	{
+		return prev_screen_.symbol;
+	}
+
+	private EffectPrecedence effect_seq;
+	private EffectPrecedence effect_pre;
+	private EffectPrecedence effect_non_block;
+	private EffectLoop effect_loop;
+
+	void StopAllEffects()
+	{
+		effect_pre.Stop();
+		effect_pre.Reset();
+	}
+
+	void PerformEffect(Effect@ effect)
+	{
+		if (effect_pre.done_)
+		{
+			effect_pre.Reset();
+		}
+
+		effect_pre.Append(effect);
+	}
+
+	void PerformEffectSeq(Effect@ effect)
+	{
+		effect_seq.Append(effect);
+	}
+
+	void PerformEffectNonBlock(Effect@ effect)
+	{
+		effect_non_block.Append(effect);
+	}
+
+	void LoopEffect(Effect@ effect)
+	{
+		effect_loop.Append(effect);
+	}
+
+	private bool keyboard_opened_ = false;
+	private bool move_keyboard_in_progress_ = false;
+	private bool keyboard_update_ = false;
+
+	void MoveKeyboardDone()
+	{
+		controller.PostEvent(keyboard_opened_ ? kViewKeyboardOpened : kViewKeyboardClosed);
+
+		move_keyboard_in_progress_ = false;
+	}
+
+	private bool map_visible_ = false;
+	private bool need_init_map_ = true;
+
+	bool NoActiveEffects()
+	{
+		return effect_pre.IsEmpty();
+	}
+
+	bool IsMoveKeyboardInPorgress()
+	{
+		return move_keyboard_in_progress_;
+	}
+
+	private bool need_config = true;
+	private float reload_config_timeout = 1.0f;
+
+	private float keyboard_max_height_ = kInf;
+
+	array<string> debug_log;
+
+	void ClearLog()
+	{
+		debug_log.resize(0);	
+	}
+
+	void Log(int str)
+	{
+		debug_log.insertLast(""+str);
+	}
+	
+	void Log(float str)
+	{
+		debug_log.insertLast(""+str);
+	}
+
+	void Log(const string&in str)
+	{
+		debug_log.insertLast(str);
+	}
+
+	int debug_inst_index = 0;
+
+	void DebugPoint(float x, float y)
+	{
+		DebugLine(x - 5, y, x + 6, y);
+		DebugLine(x, y - 5, x, y + 6);
+	}
+
+	void DebugLine(float x1, float y1, float x2, float y2)
+	{
+		Vector2 p1;
+		p1.x = x1 / kScreenToRef;
+		p1.y = y1 / kScreenToRef;
+
+		Vector2 p2;
+		p2.x = x2 / kScreenToRef;
+		p2.y = y2 / kScreenToRef;
+
+		Vector color1;
+		color1.x = 0.0f;
+		color1.y = 1.0f;
+		color1.z = 0.0f;
+
+		Vector color2;
+		color2.x = 0.0f;
+		color2.y = 1.0f;
+		color2.z = 0.0f;
+
+		core.Render.DrawLine2D(p1, color1, p2, color2);
+	}
+
+	void DebugLine(float x1, float y1, float x2, float y2, float r, float g, float b)
+	{
+		Vector2 p1;
+		p1.x = x1 / kScreenToRef;
+		p1.y = y1 / kScreenToRef;
+
+		Vector2 p2;
+		p2.x = x2 / kScreenToRef;
+		p2.y = y2 / kScreenToRef;
+
+		Vector color1;
+		color1.x = r;
+		color1.y = g;
+		color1.z = b;
+
+		Vector color2;
+		color2.x = r;
+		color2.y = g;
+		color2.z = b;
+
+		core.Render.DrawLine2D(p1, color1, p2, color2);
+	}
+
+	void DebugRect(float x, float y, float w, float h)
+	{
+		DebugLine(x, y, x + w, y);
+		DebugLine(x + w, y, x + w, y + h);
+		DebugLine(x, y + h, x + w, y + h);
+		DebugLine(x, y, x, y + h);
+	}
+
+	void DebugPoint(Symbol@ smb, float x = 0.0f, float y = 0.0f)
+	{
+		DebugPoint(smb.GetAbsoluteX() + x, smb.GetAbsoluteY() + y);
+	}
+
+	void DebugRect(Symbol@ smb, float x = 0.0f, float y = 0.0f)
+	{
+		DebugRect(smb.GetAbsoluteX() + x, smb.GetAbsoluteY() + y, smb.width, smb.height);
+	}
+
+	void DebugPoint(NGUIWidget@ smb, float x = 0.0f, float y = 0.0f)
+	{
+		DebugPoint(smb.GetAbsoluteX() + x, smb.GetAbsoluteY() + y);
+	}
+
+	void DebugRect(NGUIWidget@ smb, float x = 0.0f, float y = 0.0f)
+	{
+		DebugRect(smb.GetAbsoluteX() + x, smb.GetAbsoluteY() + y, smb.width, smb.height);
+	}
+
+	bool lock_keyboard = false;
+
+	void LockKeyboard(bool lock)
+	{
+		lock_keyboard = lock;
+	}
+
+	void UpdateKeyboardMaxHeight(NGUIEditBox@ wgt)
+	{
+		// if (wgt is null)
+		// {
+		// 	keyboard_max_height_ = kInf;
+		// }
+		// else
+		// {
+		// 	const float max_y = screens::top.height + 30.0f;
+		// 	const float y = wgt.GetAbsoluteY() - (keyboard_opened_ ? -screens::main.y : 0.0f) - GetSoftKeyboardHeight();
+
+		// 	if (y < max_y)
+		// 	{
+		// 		keyboard_max_height_ = wgt.GetAbsoluteY() + (keyboard_opened_ ? -screens::main.y : 0.0f) - max_y;
+		// 	}
+		// 	else
+		// 	{
+		// 		keyboard_max_height_ = kInf;
+		// 	}
+
+		// 	if (keyboard_opened_)
+		// 	{
+		// 		keyboard_update_ = true;
+		// 	}
+		// }
+	}
+
+	private float keyboard_height_ = -1.0f;
+	private float prev_keyboard_height_ = -1.0f;
+
+	float GetSoftKeyboardHeight()
+	{
+		if (core.Controls.GetSoftKeyboardHeight() > keyboard_height_)
+		{
+			keyboard_height_ = core.Controls.GetSoftKeyboardHeight();
+		}
+
+		if (lock_keyboard)
+		{
+			return keyboard_height_ > 0.0f ? keyboard_height_ : (400.0f - 126.0f);
+		}
+
+		return core.Controls.IsShowSoftKeyboard() ? core.Controls.GetSoftKeyboardHeight() : 0.0f;
+	}
+
+	bool need_show_demo_content_popup = true;
+
+	void PrintDebug()
+	{
+		for (int i = 0, size = debug_log.length(); i < size; ++i)
+		{
+			core.Render.PrintText(5.0f, i * 30.0f, debug_log[i]);
+		}
+	}
+
+	void Update(float dt)
+	{
+		if (screen_width != core.Render.GetWidth() || screen_height != core.Render.GetHeight())
+		{
+			screen_width = core.Render.GetWidth();
+			screen_height = core.Render.GetHeight();
+
+			Resize();
+		}
+
+		PrintDebug();
+
+		// if ((GetSoftKeyboardHeight() > 0.0f && !move_keyboard_in_progress_ && !keyboard_opened_ && controller.GetCurrentEdit() !is null) || (keyboard_update_ && !move_keyboard_in_progress_))
+		// {
+		// 	UpdateKeyboardMaxHeight(controller.GetCurrentEdit());
+
+		// 	move_keyboard_in_progress_ = true;
+		// 	keyboard_opened_ = true;
+		// 	keyboard_update_ = false;
+
+		// 	PerformEffect(MoveToWithCallback(screens::main, 0.0f, -min(float(GetSoftKeyboardHeight()), keyboard_max_height_), config_.move_screen_keyboard_time, EffectCallback(this.MoveKeyboardDone)));
+		// }
+		// else if (GetSoftKeyboardHeight() <= 0.0f && !move_keyboard_in_progress_ && keyboard_opened_)
+		// {
+		// 	move_keyboard_in_progress_ = true;
+		// 	keyboard_opened_ = false;
+		// 	keyboard_update_ = false;
+
+		// 	PerformEffect(MoveToWithCallback(screens::main, 0.0f, 0.0f, config_.move_screen_keyboard_time, EffectCallback(this.MoveKeyboardDone)));
+		// }
+
+		// main::root.Activate(NoActiveEffects());
+
+		effect_pre.Update(dt);
+		effect_seq.Update(dt);
+		effect_loop.Update(dt);
+		effect_non_block.Update(dt);
+
+		if (need_back_)
+		{
+			need_back_ = false;
+			Back();
+		}
+
+		Symbol@ screen;
+		for (int i = 0, size = screens_.length(); i < size; ++i)
+		{
+			@screen = screens_[i].symbol;
+
+			if (screen.IsVisible())
+			{
+				screen.Update(dt);
+			}
+		}
+	}
+	
+	void OnStartDrag(NGUIButton@ button, float x, float y)
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir)
+	{
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir)
+	{
+	}
+
+	void OnStartDrag(float x, float y)
+	{
+	}
+
+	void OnDrag(float dx, float dy, DragDirection dir)
+	{
+	}
+
+	private bool need_back_ = false;
+
+	void OnStopDrag(float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir)
+	{
+	}
+
+	void ProcessEvent(Event@ event)
+	{
+	}
+	
+	void ShowPopupDone()
+	{
+	}
+
+	void HidePopupDone()
+	{
+	}
+
+	void Confirm(PopupCallback@ cb, string&in text, string&in left_text = kEmpty, string&in right_text = kEmpty)
+	{
+		string lt = left_text;
+		string rt = right_text;
+
+		if (lt.isEmpty())
+		{
+			_(lt, "Yes");
+		}
+
+		if (rt.isEmpty())
+		{
+			_(rt, "No");
+		}
+
+		ShowPopup(true, kPopupOKCancel, kEmpty, text, kEmpty, lt, rt, cb);
+	}
+
+	private bool is_popup_visible_ = false;
+	bool back_on_hide_popup = false;
+
+	int show_popup_call_offset = 0; 
+	array<ShowPopupCall@> show_popup_calls;
+
+	void UpdatePopupCalls()
+	{
+		core.Trace("****** UpdatePopupCalls: " + show_popup_calls.length());
+		core.Trace("****** UpdatePopupCalls: offset: " + show_popup_call_offset);
+
+		if (show_popup_calls.isEmpty())
+		{
+			return;
+		}
+
+		ShowPopupCall@ call = show_popup_calls[show_popup_call_offset++];
+		call.Exec();
+
+		if (show_popup_call_offset >= show_popup_calls.length())
+		{
+			show_popup_call_offset = 0;
+			show_popup_calls.resize(0);
+		}
+	}
+
+	void ShowPopup(bool show = true, PopupType type = kPopupOK, string&in title = kEmpty, string&in text = kEmpty, string&in ok_text = kOK, string&in left_text = kEmpty, string&in right_text = kEmpty, PopupCallback@ callback = null)
+	{
+		string lt = left_text;
+		string rt = right_text;
+
+		if (lt.isEmpty())
+		{
+			_(lt, "Yes");
+		}
+
+		if (rt.isEmpty())
+		{
+			_(rt, "No");
+		}
+
+		if (show)
+		{
+			core.Trace("****** ShowPopup");
+
+			ShowPopupCall call;
+			show_popup_calls.insertLast(call);
+
+			call.type = type;
+			call.title = title;
+			call.text = text;
+			call.ok_text = ok_text;
+			call.left_text = lt;
+			call.right_text = rt;
+			@call.callback = callback;
+
+			if (show_popup_calls.length() == 1 && !is_popup_visible_)
+			{
+				UpdatePopupCalls();
+			}
+		}
+		else if (back_on_hide_popup)
+		{
+			back_on_hide_popup = false;
+
+			// screen_stack_.Push(cast<Screen>(screens::front.object));
+			Back();
+		}
+
+		is_popup_visible_ = show;
+	}
+
+	void ShowLoader(bool show, bool instant = false)
+	{
+		// if (instant)
+		// {
+		// 	main::loader.Show(show);
+		// }
+		// else
+		// {
+		// 	EffectSequence seq;
+
+		// 	if (show)
+		// 	{
+		// 		main::loader.Show(true);
+		// 		seq.Append(FadeIn(main::loader, config_.loader_fade_time, 0.0f));
+		// 	}
+		// 	else
+		// 	{
+		// 		seq.Append(FadeOut(main::loader, config_.loader_fade_time, 1.0f));
+		// 	}
+
+		// 	PerformEffect(seq);
+		// }
+	}
+
+	protected Screen@ current_screen_;
+	private Screen@ prev_screen_;
+
+	void Show(Symbol@ symbol, EffectPrecedence@ combine = null)
+	{
+		Screen@ screen = cast<Screen>(symbol.object);
+		if (screen is null)
+		{
+			core.Trace("*** WARN: Show Null Screen.");
+			return;
+		}
+
+		// if (current_screen_ is null)
+		// {
+		// 	@current_screen_ = cast<Screen>(screens::front.object);
+		// }
+
+		Show(screen, combine);
+	}
+	
+	void Show(Screen@ screen, EffectPrecedence@ combine = null, bool push_to_stack = true, bool clear_forward_stack = true, AppNowObject@ restore_object = null)
+	{
+		if (screen is null)
+		{
+			return;
+		}
+
+		// if (current_screen_ is null)
+		// {
+		// 	@current_screen_ = cast<Screen>(screens::front.object);
+		// }
+
+		controller.CloseKeyboard();
+
+		if (screen.symbol is current_screen_.symbol)
+		{
+			screen.symbol.Refresh();
+			return;
+		}
+
+		if (push_to_stack)
+		{
+			screen_stack_.Push(current_screen_, current_screen_.symbol.GetHistoryObject());
+		}
+
+		bool show_front = false;
+
+		// if (screen.symbol is screens::front)
+		// {
+		// 	show_front = true;
+		// 	screen_stack_.Clear();
+		// }
+
+		EffectPrecedence pre;
+
+		Screen@ current_screen = current_screen_;
+		@prev_screen_ = current_screen_;
+		@current_screen_ = screen;
+
+		if (restore_object !is null)
+		{
+			current_screen_.symbol.RestoreFromHistory(restore_object);
+		}
+
+		current_screen.symbol.BeforeHide(pre);
+		screen.symbol.BeforeShow(pre);
+
+		if ((screen.weight < current_screen.weight && push_to_stack) || (screen.weight > current_screen.weight && !push_to_stack))
+		{
+			screen.symbol.SetIndexInParentChilds(current_screen.weight);
+			current_screen.symbol.SetIndexInParentChilds(screen.weight);
+			
+			const int tmp = current_screen.weight;
+			current_screen.weight = screen.weight;
+			screen.weight = tmp;
+		}
+
+		if (screen.weight > current_screen.weight)
+		{
+			screen.symbol.x = kScreenWidth;
+
+			pre.Append(EffectWithCallback(MoveTo(current_screen.symbol, -0.5f * kScreenWidth, 0.0f, 0.3f).HideAfterDone(), EffectCallback(current_screen.symbol.AfterHide)));
+			pre.Append(MoveTo(screen.symbol, 0.0f, 0.0f, 0.3f));
+		}
+		else
+		{
+			screen.symbol.x = -0.5f * kScreenWidth;
+
+			pre.Append(EffectWithCallback(MoveTo(current_screen.symbol, kScreenWidth, 0.0f, 0.3f).HideAfterDone(), EffectCallback(current_screen.symbol.AfterHide)));
+			pre.Append(MoveTo(screen.symbol, 0.0f, 0.0f, 0.3f));
+		}
+
+		screen.symbol.AfterShow(pre); 
+		current_screen.symbol.AfterHide(pre);
+
+		if (combine is null)
+		{
+			PerformEffect(pre);
+		}
+		else
+		{
+			combine.Append(pre);
+		}
+	}
+
+	void Forward(EffectPrecedence@ combine = null)
+	{
+		//Show(forward_screen_stack_.Pop(), combine, true, false);
+	}
+
+	void Back(EffectPrecedence@ combine = null)
+	{
+		ScreenStackValue@ st_val = screen_stack_.Pop();
+
+		if (st_val is null)
+		{
+			return;
+		}
+
+		Screen@ screen = st_val.screen;
+
+		if (screen !is null)
+		{
+			//forward_screen_stack_.Push(current_screen_, obj);
+		}
+
+		Show(screen, combine, false, true, st_val.object);
+	}
+
+	bool CanCloseKeyboard()
+	{
+		const float click_x = core.Controls.GetTouchX(0);
+		const float click_y = core.Controls.GetTouchY(0);
+
+		return true;
+	}
+
+	void OnStartEdit(NGUIEditBox@ edit)
+	{
+		if (keyboard_opened_)
+		{
+			UpdateKeyboardMaxHeight(controller.GetCurrentEdit());
+		}
+	}
+
+	void OnStopEdit(NGUIEditBox@ edit, const string&in value, bool return_key_pressed)
+	{
+	}
+
+	private array<Screen@> screens_;
+
+	int GetScreensCount()
+	{
+		return screens_.length();
+	}
+
+	Screen@ GetScreen(int index)
+	{
+		return screens_[index];
+	}
+
+	void RegisterScreen(ScreenSymbol@ symbol)
+	{
+		const int weight = symbol.GetIndexInParentChilds();
+
+		string str;
+
+		symbol.GetName(str);
+		core.Trace("wgt: " + str);
+		core.Trace("weight: " + weight);
+
+		Screen@ screen = Screen(weight, symbol);
+		@symbol.object = screen;
+
+		bool insert_last = true;
+
+		for (int i = 0, size = screens_.length(); i < size; ++i)
+		{
+			if (weight < screens_[i].weight)
+			{
+				insert_last = false;
+				screens_.insertAt(i, screen);
+				break;
+			}
+		}
+
+		if (insert_last)
+		{
+			screens_.insertLast(screen);
+		}
+	}
+};
+
+BaseView@ view;

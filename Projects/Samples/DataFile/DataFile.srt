@@ -1,0 +1,52 @@
+
+void main()
+{
+	if (core.DataFile.Start("Projects/Samples/DataFile/Data.xml", "skin"))
+	{
+		string str;
+
+		core.DataFile.Read("Texture", str);
+		core.Trace("Texture - " + str);
+
+		while (core.DataFile.EnterBlock("Elem"))
+		{
+			core.Trace(" Elem");
+
+			int iVal = 0;
+
+			core.DataFile.Read("type", iVal);
+			core.Trace(" type - " + iVal );
+
+			float fVal = 0;
+
+			core.DataFile.Read("u", fVal);
+			core.Trace(" u - " + fVal );
+
+			core.DataFile.Read("v", fVal);
+			core.Trace(" v - " + fVal );
+
+			while (core.DataFile.EnterBlock("tile"))
+			{
+				core.Trace("  tile");
+
+				core.DataFile.Read("du", fVal);
+				core.Trace("   du - " + fVal );
+
+				core.DataFile.Read("dv", fVal);
+				core.Trace("   dv - " + fVal );
+
+				core.Trace("  /tile");
+
+				core.DataFile.LeaveBlock();
+			}
+
+			core.Trace(" /Elem");
+
+			core.DataFile.LeaveBlock();
+		}
+
+		core.DataFile.Finish();
+	}
+
+	//core.Exit();
+}

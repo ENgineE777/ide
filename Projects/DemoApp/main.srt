@@ -1,0 +1,4124 @@
+#include "precompiled"
+
+#include "Symbol"
+#include "ScreenSymbol"
+#include "RingBuffer"
+
+#include "utils"
+#include "effects"
+#include "locale"
+
+#include "model"
+#include "view"
+#include "controller"
+
+#include "api"
+
+const float kInf = 999999.0f;
+
+const string kEmpty = "";
+const string kVK = "vk";
+const string kFB = "fb";
+const string kNewLine = "\\n";
+const string kDots = "...";
+const string kClub = "[club";
+const string kId = "[id";
+const string kHttp = "http:";
+const string kHttps = "https:";
+const string kVKUrl = "vk.com/";
+const string kBrk = "\n \\";
+const string kSlash = "//";
+const string kBraces = "{}";
+const string kOpenBrace = "{";
+const string kCloseBrace = "}";
+const string kUrl = "://";
+
+class Config
+{
+	string date_format = "%d.%m.%y";
+	string time_format = "24";
+	string currency = "";
+	bool currency_in_front = false;
+};
+
+Config config;
+
+class MenuItem
+{
+	float pos = 0.0f;
+
+	string text;
+	string text_upper;
+
+	NGUILabel@ bg;
+
+	MenuItem(const string&in t, const string&in tu, NGUILabel@ bg)
+	{
+		text = t;
+		text_upper = tu;
+		@this.bg = bg;
+	}
+};
+
+class Menu : Symbol
+{
+	NGUILabel@ shadow;
+
+	NGUIScroller@ scroller;
+	NGUITextDrawer@ text_drawer;
+	NGUILabel@ line_top;
+	NGUILabel@ line_bottom;
+
+	NGUIButtonInstances@ buttons;
+
+	EffectTarget effect_text;
+
+	array<MenuItem@> items;
+
+	int current_item = 2;
+	int prev_item = 2;
+	int open_after_move = -1;
+
+	bool move_to_current_pos = false;
+	float move_start_pos = 0.0f;
+	float move_end_pos = 0.0f;
+	float move_t = 0.0f;
+
+	float step = 0.0f;
+
+	Symbol@ prev_screen;
+	Symbol@ current_screen;
+
+	Menu(main::SymbolInstMenuSymbol@ symbol)
+	{
+		super(symbol);
+
+		@scroller = cast<NGUIScroller>(symbol.menu_scroller);
+		@shadow = symbol.menu_shadow;
+		@text_drawer = symbol.menu_scroller.menu_text_drawer;
+		@line_top = symbol.menu_line_top;
+		@line_bottom = symbol.menu_line_bottom;
+		@buttons = symbol.menu_scroller.menu_buttons;
+
+		symbol.menu_bg0.Show(false);
+		symbol.menu_bg1.Show(false);
+		symbol.menu_bg2.Show(true);
+		symbol.menu_bg3.Show(false);
+		symbol.menu_bg4.Show(false);
+		symbol.menu_bg5.Show(false);
+
+		items.insertLast(MenuItem("Events and news", "EVENTS AND NEWS", symbol.menu_bg2));
+		items.insertLast(MenuItem("Biography", "BIOGRAPHY", symbol.menu_bg0));
+		items.insertLast(MenuItem("Philantropy", "PHILANTROPY", symbol.menu_bg3));
+		items.insertLast(MenuItem("Filmography", "FILMOGRAPHY", symbol.menu_bg1));
+		items.insertLast(MenuItem("Music", "MUSIC", symbol.menu_bg4));
+		items.insertLast(MenuItem("Share with friends", "SHARE WITH FRIENDS", symbol.menu_bg5));
+
+		buttons.ResizeInstances(items.length());
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+
+		CLICK_INDEX(buttons, OnClick);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		height = kScreenHeight;
+
+		LOOP(items)
+		{
+			if (i == 0)
+			{
+				view.Clip(items[i].bg, kScreenWidth, kScreenHeight, box: Box(503.0f, 7.0f, 640.0f, 1136.0f));
+			}
+			else
+			{
+				view.Clip(items[i].bg, kScreenWidth, kScreenHeight);
+			}
+		}
+
+		scroller.width = kScreenWidth;
+		shadow.width = kScreenWidth;
+
+		text_drawer.width = kScreenWidth;
+
+		step = scroller.height / 8.0f;
+
+		line_top.y = 0.5f * scroller.height;
+		line_top.width = 0.0f;
+		line_top.height = 1.0f;
+
+		line_bottom.y = 0.5f * scroller.height;
+		line_bottom.width = 0.0f;
+		line_bottom.height = 1.0f;
+	}
+
+	int frames = 0;
+
+	float prev_pos = 0.0f;
+	float dpos_total = 0.0f;
+	float dt_total = 0.0f;
+	float vel = 0.0f;
+
+	bool fade_in_progress = false;
+	bool inited_pos = false;
+
+	void DoneFade()
+	{
+		fade_in_progress = false;
+	}
+
+	void Update(float dt) override
+	{
+		++frames;
+
+		const float center_y = 0.5f * scroller.height;
+		const float pos = scroller.GetPosition();
+
+		if ((frames % 3) == 0)
+		{
+			vel = dpos_total / clampf(dt_total, 0.001f, kInf);
+
+			dpos_total = 0;
+			dt_total = 0;
+		}
+		else
+		{
+			dpos_total += abs(pos - prev_pos);
+			dt_total += dt;
+		}
+
+		prev_pos = pos;
+
+		if (!controller.IsDrag(true))
+		{
+			const float d = abs(-current_item * step - pos);
+			if (((vel > 0.05f && vel < 50.0f) || (vel <= 0.05f && d > 0.5f)) && !move_to_current_pos)
+			{
+				MoveToCurrentPos();
+			}
+		}
+
+		if (prev_item != current_item && !fade_in_progress)
+		{
+			if (items[prev_item].bg !is items[current_item].bg)
+			{
+				fade_in_progress = true;
+				EffectWithCallback(EffectPrecedence(FadeOut(items[prev_item].bg, 0.3f, 1.0f), FadeIn(items[current_item].bg, 0.3f, 0.0f)), EffectCallback(this.DoneFade)).Perform();
+			}
+
+			prev_item = current_item;
+		}
+
+		LOOP(items)
+		{
+			const float text_w = text_drawer.GetTextWidth(items[i].text);
+			const float text_h = text_drawer.GetTextHeight(items[i].text);
+
+			const float text_x = 0.5f * (scroller.width - text_w);
+			const float text_y = i * step - 0.5f * text_h;
+
+			const float dy = pos + text_y + 0.5f * text_h;
+
+			const float goal_alpha = 0.5f - (i <= 5 ? i : (i - 5)) * 0.05f;
+			const float gloal_scale = 0.85f;
+
+			float scale = (1.0f + gloal_scale) - clampf(gloal_scale + (1.0f - gloal_scale) * abs(dy) / 100.0f, 0.0f, 1.0f);
+			float alpha = (1.0f + goal_alpha) - clampf(goal_alpha + (1.0f - goal_alpha) * abs(dy) / 100.0f, 0.0f, 1.0f);
+
+			if (i == current_item && effect_text.width > 0.0f)
+			{
+				scale = effect_text.width / text_w;
+				alpha = effect_text.alpha;
+			}
+
+			items[i].pos = dy;
+
+			text_drawer.fontScale = scale;
+			text_drawer.Draw(text_x + 0.5f * text_w * (1.0f - scale), center_y + text_y + 0.5f * text_h * (1.0f - scale), kScreenWidth, 100.0f, items[i].text, alpha);
+
+			buttons.SetInstance(i, 0.0f, center_y + text_y - 25.0f, kScreenWidth, text_h + 50.0f);
+
+			// _RECT(0.0f, center_y + text_y - 25.0f, kScreenWidth, text_h + 50.0f);
+		}
+
+		scroller.scrollSize = center_y + step + kScreenHeight;
+
+		if (!inited_pos)
+		{
+			inited_pos = true;
+			current_item = 2;
+			scroller.SetPosition(-284.0f, true);
+		}
+
+		for (int i = 0; i < 10; ++i)
+		{
+			// view.DebugLine(0.0f, i * step, kScreenWidth, i * step);
+		}
+
+		scroller.Allow_Scroll = !move_to_current_pos;
+		if (move_to_current_pos)
+		{
+			const float p = core.Utils.CubicEaseOut(move_t);
+			scroller.SetPosition(move_start_pos + (move_end_pos - move_start_pos) * p, true);
+
+			if (move_t >= 1.0f)
+			{
+				move_t = 1.0f;
+
+				scroller.SetPosition(move_end_pos, true);
+
+				move_to_current_pos = false;
+
+				if (open_after_move >= 0)
+				{
+					OnClick(open_after_move);
+
+					open_after_move = -1;
+				}
+			}
+
+			move_t = clampf(move_t + (1.0f / 0.5f) * dt, 0.0f, 1.0f);
+		}
+	}
+
+	void MoveToCurrentPos(int set_pos = -1)
+	{
+		const float center_y = 0.5f * scroller.height;
+		const float pos = scroller.GetPosition();
+
+		if (set_pos < 0)
+		{
+			float cloest_pos = kInf;
+			int cloest_index = 0;
+
+			LOOP(items)
+			{
+				if (abs(items[i].pos) < cloest_pos)
+				{
+					cloest_pos = abs(items[i].pos);
+					cloest_index = i;
+				}
+			}
+
+			current_item = cloest_index;
+		}
+		else
+		{
+			current_item = set_pos;
+		}
+
+		const float text_h = text_drawer.GetTextHeight(items[current_item].text);
+
+		if (set_pos >= 0 || (pos < 0.0f && pos > scroller.height - scroller.scrollSize))
+		{
+			move_to_current_pos = true;
+			move_start_pos = scroller.GetPosition();
+			move_end_pos = -current_item * step;
+			move_t = 0.0f;
+		}
+	}
+
+	void DoneOpen()
+	{
+		effect_text.alpha = 1.0f;
+		effect_text.width = 0.0f;
+
+		line_top.width = 0.0f;
+		line_bottom.width = 0.0f;
+	}
+
+	void DoneTextHide()
+	{
+		// screens::news.height = 0.0f;
+		// screens::news.alpha = 1.0f;
+		// screens::news.Show(true);
+
+		line_top.width = 0.0f;
+		line_bottom.width = 0.0f;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(MoveTo(line_top, line_top.x, 0.0f, duration), MoveTo(line_bottom, line_bottom.x, scroller.height, duration), MoveHeightTo(current_screen, scroller.height, duration)), EffectCallback(this.DoneOpen)).Perform();
+
+		screens::top.TransformToLines();
+		screens::top.ShowText(items[current_item].text_upper);
+
+		// EffectWithTimeout(FadeOut(screens::news, duration, 1.0f), 5.0f).PerformNonBlock();
+	}
+
+	void Show(Symbol@ screen, bool fade = false, bool force = false)
+	{
+		if (screen is current_screen && !force)
+		{
+			return;
+		}
+
+		if (screen !is current_screen)
+		{
+			@prev_screen = current_screen;
+			@current_screen = screen;
+		}
+
+		if (prev_screen !is null)
+		{
+			prev_screen.Show(false);
+		}
+
+		if (fade)
+		{
+			FadeIn(current_screen, 0.4f, 0.0f).Perform();
+		}
+		else
+		{
+			current_screen.height = 0.0f;
+			current_screen.alpha = 1.0f;
+			current_screen.Show(true);
+		}
+	}
+
+	void OnClick(int index)
+	{
+		if (index != current_item)
+		{
+			open_after_move = index;
+			MoveToCurrentPos(index);
+			return;
+		}
+
+		if (index == 5)
+		{
+			LOGTO('Share', 'Share');
+			core.Mobile.StartShareText("Steven Seagal's app: iTunes, Android", kEmpty, null);
+			return;
+		}
+
+		if (GetScreen(index) is screens::events_and_news && controller.NoInternet())
+		{
+			view.ShowPopup(text: "No internet connection", callback: PopupCallback(controller.OnClickPopupNetworkError));
+			return;
+		}
+
+		const float center_y = 0.5f * scroller.height;
+		const float pos = scroller.GetPosition();
+
+		effect_text.width = text_drawer.GetTextWidth(items[index].text);
+		effect_text.height = text_drawer.GetTextHeight(items[index].text);
+		effect_text.x = 0.5f * (scroller.width - effect_text.width);
+		effect_text.y = scroller.GetPosition() + index * step - 0.5f * effect_text.height + center_y;
+
+		line_top.y = effect_text.y + 0.5f * effect_text.height;
+		line_top.width = 0.0f;
+		line_top.height = 1.0f;
+
+		line_bottom.y = effect_text.y + 0.5f * effect_text.height;
+		line_bottom.width = 0.0f;
+		line_bottom.height = 1.0f;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(Shrink(effect_text, duration, 0.3f), FadeOut(effect_text, duration, 1.0f), MoveWidthTo(line_top, scroller.width, duration), MoveWidthTo(line_bottom, scroller.width, duration)), EffectCallback(this.DoneTextHide)).Perform();
+
+		ShowScreen(index, force: true);
+	}
+
+	Symbol@ GetScreen(int index)
+	{
+		if (index == 0)
+		{
+			return screens::events_and_news;
+		}
+		else if (index == 1)
+		{
+			return screens::biography;
+		}
+		else if (index == 2)
+		{
+			return screens::philantropy;
+		}
+		else if (index == 3)
+		{
+			return screens::filmography;
+		}
+		else if (index == 4)
+		{
+			return screens::music;
+		}
+		
+		return screens::news;
+	}
+
+	void ShowScreen(int index, bool fade = false, bool force = false)
+	{
+		Symbol@ screen = GetScreen(index);
+
+		Show(screen, fade: fade, force: force);
+
+		if (screen is screens::biography)
+		{
+			screens::top.bg.Show(false);
+		}
+		else if (screen is screens::events)
+		{
+			screens::top.bg.Show(false);
+		}
+		else if (screen is screens::events_and_news)
+		{
+			screens::top.bg.Show(false);
+		}
+		else if (screen is screens::filmography)
+		{
+			screens::top.bg.Show(false);
+		}
+	}
+};
+
+class PullToGo : Symbol, IDragListener
+{
+	NGUILabel@ clip;
+	NGUILabel@ arrow;
+	NGUILabel@ text;
+	NGUILabel@ pager_dot;
+
+	NGUITextDrawer@ text_drawer;
+
+	NGUIButtonInstances@ buttons;
+
+	NGUIPager@ pager;
+
+	bool opened = false;
+	bool runned = false;
+
+	PullToGo(main::SymbolInstPullToGoSymbol@ symbol)
+	{
+		super(symbol);
+
+		@clip = cast<NGUILabel>(symbol.pull_clip);
+		@arrow = symbol.pull_clip.pull_arrow;
+		@text = symbol.pull_clip.pull_text;
+		@pager = cast<NGUIPager>(symbol.pull_pager);
+		@pager_dot = symbol.pull_pager_dot;
+		@text_drawer = symbol.pull_pager.pull_text_drawer;
+		@buttons = symbol.pull_pager.pull_buttons;
+
+		buttons.ResizeInstances(screens::menu.items.length() - 1);
+
+		pager.Show(false);
+		pager_dot.Show(false);
+
+		UpdateText(true);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_DRAG;
+
+		CLICK_INDEX(buttons, this.OnClick);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+
+		pager.width = kScreenWidth;
+		text_drawer.width = kScreenWidth;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		clip.width = width;
+		clip.height = height - 4.0f;
+
+		float x = 0.0f;
+		LOOP(screens::menu.items)
+		{
+			if (i == size - 1)
+			{
+				break;
+			}
+
+			const float text_w = text_drawer.GetTextWidth(screens::menu.items[i].text_upper);
+			const float text_h = text_drawer.GetTextHeight(screens::menu.items[i].text_upper);
+
+			text_drawer.Draw(x + 0.5f * (pager.width - text_w), 0.5f * (pager.height - text_h), pager.width, text_h, screens::menu.items[i].text_upper, 1.0f);
+			buttons.SetInstance(i, x, -126.0f, pager.width, pager.height);
+
+			x += pager.width;
+		}
+
+		pager.numPages = screens::menu.items.length() - 1;
+
+		pager_dot.width = pager.width / pager.numPages;
+		pager_dot.x = pager.GetPosition() * pager_dot.width;
+		pager_dot.height = 14.0f;
+	}
+
+	void OnStartDrag(NGUIButton@ button, float x, float y) override
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir) override
+	{
+		if (button is null)
+		{
+		}
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir) override
+	{
+		if (button is null)
+		{
+			if (runned && swipe_dir == kSwipeDown)
+			{
+				if (screens::menu.current_screen !is null)
+				{
+					screens::news.StopPullToGo();
+					screens::philantropy.StopPullToGo();
+					screens::biography.StopPullToGo();
+					screens::events_and_news.StopPullToGo();
+					screens::music.StopPullToGo();
+				}
+			}
+		}
+	}
+
+	void OnClick(int index)
+	{
+		screens::news.StopPullToGo();
+		screens::philantropy.StopPullToGo();
+		screens::biography.StopPullToGo();
+		screens::events_and_news.StopPullToGo();
+		screens::music.StopPullToGo();
+
+		screens::menu.ShowScreen(index, fade: true);
+	}
+
+	void UpdateText(bool pull)
+	{
+		text.SetText(pull ? "PULL TO GO" : "RELEASE TO GO");
+		arrow.x = -20.0f -0.5f * text.GetCurTextWidth();
+	}
+};
+
+class NewsScreen : Symbol, IEventListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ shadow_top;
+	NGUILabel@ shadow_bottom;
+	NGUILabel@ bottom;
+	NGUILabel@ bottom_bg;
+	NGUILabel@ bottom_text;
+	NGUILabel@ pull_to_go_shadow;
+
+	NGUIScroller@ scroller;
+
+	PullToGo@ pull_to_go;
+
+	NewsScreen(main::SymbolInstNewsScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.news_bg;
+		@shadow_top = symbol.news_shadow_top;
+		@shadow_bottom = symbol.news_shadow_bottom;
+		@scroller = cast<NGUIScroller>(symbol.news_scroller);
+		@bottom = cast<NGUILabel>(symbol.news_scroller.news_bottom);
+		@bottom_bg = symbol.news_scroller.news_bottom.news_bottom_bg;
+		@bottom_text = symbol.news_scroller.news_bottom.news_bottom_text;
+		@pull_to_go_shadow = symbol.news_pull_to_go_shadow;
+
+		@pull_to_go = PullToGo(symbol.news_pull_to_go);
+
+		bottom_text.SetText("EVENTS AND NEWS");
+
+		bottom.Show(false);
+		pull_to_go.Show(false);
+		pull_to_go_shadow.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_EVENT;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		height = kScreenHeight;
+
+		view.Clip(bg, kScreenWidth, kScreenHeight);
+
+		shadow_top.width = kScreenWidth;
+		shadow_bottom.width = kScreenWidth;
+
+		bottom.width = kScreenWidth;
+
+		bottom_bg.width = kScreenWidth;
+		bottom_bg.height = 10.0f * bottom.height;
+
+		pull_to_go_shadow.width = kScreenWidth;
+
+		pull_to_go.pager.height = 2.0f * kScreenHeight + 2.0f * bottom.height;
+		pull_to_go.pager_dot.y = bottom.height;
+	}
+
+	void Process(Event@ event) override
+	{
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		scroller.scrollSize = 2000.0f;
+
+		const float pos = scroller.GetPosition();
+		const float sz = clampf(scroller.scrollSize - scroller.height, 0.0f, kInf);
+
+		bottom.y = sz + scroller.height;
+
+		if (pos < -sz)
+		{
+			pull_to_go.height = abs(pos + sz);
+		}
+		else
+		{
+			pull_to_go.height = 0.0f;
+		}
+
+		if (!pull_to_go.runned)
+		{
+			pull_to_go_shadow.y = pull_to_go.height;
+		}
+	}
+
+	bool pull_to_go_started = false;
+
+	void StartPullToGo()
+	{
+		return;
+		
+		if (!controller.IsTouchActive())
+		{
+			return;
+		}
+
+		pull_to_go_started = true;
+
+		scroller.EnableRefreshOffset(true);
+		pull_to_go.UpdateText(false);
+
+		pull_to_go.pager.SetPosition(0.0f, true);
+
+		RotateTo(pull_to_go.arrow, -180.0f, 0.5f).Perform();
+	}
+
+	void DoneOpenPullToGo()
+	{
+		pull_to_go.opened = true;
+		pull_to_go.pager.Show(true);
+		bottom_text.Show(false);
+	}
+
+	void DoneClosePullToGo()
+	{
+		pull_to_go.opened = false;
+		pull_to_go.runned = false;
+		scroller.EnableRefreshOffset(false);
+	}
+
+	void RunPullToGo()
+	{
+		if (!pull_to_go_started)
+		{
+			return;
+		}
+
+		pull_to_go.runned = true;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeIn(pull_to_go.pager_dot, 0.5f * duration, 0.0f, use_filled: true), FadeOut(pull_to_go.arrow, 0.5f * duration, 1.0f), FadeOut(pull_to_go.text, 0.5f * duration, 1.0f), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, 2.0f * bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.5f * bottom.height, duration)), EffectCallback(this.DoneOpenPullToGo)).Perform();
+	}
+
+	void ResetPullToGo()
+	{
+		pull_to_go_started = false;
+
+		pull_to_go.text.Show(true);
+		pull_to_go.text.alpha = 1.0f;
+
+		pull_to_go.arrow.Show(true);
+		pull_to_go.arrow.alpha = 1.0f;
+
+		pull_to_go.UpdateText(true);
+		pull_to_go.arrow.rot_z = 0.0f;
+	}
+
+	void StopPullToGo()
+	{
+		if (!pull_to_go.opened)
+		{
+			return;
+		}
+
+		pull_to_go.pager.Show(false);
+
+		bottom_text.Show(true);
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeOut(pull_to_go.pager_dot, 0.5f * duration, 1.0f, use_filled: true), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.0f, duration)), EffectCallback(this.DoneClosePullToGo)).Perform();
+		TIMEOUT_CB(this.ResetPullToGo, 2.0f * duration);
+	}
+};
+
+class Top : Symbol
+{
+	NGUILabel@ bg;
+	NGUILabel@ title;
+	NGUILabel@ text;
+
+	NGUILabel@ line0;
+	NGUILabel@ line1;
+	NGUILabel@ line2;
+
+	NGUILabel@ ball0;
+	NGUILabel@ ball1;
+	NGUILabel@ ball2;
+
+	NGUIButton@ button;
+
+	bool is_cross = false;
+	bool in_progress = false;
+
+	Top(main::SymbolInstTopSymbol@ symbol)
+	{
+		super(symbol);
+
+		symbol.top_cross.Show(false);
+
+		@bg = symbol.top_bg;
+		@title = symbol.top_text;
+		@text = symbol.top_text0;
+
+		@line0 = symbol.top_line0;
+		@line1 = symbol.top_line1;
+		@line2 = symbol.top_line2;
+
+		@ball0 = symbol.top_ball0;
+		@ball1 = symbol.top_ball1;
+		@ball2 = symbol.top_ball2;
+
+		@button = symbol.top_button;
+
+		title.SetText("STEVEN SEAGAL");
+		text.Show(false);
+
+		bg.Show(false);
+
+		ball0.Show(false);
+		ball1.Show(false);
+		ball2.Show(false);
+	}
+
+	void Init() override
+	{
+		CLICK(button, this.OnClick);
+
+		text.alpha = 1.0f;
+		text.Show(true);
+		bg.alpha = 1.0f;
+		bg.Show(true);
+		title.alpha = 0.0f;
+		title.Show(false);
+
+		text.SetText(screens::menu.items[0].text_upper);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+
+		bg.width = kScreenWidth;
+
+		y = core.Mobile.GetTittleBarHeight();
+		bg.y = -y - 2.0f;
+		bg.height += y + 2.0f;
+
+		line0.width = 34.0f;
+		line0.height = 3.0f;
+		line0.y = 10.0;
+
+		line1.width = 34.0f;
+		line1.height = 3.0f;
+		
+		line2.width = 34.0f;
+		line2.height = 3.0f;
+		line2.y = -10.0;
+	}
+
+	void TransformToShare()
+	{
+		// if (in_progress)
+		// {
+		// 	return;
+		// }
+
+		// if (is_cross)
+		// {
+		// 	return;
+		// }
+
+		in_progress = true;
+		// is_cross = true;
+
+		ball0.x = line0.x + 14.0f;
+		ball1.x = line0.x - 14.0f;
+		ball1.y = line0.y - 17.0f;
+		ball2.x = line2.x - 14.0f;
+		ball2.y = line2.y + 16.0f;
+
+		EffectWithTimeout(Pulse(ball0, 0.2f), 0.2f).Perform();
+		EffectWithTimeout(Pulse(ball1, 0.2f), 0.2f).Perform();
+		EffectWithTimeout(Pulse(ball2, 0.2f), 0.2f).Perform();
+
+		const float duration = 0.4f;
+		EffectPrecedence(MoveTo(line0, line0.x, 9.0f, duration), RotateTo(line0, 30.0f, duration)).Perform();
+		EffectWithCallback(EffectPrecedence(MoveTo(line2, line2.x, -9.0f, duration), RotateTo(line2, -30.0f, duration), FadeOut(line1, 0.5f * duration, 1.0f, use_filled: true)), EffectCallback(this.DoneTransform)).Perform();
+	}
+
+	void TransformToCross()
+	{
+		if (in_progress)
+		{
+			return;
+		}
+
+		if (is_cross)
+		{
+			return;
+		}
+
+		in_progress = true;
+		is_cross = true;
+
+		const float duration = 0.4f;
+		EffectPrecedence(MoveTo(line0, line0.x, 0.0f, duration), RotateTo(line0, -45.0f, duration)).Perform();
+		EffectWithCallback(EffectPrecedence(MoveTo(line2, line2.x, 0.0f, duration), RotateTo(line2, 45.0f, duration), FadeOut(line1, 0.5f * duration, 1.0f, use_filled: true)), EffectCallback(this.DoneTransform)).Perform();
+	}
+
+	void TransformToLines()
+	{
+		if (in_progress)
+		{
+			return;
+		}
+
+		if (!is_cross)
+		{
+			return;
+		}
+
+		in_progress = true;
+		is_cross = false;
+
+		const float duration = 0.4f;
+		EffectPrecedence(MoveTo(line0, line0.x, 10.0f, duration), RotateTo(line0, 0.0f, duration)).Perform();
+		EffectWithCallback(EffectPrecedence(MoveTo(line2, line2.x, -10.0f, duration), RotateTo(line2, 0.0f, duration), FadeIn(line1, 0.5f * duration, 0.0f, use_filled: true)), EffectCallback(this.DoneTransform)).Perform();
+	}
+
+	void DoneTransform()
+	{
+		in_progress = false;
+	}
+
+	void ShowText(const string&in t = kEmpty)
+	{
+		if (!t.isEmpty())
+		{
+			text.SetText(t);
+		}
+
+		if (!text.IsVisible())
+		{
+			if (HasBG())
+			{
+				EffectPrecedence(FadeIn(text, 0.4f, 0.0f), FadeIn(bg, 0.4f, 0.0f), FadeOut(title, 0.4f, 1.0f)).Perform();
+			}
+			else
+			{
+				EffectPrecedence(FadeIn(text, 0.4f, 0.0f), FadeOut(title, 0.4f, 1.0f)).Perform();
+			}
+		}
+	}
+
+	void ShowTitle()
+	{
+		if (!title.IsVisible())
+		{
+			if (HasBG())
+			{
+				EffectPrecedence(FadeOut(text, 0.4f, 1.0f), FadeOut(bg, 0.4f, 1.0f), FadeIn(title, 0.4f, 0.0f)).Perform();
+			}
+			else
+			{
+				EffectPrecedence(FadeOut(text, 0.4f, 1.0f), FadeIn(title, 0.4f, 0.0f)).Perform();
+			}
+		}
+	}
+
+	void OnClick()
+	{
+		if (screens::menu.current_screen is null)
+		{
+			// TransformToShare();
+			return;
+		}
+
+		if (in_progress)
+		{
+			return;
+		}
+
+		screens::news.StopPullToGo();
+		screens::philantropy.StopPullToGo();
+		screens::biography.StopPullToGo();
+		screens::events_and_news.StopPullToGo();
+		screens::music.StopPullToGo();
+
+		if (screens::news_expanded.IsVisible())
+		{
+			screens::news_expanded.Hide();
+			return;
+		}
+
+		if (screens::events.IsVisible())
+		{
+			screens::events.Hide();
+			return;
+		}
+
+		in_progress = true;
+
+		const float duration = 0.4f;
+
+		if (screens::menu.current_screen.IsVisible() && !is_cross)
+		{
+			ShowTitle();
+			FadeOut(screens::menu.current_screen, 0.5f * duration, 1.0f).Perform();
+		}
+		else if (!screens::menu.current_screen.IsVisible() && is_cross)
+		{
+			ShowText();
+			FadeIn(screens::menu.current_screen, 0.5f * duration, 0.0f).Perform();
+		}
+
+		if (is_cross)
+		{
+			EffectPrecedence(MoveTo(line0, line0.x, 10.0f, duration), RotateTo(line0, 0.0f, duration)).Perform();
+			EffectWithCallback(EffectPrecedence(MoveTo(line2, line2.x, -10.0f, duration), RotateTo(line2, 0.0f, duration), FadeIn(line1, 0.5f * duration, 0.0f, use_filled: true)), EffectCallback(this.DoneTransform)).Perform();
+		}
+		else
+		{
+			EffectPrecedence(MoveTo(line0, line0.x, 0.0f, duration), RotateTo(line0, -45.0f, duration)).Perform();
+			EffectWithCallback(EffectPrecedence(MoveTo(line2, line2.x, 0.0f, duration), RotateTo(line2, 45.0f, duration), FadeOut(line1, 0.5f * duration, 1.0f, use_filled: true)), EffectCallback(this.DoneTransform)).Perform();
+		}
+
+		is_cross = !is_cross;
+	}
+
+	bool HasBG()
+	{
+		if (screens::menu.current_screen is screens::biography)
+		{
+			return false;
+		}
+		else if (screens::menu.current_screen is screens::filmography)
+		{
+			return false;
+		}
+		// else if (screens::menu.current_screen is screens::events)
+		// {
+		// 	return false;
+		// }
+
+		return true;
+	}
+};
+
+class BlockContentImage : Symbol
+{
+	NGUILabel@ image;
+	NGUILabel@ video;
+
+	NGUIButton@ button;
+
+	float initial_image_height = 0.0f;
+
+	BlockContentImage(main::SymbolInstBlockContentImageSymbol@ symbol)
+	{
+		super(symbol);
+
+		@image = cast<NGUILabel>(symbol.block_content_image);
+		@video = symbol.block_content_image.block_content_video;
+		@button = symbol.block_content_image_button;
+
+		initial_image_height = image.height;
+
+		// video.Show(false);
+	}
+
+	void Init() override
+	{
+		CLICK(button, this.OnClick);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		image.width = kScreenWidth;
+	}
+
+	void OnClick()
+	{
+		DataImage@ img = cast<DataImage>(object);
+
+		if (img !is null && !img.url.isEmpty())
+		{
+			LOG("Video: "+img.url);
+			core.Utils.OpenURL(img.url, false);
+		}
+	}
+};
+
+class BlockContent : Symbol
+{
+	NGUILabelRich@ text;
+
+	NGUIPager@ pager;
+	array<BlockContentImage@> pager_images;
+
+	main::SymbolBlockContentImageSymbol@ content_pager_image;
+
+	array<string>@ urls;
+
+	bool need_resize_images = true;
+	bool inited = false;
+
+	BlockContent(main::SymbolInstBlockContentSymbol@ symbol)
+	{
+		super(symbol);
+
+		@text = symbol.content_text;
+		@pager = cast<NGUIPager>(symbol.content_pager);
+
+		@content_pager_image = symbol.content_pager.content_pager_image;
+
+		text.Show(false);
+		pager.Show(false);
+	}
+
+	void Init() override
+	{
+		if (inited)
+		{
+			return;
+		}
+
+		inited = true;
+
+		REG_TASK;
+
+		CLICK_LINK(text, this.OnClickLink);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		pager.width = kScreenWidth;
+		text.width = kScreenWidth - 2.0f * 40.0f;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		if (need_resize_images)
+		{
+			LOOP(pager_images)
+			{
+				if (!pager_images[i].image.IsTextureLoading())
+				{
+					view.Clip(pager_images[i].image, pager_images[i].image.width, pager_images[i].image.height, allow_vertical: true);
+
+					const float w = pager_images[i].image.GetTextureWidth() * kScreenToRef;
+					const float h = pager_images[i].image.GetTextureHeight() * kScreenToRef;
+
+					if (w < kScreenWidth)
+					{
+						pager_images[i].image.width = pager_images[i].initial_image_height * (w / h);
+						pager_images[i].image.height = pager_images[i].initial_image_height;
+					}
+				}
+			}
+		}
+
+		float x = 0.0f;
+		LOOP(pager_images)
+		{
+			pager_images[i].x = x;
+			x += pager.width;
+		}
+	}
+
+	void SetImages(array<DataImage@>@ images)
+	{
+		LOOP(pager_images)
+		{
+			pager_images[i].Show(false);
+		}
+
+		if (images.length() > content_pager_image.GetInstancesCount())
+		{
+			pager_images.resize(0);
+			BIND_ARRAY(pager_images, images.length(), content_pager_image, BlockContentImage);
+		}
+
+		// pager_images.resize(0);
+		// BIND_ARRAY(pager_images, images.length(), content_pager_image, BlockContentImage);
+		pager.numPages = images.length();
+
+		if (pager.numPages == 1)
+		{
+			pager.dotOffset = 2000.0f;
+		}
+		else
+		{
+			pager.dotOffset = 0.0f;
+		}
+
+		need_resize_images = true;
+
+		LOOP(pager_images)
+		{
+			pager_images[i].Show(true);
+			pager_images[i].Init();
+			pager_images[i].Resize();
+
+			pager_images[i].image.y -= 25.0f;
+			pager_images[i].button.y -= 25.0f;
+
+			pager_images[i].image.SetTextureURL(images[i].image);
+			pager_images[i].video.Show(images[i].video);
+			@pager_images[i].object = images[i];
+		}
+
+		pager.height += 50.0f;
+	}
+
+	void OnClickLink(int index)
+	{
+		if (index >= 0 && index < urls.length())
+		{
+			core.Utils.OpenURL(urls[index], false);
+		}
+	}
+};
+
+class PhotoViewerScreenSymbol : ScreenSymbol, IDragListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ top_bg;
+	NGUILabel@ target;
+	NGUILabel@ close;
+	NGUILabel@ share;
+	NGUILabel@ text;
+
+	NGUIPager@ pager;
+	NGUIImageListDrawer@ drawer;
+
+	NGUIButton@ close_button;
+	NGUIButton@ share_button;
+
+	DataImage@ photo;
+	Box photo_box;
+
+	array<DataImage@>@ photos;
+
+	float start_photo_x = 0.0f;
+	float start_photo_y = 0.0f;
+	float start_photo_w = 0.0f;
+	float start_photo_h = 0.0f;
+
+	bool close_in_progress = false;
+	bool open_in_progress = false;
+
+	PhotoViewerScreenSymbol(main::SymbolInstPhotoViewerScreenSymbol@ symbol)
+	{
+		super(symbol);
+		symbol.Show(false);
+
+		@bg = symbol.photo_viewer_bg;
+		@top_bg = symbol.photo_viewer_top_bg;
+		@text = symbol.photo_viewer_text;
+		@target = symbol.photo_viewer_target;
+		@close = symbol.photo_viewer_close;
+		@close_button = symbol.photo_viewer_close_button;
+		@share = symbol.photo_viewer_share;
+		@share_button = symbol.photo_viewer_share_button;
+
+		@pager = cast<NGUIPager>(symbol.photo_viewer_pager);
+		@drawer = symbol.photo_viewer_pager.photo_viewer_drawer;
+		drawer.ResizeList(9);
+	}
+
+	void Init() override
+	{
+		REG_DRAG;
+
+		CLICK(close_button, this.OnClickClose);
+		CLICK(share_button, this.OnClickShare);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		height = kScreenHeight;
+
+		bg.width = kScreenWidth;
+		bg.height = kScreenHeight;
+
+		top_bg.width = kScreenWidth;
+		pager.width = kScreenWidth;
+		pager.height = kScreenHeight - top_bg.height;
+
+		// close.x = screens::top.back.x;
+		// close.y = screens::top.back.y + 0.5f * screens::top.height;
+		// close.width = screens::top.back.width;
+		// close.height = screens::top.back.width;
+	}
+
+	int prev_page = -1;
+
+	void Update(float dt) override
+	{
+		// if (photo is null)
+		// {
+		// 	return;
+		// }
+
+		// if (prev_page != pager.GetCurPage())
+		// {
+		// 	_(text, "PageIndex", kEmpty + (pager.GetCurPage() + 1), kEmpty + pager.numPages);
+		// }
+
+		// top_bg.SetFilledColor(0.0f, 0.0f, 0.0f, clampf(bg.alpha, 0.0f, 0.4f));
+		// close.alpha = bg.alpha;
+		// share.alpha = bg.alpha;
+		// text.alpha = text.alpha;
+
+		// pager.Show(!open_in_progress && !close_in_progress);
+
+		// target.Show(open_in_progress || close_in_progress);
+		// if (open_in_progress || close_in_progress)
+		// {
+		// 	if (photo.box.IsValid())
+		// 	{
+		// 		const float photo_as = start_photo_w / start_photo_h;
+		// 		const float px = clampf((target.width - photo.scr_width) / (kScreenWidth - photo.scr_width), 0.0f, 1.0f);
+		// 		const float py = clampf((target.height - photo.scr_height) / ((kScreenWidth / photo_as) - photo.scr_height), 0.0f, 1.0f);
+
+		// 		photo_box.left_margin = photo.box.left_margin + (0.0f - photo.box.left_margin) * px;
+		// 		photo_box.width = photo.box.width + (start_photo_w - photo.box.width) * px;
+
+		// 		photo_box.top_margin = photo.box.top_margin + (0.0f - photo.box.top_margin) * py;
+		// 		photo_box.height = photo.box.height + (start_photo_h - photo.box.height) * px;
+		// 	}
+		// 	else
+		// 	{
+		// 		photo_box.left_margin = 0.0f;
+		// 		photo_box.width = 0.0f;
+
+		// 		photo_box.top_margin = 0.0f;
+		// 		photo_box.height = 0.0f;
+		// 	}
+
+		// 	view.Clip(target, target.width, target.height, box: photo_box);
+		// }
+
+		// float x = 0.0f;
+		// for (int i = 0, size = photos.length(); i < size; ++i)
+		// {
+		// 	if (i != screens::team_about.last_clicked_photo || !open_in_progress)
+		// 	{
+		// 		const float w = kScreenWidth;
+		// 		const float h = w / drawer.GetTextureWidth(i) * drawer.GetTextureHeight(i);
+
+		// 		drawer.Draw(i, x, 0.5f * (pager.height - h), w, h, 1.0f, 0.0f);
+		// 	}
+
+		// 	x += kScreenWidth;
+		// }
+	}
+
+	void OnStartDrag(NGUIButton@ button, float x, float y) override
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir) override
+	{
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir) override
+	{
+		// if (view.GetCurrentScreen() is screens::team_about && IsVisible() && (swipe_dir == kSwipeUp || swipe_dir == kSwipeDown))
+		// {
+		// 	OnClickClose();
+		// }
+	}
+
+	void SetPhotos(array<DataImage@>@ photos)
+	{
+		// @this.photos = photos;
+
+		// for (int i = 0, size = photos.length(); i < size; ++i)
+		// {
+		// 	drawer.SetTextureURL(i, photos[i].texture);
+		// }
+
+		// pager.numPages = photos.length();
+		// pager.SetPosition(screens::team_about.last_clicked_photo, true);
+	}
+
+	void SetPhoto(DataImage@ photo, float photo_x, float photo_y, float photo_w, float photo_h)
+	{
+		// const float photo_as = photo_w / photo_h;
+
+		// @this.photo = photo;
+
+		// start_photo_x = photo_x + 0.5f * photo.scr_width;
+		// start_photo_y = photo_y + 0.5f * photo.scr_height;
+		// start_photo_w = photo_w;
+		// start_photo_h = photo_h;
+
+		// target.SetTextureURL(photo.texture);
+
+		// Show(true);
+		// target.x = photo_x + 0.5f * photo.scr_width;
+		// target.y = photo_y + 0.5f * photo.scr_height;
+		// target.width = photo.scr_width;
+		// target.height = photo.scr_height;
+
+		// open_in_progress = true;
+
+		// const float duration = 0.3f;
+		// EffectWithCallback(EffectPrecedence(FadeIn(bg, duration, 0.0f, use_filled: true), MoveWidthTo(target, kScreenWidth, duration), MoveHeightTo(target, kScreenWidth / photo_as, duration), MoveTo(target, 0.5f * kScreenWidth, 0.5f * kScreenHeight, duration)), EffectCallback(this.OnOpenDone)).Perform();
+	}
+
+	void OnOpenDone()
+	{
+		open_in_progress = false;
+	}
+
+	void OnCloseDone()
+	{
+		// Show(false);
+		// screens::team_about.scroller.Allow_Scroll = true;
+
+		// @photo = null;
+		// close_in_progress = false;
+	}
+
+	void OnClickShare()
+	{
+		string path;
+		target.GetTextureFileName(path);
+
+		core.Mobile.StartShareImage(path, null);
+	}
+
+	void OnClickClose()
+	{
+		// if (close_in_progress)
+		// {
+		// 	return;
+		// }
+
+		// const int current_page = pager.GetCurPage();
+		// if (current_page != screens::team_about.last_clicked_photo)
+		// {
+		// 	screens::team_about.last_clicked_photo = current_page;
+
+		// 	float px = 0.0f;
+		// 	float py = 0.0f;
+
+		// 	screens::team_about.GetPhotoPosition(current_page, px, py);
+
+		// 	@this.photo = photos[current_page];
+
+		// 	start_photo_x = px + 0.5f * photo.scr_width;
+		// 	start_photo_y = py + 0.5f * photo.scr_height;
+		// 	start_photo_w = drawer.GetTextureWidth(current_page);
+		// 	start_photo_h = drawer.GetTextureHeight(current_page);
+
+		// 	target.SetTextureURL(photo.texture);
+
+		// 	target.x = 0.5f * kScreenWidth;
+		// 	target.y = 0.5f * kScreenHeight;
+		// 	target.width = kScreenWidth;
+		// 	target.height = kScreenWidth / start_photo_w * start_photo_h;
+		// }
+
+		// close_in_progress = true;
+
+		// float px = 0.0f;
+		// float py = 0.0f;
+
+		// screens::team_about.GetPhotoPosition(screens::team_about.last_clicked_photo, px, py);
+
+		// px += 0.5f * photo.scr_width;
+		// py += 0.5f * photo.scr_height;
+
+		// const float duration = 0.3f;
+		// EffectWithCallback(EffectPrecedence(FadeOut(bg, duration, 1.0f, use_filled: true), MoveWidthTo(target, photo.scr_width, duration), MoveHeightTo(target, photo.scr_height, duration), MoveTo(target, px + 1.0f, py, duration)), EffectCallback(this.OnCloseDone)).Perform();
+	}
+};
+
+class BlockTop : Symbol
+{
+	NGUILabel@ bg;
+	NGUILabel@ title;
+	NGUILabel@ clip;
+
+	NGUILabel@ shadow0;
+	NGUILabel@ shadow1;
+
+	main::SymbolBlockContentSymbol@ block_top_content;
+
+	NGUIWidget@ contents_root;
+	array<BlockContent@> contents;
+
+	array<DataBlock@>@ blocks;
+
+	float initial_content_y = 0.0f;
+	float total_height = 0.0f;
+
+	BlockTop(main::SymbolInstBlockTopSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.block_top_bg;
+		@title = symbol.block_top_title;
+		@clip = cast<NGUILabel>(symbol.block_top_clip);
+		@shadow0 = symbol.block_top_shadow0;
+		@shadow1 = symbol.block_top_shadow1;
+
+		@block_top_content = symbol.block_top_clip.block_top_content_root.block_top_content;
+
+		@contents_root = cast<NGUIWidget>(symbol.block_top_clip.block_top_content_root);
+
+		// BIND_ARRAY(contents, 2, symbol.block_top_clip.block_top_content_root.block_top_content, BlockContent);
+
+		// contents[1].text.Show(false);
+		// contents[1].pager.Show(true);
+
+		initial_content_y = contents_root.y;
+
+		bg.Show(false);
+		shadow0.Show(false);
+		shadow1.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		bg.width = kScreenWidth;
+		clip.width = kScreenWidth;
+		contents_root.width = kScreenWidth;
+		shadow0.width = kScreenWidth;
+		shadow1.width = kScreenWidth;
+		title.width = kScreenWidth - 80.0f;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		const float count = blocks.length();
+		LOOP(contents)
+		{
+			contents[i].pager.Show(i < count && !blocks[i].images.isEmpty() && contents[i].pager.numPages > 0 && clip.alpha > 0.05f);
+			contents[i].pager.allowRubberBorder = contents[i].pager.numPages > 1;
+		}
+	}
+
+	float GetHeight() override
+	{
+		return total_height;
+	}
+
+	void SetContent(array<DataBlock@>@ blocks)
+	{
+		@this.blocks = blocks;
+
+		LOOP(contents)
+		{
+			contents[i].Show(false);
+		}
+
+		if (blocks.length() > block_top_content.GetInstancesCount())
+		{
+			contents.resize(0);
+			BIND_ARRAY(contents, blocks.length(), block_top_content, BlockContent);
+		}
+
+		total_height = initial_content_y + 150.0f;
+
+		float y = 0.0f;
+		clip.height = initial_content_y;
+		LOOP(blocks)
+		{
+			contents[i].Show(true);
+
+			contents[i].Init();
+			contents[i].Resize();
+
+			contents[i].text.Show(false);
+			contents[i].pager.Show(false);
+
+			if (!blocks[i].text.isEmpty())
+			{
+				contents[i].text.Show(true);
+				contents[i].text.y = y;
+				contents[i].text.SetText(blocks[i].text);
+				@contents[i].urls = blocks[i].urls;
+
+				blocks[i].height = contents[i].text.GetCurTextHeight() + 70.0f;
+			}
+			else if (!blocks[i].images.isEmpty())
+			{
+				contents[i].pager.Show(true);
+				contents[i].pager.y = y;
+
+				contents[i].SetImages(blocks[i].images);
+
+				blocks[i].height = contents[i].pager.height + 150.0f;
+			}
+
+			clip.height += blocks[i].height;
+			total_height += blocks[i].height;
+			y += blocks[i].height;
+		}
+	}
+};
+
+class PhilantropyScreen : Symbol, IEventListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ image;
+
+	NGUIScroller@ scroller;
+
+	main::SymbolBlockTopSymbol@ phil_content_blocks;
+
+	array<BlockTop@> text_blocks;
+
+	NGUILabel@ bottom;
+	NGUILabel@ bottom_bg;
+	NGUILabel@ bottom_text;
+	NGUILabel@ pull_to_go_shadow;
+	PullToGo@ pull_to_go;
+
+	float initial_image_height = 0.0f;
+	float initial_image_y = 0.0f;
+
+	PhilantropyScreen(main::SymbolInstPhilantropyScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.phil_bg;
+		@image = symbol.phil_image;
+		@scroller = cast<NGUIScroller>(symbol.phil_scroller);
+
+		initial_image_height = image.height;
+		initial_image_y = image.y;
+
+		@phil_content_blocks = symbol.phil_scroller.phil_top_blocks;
+
+		@bottom = cast<NGUILabel>(symbol.phil_scroller.phil_bottom);
+		@bottom_bg = symbol.phil_scroller.phil_bottom.phil_bottom_bg;
+		@bottom_text = symbol.phil_scroller.phil_bottom.phil_bottom_text;
+		@pull_to_go_shadow = symbol.phil_pull_to_go_shadow;
+
+		@pull_to_go = PullToGo(symbol.phil_pull_to_go);
+
+		bottom_text.SetText("PHILANTROPY");
+
+		bottom.Show(false);
+		pull_to_go.Show(false);
+		pull_to_go_shadow.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_EVENT;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		bottom.width = kScreenWidth;
+
+		bottom_bg.width = kScreenWidth;
+		bottom_bg.height = 10.0f * bottom.height;
+
+		pull_to_go_shadow.width = kScreenWidth;
+
+		pull_to_go.pager.height = 2.0f * kScreenHeight + 2.0f * bottom.height;
+		pull_to_go.pager_dot.y = bottom.height;
+	}
+
+	void Process(Event@ event) override
+	{
+		if (event.code == kModelReady)
+		{
+			BIND_ARRAY(text_blocks, model.philantropy.length(), phil_content_blocks, BlockTop);
+			LOOP(text_blocks)
+			{
+				text_blocks[i].Init();
+				text_blocks[i].Resize();
+
+				text_blocks[i].Show(true);
+
+				text_blocks[i].title.SetText(model.philantropy[i].title);
+				text_blocks[i].SetContent(model.philantropy[i].blocks);
+			}
+
+			if (!model.philantropy.isEmpty())
+			{
+				text_blocks[0].Show(true);
+				text_blocks[0].shadow0.Show(true);
+			}
+		}
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		const float pos = scroller.GetPosition();
+
+		const float as = image.width / image.height;
+		if (pos > 0.0f)
+		{
+			image.height = initial_image_height + pos;
+			image.width = as * image.height;
+		}
+		else
+		{
+			image.height = initial_image_height;
+			image.width = as * image.height;
+		}
+
+		view.Clip(image, kScreenWidth, image.height);
+
+		float prev_y = 0.0f;
+		float y = 0.0f;
+		LOOP(text_blocks)
+		{
+			text_blocks[i].Show(true);
+			text_blocks[i].y = y;
+
+			prev_y = y;
+			y += text_blocks[i].height;
+		}
+
+		scroller.scrollSize = 680.0f + y/* + bottom.height*/;
+
+		bg.y = 160.0f + pos;
+		bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+
+		const float sz = clampf(scroller.scrollSize - scroller.height, 0.0f, kInf);
+
+		bottom.y = sz + scroller.height;
+
+		if (pos < -sz)
+		{
+			pull_to_go.height = abs(pos + sz);
+		}
+		else
+		{
+			pull_to_go.height = 0.0f;
+		}
+
+		if (!pull_to_go.runned)
+		{
+			pull_to_go_shadow.y = pull_to_go.height;
+		}
+	}
+
+	bool pull_to_go_started = false;
+
+	void StartPullToGo()
+	{
+		return;
+		
+		if (!controller.IsTouchActive())
+		{
+			return;
+		}
+
+		pull_to_go_started = true;
+
+		scroller.EnableRefreshOffset(true);
+		pull_to_go.UpdateText(false);
+
+		pull_to_go.pager.SetPosition(2.0f, true);
+
+		RotateTo(pull_to_go.arrow, -180.0f, 0.5f).Perform();
+	}
+
+	void DoneOpenPullToGo()
+	{
+		pull_to_go.opened = true;
+		pull_to_go.pager.Show(true);
+		bottom_text.Show(false);
+	}
+
+	void DoneClosePullToGo()
+	{
+		pull_to_go.opened = false;
+		pull_to_go.runned = false;
+		scroller.EnableRefreshOffset(false);
+	}
+
+	void RunPullToGo()
+	{
+		if (!pull_to_go_started)
+		{
+			return;
+		}
+
+		pull_to_go.runned = true;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeIn(pull_to_go.pager_dot, 0.5f * duration, 0.0f, use_filled: true), FadeOut(pull_to_go.arrow, 0.5f * duration, 1.0f), FadeOut(pull_to_go.text, 0.5f * duration, 1.0f), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, 2.0f * bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.5f * bottom.height, duration)), EffectCallback(this.DoneOpenPullToGo)).Perform();
+	}
+
+	void ResetPullToGo()
+	{
+		pull_to_go_started = false;
+
+		pull_to_go.text.Show(true);
+		pull_to_go.text.alpha = 1.0f;
+
+		pull_to_go.arrow.Show(true);
+		pull_to_go.arrow.alpha = 1.0f;
+
+		pull_to_go.UpdateText(true);
+		pull_to_go.arrow.rot_z = 0.0f;
+	}
+
+	void StopPullToGo()
+	{
+		if (!pull_to_go.opened)
+		{
+			return;
+		}
+
+		pull_to_go.pager.Show(false);
+
+		bottom_text.Show(true);
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeOut(pull_to_go.pager_dot, 0.5f * duration, 1.0f, use_filled: true), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.0f, duration)), EffectCallback(this.DoneClosePullToGo)).Perform();
+		TIMEOUT_CB(this.ResetPullToGo, 2.0f * duration);
+	}
+};
+
+class LineWithDot : Symbol
+{
+	NGUILabel@ line;
+	NGUILabel@ dot;
+
+	LineWithDot(main::SymbolInstLineWithDotSymbol@ symbol)
+	{
+		super(symbol);
+
+		@line = symbol.line;
+		@dot = symbol.dot;
+	}
+
+	void Resize() override
+	{
+		line.x = 20.0f;
+		line.width = 0.5f * kScreenWidth - 42.0f;
+	}
+};
+
+class LineWithDate : Symbol
+{
+	NGUILabel@ line;
+	NGUILabelRich@ date;
+
+	LineWithDate(main::SymbolInstLineWithDateSymbol@ symbol)
+	{
+		super(symbol);
+
+		@line = symbol.line0;
+		@date = symbol.date;
+
+		date.SetText("#fn{gothampro}#fz30#algC 5\n#fz16 NOV");
+	}
+
+	void Resize() override
+	{
+		// line.x = 20.0f;
+		// line.width = 0.5f * kScreenWidth - 18.0f;
+	}
+
+	void SetDate(const string&in day, const string&in month)
+	{
+		date.SetText("#fn{gothampro}#fz30#algC "+day+"\\n#fz16 "+month);
+	}
+};
+
+class Label : Symbol
+{
+	NGUILabel@ label;
+
+	Label(main::SymbolInstLabelSymbol@ symbol)
+	{
+		super(symbol);
+
+		@label = symbol.label;
+	}
+};
+
+class BiographyScreen : Symbol, IEventListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ image;
+	NGUILabel@ top_shadow;
+
+	NGUIWidget@ switch_content;
+	NGUILabel@ switch_content_bg;
+	NGUIPager@ switch_content_pager;
+	// NGUITextDrawer@ switch_content_text_drawer;
+
+	NGUIScroller@ scroller;
+
+	main::SymbolLineWithDotSymbol@ bio_switch_lines;
+	main::SymbolBlockTopSymbol@ bio_content_blocks;
+	main::SymbolLabelSymbol@ bio_switch_text;
+
+	array<BlockTop@> text_blocks;
+	array<LineWithDot@> bio_lines;
+	array<Label@> bio_text;
+
+	NGUILabel@ bottom;
+	NGUILabel@ bottom_bg;
+	NGUILabel@ bottom_text;
+	NGUILabel@ pull_to_go_shadow;
+	PullToGo@ pull_to_go;
+
+	float initial_image_height = 0.0f;
+	float initial_image_y = 0.0f;
+
+	BiographyScreen(main::SymbolInstBiographyScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.bio_bg;
+		@image = symbol.bio_image;
+		@top_shadow = symbol.bio_top_shadow;
+		@scroller = cast<NGUIScroller>(symbol.bio_scroller);
+		@switch_content = cast<NGUIWidget>(symbol.bio_switch);
+		@switch_content_bg = symbol.bio_switch.bio_switch_bg;
+		@switch_content_pager = cast<NGUIPager>(symbol.bio_switch.bio_switch_pager);
+		// @switch_content_text_drawer = symbol.bio_switch.bio_switch_pager.bio_switch_text_drawer;
+		@bio_switch_text = symbol.bio_switch.bio_switch_pager.bio_switch_text;
+
+		initial_image_height = image.height;
+		initial_image_y = image.y;
+
+		@bio_switch_lines = symbol.bio_switch.bio_switch_pager.bio_switch_lines;
+		@bio_content_blocks = symbol.bio_scroller.bio_top_blocks;
+
+		@bottom = cast<NGUILabel>(symbol.bio_scroller.bio_bottom);
+		@bottom_bg = symbol.bio_scroller.bio_bottom.bio_bottom_bg;
+		@bottom_text = symbol.bio_scroller.bio_bottom.bio_bottom_text;
+		@pull_to_go_shadow = symbol.bio_pull_to_go_shadow;
+
+		@pull_to_go = PullToGo(symbol.bio_pull_to_go);
+
+		bottom_text.SetText("BIOGRAPHY");
+
+		bottom.Show(false);
+		pull_to_go.Show(false);
+		pull_to_go_shadow.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_EVENT;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		top_shadow.width = kScreenWidth;
+		switch_content.width = kScreenWidth;
+		switch_content_bg.width = kScreenWidth;
+		// switch_content_text_drawer.width = kScreenWidth;
+		switch_content_pager.width = 0.5f * kScreenWidth/* - 150.0f * 2.0f*/;
+
+		scroller.width = kScreenWidth;
+		bottom.width = kScreenWidth;
+
+		bottom_bg.width = kScreenWidth;
+		bottom_bg.height = 10.0f * bottom.height;
+
+		pull_to_go_shadow.width = kScreenWidth;
+
+		pull_to_go.pager.height = 2.0f * kScreenHeight + 2.0f * bottom.height;
+		pull_to_go.pager_dot.y = bottom.height;
+	}
+
+	void Process(Event@ event) override
+	{
+		if (event.code == kModelReady)
+		{
+			BIND_ARRAY(bio_text, model.biography.length(), bio_switch_text, Label);
+			BIND_ARRAY(bio_lines, model.biography.length(), bio_switch_lines, LineWithDot);
+			BIND_ARRAY(text_blocks, model.biography.length(), bio_content_blocks, BlockTop);
+			LOOP(text_blocks)
+			{
+				bio_lines[i].Init();
+				bio_lines[i].Resize();
+
+				text_blocks[i].Init();
+				text_blocks[i].Resize();
+
+				text_blocks[i].Show(true);
+				text_blocks[i].Show(true);
+				text_blocks[i].shadow0.Show(true);
+
+				text_blocks[i].title.SetText(model.biography[i].title);
+				text_blocks[i].SetContent(model.biography[i].blocks);
+			}
+
+			LOOP(bio_text)
+			{
+				bio_text[i].label.SetFontName("circe", true, false, 37, 1.0f, 0.0f);
+				bio_text[i].label.num_visible_lines = 1;
+			}
+
+			if (!bio_lines.isEmpty())
+			{
+				bio_lines[bio_lines.length()-1].line.Show(false);
+			}
+		}
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		if (text_blocks.isEmpty())
+		{
+			return;
+		}
+
+		const float pos = scroller.GetPosition();
+		const float pager_pos = switch_content_pager.GetPosition();
+		const int current_page = switch_content_pager.GetCurPage();
+
+		const float as = image.width / image.height;
+		if (pos > 0.0f)
+		{
+			image.height = initial_image_height + pos;
+			image.width = as * image.height;
+		}
+		else
+		{
+			image.height = initial_image_height;
+			image.width = as * image.height;
+		}
+
+		view.Clip(image, kScreenWidth, image.height);
+
+		LOOP(text_blocks)
+		{
+			text_blocks[i].Show(false);
+			text_blocks[i].shadow0.Show(false);
+			text_blocks[i].y = 0.0f;
+		}
+
+		text_blocks[current_page].Show(true);
+		// text_blocks[current_page].shadow0.Show(true);
+
+		if (current_page + 1 < text_blocks.length())
+		{
+			text_blocks[current_page + 1].Show(true);
+		}
+
+		if (current_page - 1 >= 0)
+		{
+			text_blocks[current_page - 1].Show(true);
+		}
+
+		if (pager_pos >= (current_page + 0.4f))
+		{
+			text_blocks[current_page].clip.alpha = clampf(1.0f - (pager_pos - (current_page + 0.4f)) / 0.3f, 0.0f, 1.0f);
+			text_blocks[current_page].title.alpha = text_blocks[current_page].clip.alpha;
+		}
+		else if (pager_pos >= current_page)
+		{
+			text_blocks[current_page].clip.alpha = 1.0f;
+			text_blocks[current_page].title.alpha = text_blocks[current_page].clip.alpha;
+		}
+
+		if (current_page + 1 < text_blocks.length())
+		{
+			if (pager_pos >= (current_page + 0.7f))
+			{
+				text_blocks[current_page+1].clip.alpha = clampf((pager_pos - (current_page + 0.7f)) / 0.3f, 0.0f, 1.0f);
+				text_blocks[current_page+1].title.alpha = text_blocks[current_page+1].clip.alpha;
+			}
+			else
+			{
+				text_blocks[current_page+1].clip.alpha = 0.0f;
+				text_blocks[current_page+1].title.alpha = text_blocks[current_page+1].clip.alpha;
+			}
+		}
+
+		if (current_page - 1 >= 0)
+		{
+			if (pager_pos <= current_page - 1 + 0.7f && pager_pos > current_page - 1 + 0.4f)
+			{
+				text_blocks[current_page].clip.alpha = 1.0f - clampf(abs(pager_pos - (current_page - 1 + 0.7f)) / 0.3f, 0.0f, 1.0f);
+				text_blocks[current_page].title.alpha = text_blocks[current_page].clip.alpha;
+			}
+			else if (pager_pos <= current_page - 1 + 0.4f)
+			{
+				text_blocks[current_page].clip.alpha = 0.0f;
+				text_blocks[current_page].title.alpha = text_blocks[current_page].clip.alpha;
+
+				text_blocks[current_page - 1].clip.alpha = clampf(abs(pager_pos - (current_page - 1 + 0.4f)) / 0.3f, 0.0f, 1.0f);
+				text_blocks[current_page - 1].title.alpha = text_blocks[current_page - 1].clip.alpha;
+			}
+		}
+
+		float x = 0.0f;
+		LOOP(model.biography)
+		{
+			const float text_w = clampf(bio_text[i].label.GetTextWidth(model.biography[i].title), 0.0f, bio_text[i].label.width);
+			const float text_h = bio_text[i].label.GetTextHeight(model.biography[i].title);
+
+			const float text_x = x + 0.5f * (switch_content_pager.width - text_w);
+			const float text_y = 150.0f;
+
+			const float dx = x - pager_pos * switch_content_pager.width;
+
+			const float goal_alpha = 0.5f;
+			const float gloal_scale = 0.80f;
+
+			float scale = (1.0f + gloal_scale) - clampf(gloal_scale + (1.0f - gloal_scale) * abs(dx) / kScreenWidth, 0.0f, 1.0f);
+			float alpha = (1.0f + goal_alpha) - clampf(goal_alpha + (1.0f - goal_alpha) * abs(dx) / kScreenWidth, 0.0f, 1.0f);
+
+			bio_text[i].label.SetText(model.biography[i].title);
+			bio_text[i].label.width = 0.5f * kScreenWidth - 20.0f;
+			bio_text[i].label.height = 100.0f;
+			bio_text[i].label.fontScale = scale;
+			bio_text[i].label.x = text_x + 0.5f * text_w * (1.0f - scale);
+			bio_text[i].label.y = text_y;
+			bio_text[i].label.alpha = alpha;
+
+			bio_lines[i].x = x;
+			bio_lines[i].y = 250.0f;
+
+			x += switch_content_pager.width;
+		}
+
+		switch_content_pager.numPages = model.biography.length();
+
+		scroller.scrollSize = 680.0f + text_blocks[current_page].height/* + bottom.height*/;
+
+		bg.y = 160.0f + pos;
+		bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+		top_shadow.y = bg.y;
+
+		const float sz = clampf(scroller.scrollSize - scroller.height, 0.0f, kInf);
+
+		bottom.y = sz + scroller.height;
+
+		if (pos < -sz)
+		{
+			pull_to_go.height = abs(pos + sz);
+		}
+		else
+		{
+			pull_to_go.height = 0.0f;
+		}
+
+		if (!pull_to_go.runned)
+		{
+			pull_to_go_shadow.y = pull_to_go.height;
+		}
+	}
+
+	bool pull_to_go_started = false;
+
+	void StartPullToGo()
+	{
+		return;
+		
+		if (!controller.IsTouchActive())
+		{
+			return;
+		}
+
+		pull_to_go_started = true;
+
+		scroller.EnableRefreshOffset(true);
+		pull_to_go.UpdateText(false);
+
+		pull_to_go.pager.SetPosition(1.0f, true);
+
+		RotateTo(pull_to_go.arrow, -180.0f, 0.5f).Perform();
+	}
+
+	void DoneOpenPullToGo()
+	{
+		pull_to_go.opened = true;
+		pull_to_go.pager.Show(true);
+		bottom_text.Show(false);
+	}
+
+	void DoneClosePullToGo()
+	{
+		pull_to_go.opened = false;
+		pull_to_go.runned = false;
+		scroller.EnableRefreshOffset(false);
+	}
+
+	void RunPullToGo()
+	{
+		if (!pull_to_go_started)
+		{
+			return;
+		}
+
+		pull_to_go.runned = true;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeIn(pull_to_go.pager_dot, 0.5f * duration, 0.0f, use_filled: true), FadeOut(pull_to_go.arrow, 0.5f * duration, 1.0f), FadeOut(pull_to_go.text, 0.5f * duration, 1.0f), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, 2.0f * bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.5f * bottom.height, duration)), EffectCallback(this.DoneOpenPullToGo)).Perform();
+	}
+
+	void ResetPullToGo()
+	{
+		pull_to_go_started = false;
+
+		pull_to_go.text.Show(true);
+		pull_to_go.text.alpha = 1.0f;
+
+		pull_to_go.arrow.Show(true);
+		pull_to_go.arrow.alpha = 1.0f;
+
+		pull_to_go.UpdateText(true);
+		pull_to_go.arrow.rot_z = 0.0f;
+	}
+
+	void StopPullToGo()
+	{
+		if (!pull_to_go.opened)
+		{
+			return;
+		}
+
+		pull_to_go.pager.Show(false);
+
+		bottom_text.Show(true);
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeOut(pull_to_go.pager_dot, 0.5f * duration, 1.0f, use_filled: true), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.0f, duration)), EffectCallback(this.DoneClosePullToGo)).Perform();
+		TIMEOUT_CB(this.ResetPullToGo, 2.0f * duration);
+	}
+};
+
+class EventsScreen : Symbol, IDragListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ title;
+	NGUILabel@ desc;
+	NGUILabel@ image;
+	NGUILabel@ top_shadow;
+
+	NGUIButton@ calendar_button;
+
+	NGUILabelRich@ date;
+
+	NGUIScroller@ scroller;
+
+	BlockTop@ content;
+
+	float initial_image_height = 0.0f;
+	float initial_image_y = 0.0f;
+
+	DataEvent@ current_event;
+
+	EventsScreen(main::SymbolInstEventsScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.ev_bg;
+		@image = symbol.ev_image;
+		@top_shadow = symbol.ev_top_shadow;
+		@title = symbol.ev_scroller.ev_title;
+		@desc = symbol.ev_scroller.ev_desc;
+		@date = symbol.ev_scroller.ev_date;
+		@calendar_button = symbol.ev_scroller.ev_calendar_button;
+		@content = BlockTop(symbol.ev_scroller.ev_top_blocks);
+		@scroller = cast<NGUIScroller>(symbol.ev_scroller);
+
+		initial_image_height = image.height;
+		initial_image_y = image.y;
+
+		date.SetText("#fn{gothampro}#fz30#algC 5\n#fz16 NOV");
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_DRAG;
+
+		CLICK(calendar_button, this.OnClickCalendar);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		title.width = kScreenWidth - 80.0f;
+		desc.width = kScreenWidth - 80.0f;
+		top_shadow.width = kScreenWidth;
+
+		scroller.width = kScreenWidth;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		const float pos = scroller.GetPosition();
+
+		const float as = image.width / image.height;
+		if (pos > 0.0f)
+		{
+			image.height = initial_image_height + pos;
+			image.width = as * image.height;
+		}
+		else
+		{
+			image.height = initial_image_height;
+			image.width = as * image.height;
+		}
+
+		view.Clip(image, kScreenWidth, image.height);
+
+		scroller.scrollSize = content.height + 430.0f;
+
+		bg.y = pos;
+		bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+		top_shadow.y = bg.y;
+	}
+
+	void OnStartDrag(NGUIButton@ button, float x, float y) override
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir) override
+	{
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir) override
+	{
+		ONLY_VISIBLE;
+
+		if (swipe_dir == kSwipeRight)
+		{
+			LOOP(content.contents)
+			{
+				if (content.contents[i].pager.IsVisible() && controller.IsClicked(content.contents[i].pager) && content.contents[i].pager.GetCurPage() > 0)
+				{
+					return;
+				}
+			}
+
+			Hide();
+		}
+	}
+
+	void Hide()
+	{
+		@current_event = null;
+
+		MoveTo(screens::events, kScreenWidth, 0.0f, 0.4f).HideAfterDone().Perform();
+		
+		screens::events_and_news.Show(true);
+		screens::events_and_news.x = -kScreenWidth;
+		MoveTo(screens::events_and_news, 0.0f, 0.0f, 0.4f).Perform();
+
+		screens::top.TransformToLines();
+	}
+
+	void Show(DataEvent@ event)
+	{
+		@current_event = event;
+
+		content.Show(true);
+
+		content.title.SetText(kEmpty);
+		content.SetContent(event.blocks);
+
+		content.Show(true);
+		content.shadow0.Show(false);
+
+		title.SetText(event.title);
+		desc.SetText(event.desc);
+		date.SetText("#fn{gothampro}#fz30#algC "+event.day+"\n#fz16 "+event.month);
+
+		if (event.image.isEmpty())
+		{
+			image.SetTexture(kEmpty);
+		}
+		else
+		{
+			image.SetTextureURL(event.image);
+		}
+
+		MoveTo(screens::events_and_news, -kScreenWidth, 0.0f, 0.4f).HideAfterDone().Perform();
+
+		screens::events.Show(true);
+		screens::events.x = kScreenWidth;
+		MoveTo(screens::events, 0.0f, 0.0f, 0.4f).Perform();
+
+		screens::top.TransformToCross();
+	}
+
+	void OnClickCalendar()
+	{
+		core.Mobile.AddEventToCalendar(current_event.day_idx, current_event.month_idx, current_event.year_idx, current_event.hour, current_event.minute, 0, current_event.title, current_event.desc, "");
+
+		view.ShowPopup(text: "Event has been added to the calendar");
+	}
+};
+
+class EventsItem : Symbol
+{
+	NGUILabel@ image;
+	NGUILabel@ title;
+	NGUILabel@ desc;
+	NGUILabel@ calendar;
+
+	NGUIButton@ button;
+	NGUIButton@ calendar_button;
+
+	EventsItem(main::SymbolInstEventsItemSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@image = symbol.ev_item_image;
+		@title = symbol.ev_item_title;
+		@desc = symbol.ev_item_desc;
+		@calendar = symbol.ev_item_calendar;
+		@button = symbol.ev_item_button;
+		@calendar_button = symbol.ev_item_calendar_button;
+	}
+
+	void Init() override
+	{
+		CLICK(button, this.OnClick);
+		CLICK(calendar_button, this.OnClickCalendar);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		title.width = kScreenWidth - 80.0f;
+		desc.width = kScreenWidth - 80.0f;
+
+		button.width = width;
+		button.height = height;
+	}
+
+	void Update(float dt) override
+	{
+		// image.width = screens::events_and_news.pager.width;
+		// image.height = screens::events_and_news.pager.height;
+	}
+
+	void OnClick()
+	{
+		screens::events.Show(cast<DataEvent>(object));
+	}
+
+	void OnClickCalendar()
+	{
+		DataEvent@ ev = cast<DataEvent>(object);
+		core.Mobile.AddEventToCalendar(ev.day_idx, ev.month_idx, ev.year_idx, ev.hour, ev.minute, 0, ev.title, ev.desc, "");
+
+		view.ShowPopup(text: "Event has been added to the calendar");
+	}
+};
+
+class EventsNewsItem : Symbol
+{
+	NGUILabel@ frame;
+	NGUILabel@ date;
+	NGUILabelRich@ text;
+
+	NGUILabel@ icon_fb;
+	NGUILabel@ icon_inst;
+	NGUILabel@ icon_twitter;
+
+	NGUIButton@ button;
+
+	EventsNewsItem(main::SymbolInstEventsNewsItemSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@frame = symbol.news_item_frame;
+		@date = symbol.news_item_date;
+		@text = symbol.news_item_text;
+
+		@icon_fb = symbol.news_item_icon_fb;
+		@icon_inst = symbol.news_item_icon_inst;
+		@icon_twitter = symbol.news_item_icon_twitter;
+
+		@button = symbol.news_item_button;
+	}
+
+	void Init() override
+	{
+		CLICK(button, this.OnClick);
+		CLICK_LINK(text, this.OnClickLink);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth - 2.0f * 30.0f;
+		frame.width = width;
+		text.width = width - 2.0f * 40.0f;
+	}
+
+	float GetHeight(DataNews@ page)
+	{
+		return text.y + text.GetTextHeight(page.text) + 80.0f;
+	}
+
+	void SetData(DataNews@ page)
+	{
+		@object = page;
+
+		icon_fb.Show(page.source == "facebook");
+		icon_inst.Show(page.source == "instagram");
+		icon_twitter.Show(page.source == "twitter");
+
+		date.SetText(page.date_str);
+		text.SetText(page.text);
+
+		height = GetHeight(page);
+		frame.height = height;
+
+		button.width = width;
+		button.height = height;
+	}
+
+	void OnClick()
+	{
+		const int link_idx = text.CheckLinksId();
+		if (link_idx >= 0)
+		{
+			OnClickLink(link_idx);
+			return;
+		}
+
+		DataNews@ page = cast<DataNews>(object);
+		// if (page.type == kNewsLink || page.type == kNewsVideo)
+		// {
+		// 	core.Utils.OpenURL(page.link, false);
+		// }
+
+		screens::news_expanded.Show(page);
+	}
+
+	void OnClickLink(int index)
+	{
+		DataNews@ page = cast<DataNews>(object);
+		if (index >= 0 && index < page.urls.length())
+		{
+			core.Utils.OpenURL(page.urls[index], false);
+		}
+	}
+};
+
+class EventsNewsItemWithImage : Symbol
+{
+	NGUILabel@ image;
+	NGUILabel@ date;
+	NGUILabel@ date_bg;
+	NGUILabelRich@ text;
+	NGUILabel@ text_bg;
+	NGUILabel@ video;
+
+	NGUILabel@ icon_fb;
+	NGUILabel@ icon_inst;
+	NGUILabel@ icon_twitter;
+
+	NGUIButton@ button;
+
+	EventsNewsItemWithImage(main::SymbolInstEventsNewsItemWithImageSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@image = symbol.news_item_image;
+		@date = symbol.news_item_date0;
+		@date_bg = symbol.news_item_date_bg;
+		@text = symbol.news_item_text0;
+		@text_bg = symbol.news_item_text_bg;
+		@video = symbol.news_item_video;
+
+		@icon_fb = symbol.news_item_icon_fb0;
+		@icon_inst = symbol.news_item_icon_inst0;
+		@icon_twitter = symbol.news_item_icon_twitter0;
+
+		@button = symbol.news_item_button0;
+
+		video.Show(false);
+	}
+
+	void Init() override
+	{
+		CLICK(button, this.OnClick);
+		CLICK_LINK(text, this.OnClickLink);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth - 2.0f * 30.0f;
+		image.width = width;
+		text_bg.width = width + 2.0f;
+		text.width = width - 2.0f * 40.0f;
+
+		button.width = width;
+		button.height = height;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		view.Clip(image, image.width, image.height);
+	}
+
+	float GetHeight(DataNews@ page)
+	{
+		return height;
+	}
+
+	void SetData(DataNews@ page)
+	{
+		@object = page;
+
+		icon_fb.Show(page.source == "facebook");
+		icon_inst.Show(page.source == "instagram");
+		icon_twitter.Show(page.source == "twitter");
+
+		date.SetText(page.date_str);
+		date_bg.width = date.GetTextWidth(page.date_str) + date.x + 20.0f;
+
+		text.SetText(page.text);
+		text.height = text.GetTextHeight(page.text) + 5.0f;
+		text_bg.height = text.y + text.height + 40.0f;
+		date.y = text_bg.height;
+		date_bg.y = text_bg.height;
+
+		image.SetTextureURL(page.image);
+
+		video.Show(page.type == kNewsVideo);
+		video.y = 0.5f * (height - text_bg.height);
+	}
+
+	void OnClick()
+	{
+		const int link_idx = text.CheckLinksId();
+		if (link_idx >= 0)
+		{
+			OnClickLink(link_idx);
+			return;
+		}
+
+		DataNews@ page = cast<DataNews>(object);
+		if (page.type == kNewsVideo)
+		{
+			core.Utils.OpenURL(page.link, false);
+			return;
+		}
+
+		screens::news_expanded.Show(page);
+	}
+
+	void OnClickLink(int index)
+	{
+		DataNews@ page = cast<DataNews>(object);
+		if (index >= 0 && index < page.urls.length())
+		{
+			core.Utils.OpenURL(page.urls[index], false);
+		}
+	}
+};
+
+class EventsNewsItemWrapper : Symbol
+{
+	EventsNewsItem@ text;
+	EventsNewsItemWithImage@ image;
+
+	EventsNewsItemWrapper(main::SymbolInstEventsNewsItemWrapperSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@text = EventsNewsItem(symbol.news_wrap_text);
+		@image = EventsNewsItemWithImage(symbol.news_wrap_image);
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		text.Update(dt);
+		image.Update(dt);
+	}
+
+	float GetHeight(DataNews@ page)
+	{
+		if (page.IsText())
+		{
+			return text.GetHeight(page);
+		}
+
+		return image.GetHeight(page);
+	}
+
+	void SetData(DataNews@ page)
+	{
+		@object = page;
+
+		text.Show(false);
+		image.Show(false);
+
+		if (page.IsText())
+		{
+			text.Show(true);
+			text.SetData(page);
+		}
+		else
+		{
+			image.Show(true);
+			image.SetData(page);
+		}
+	}
+};
+
+class EventsAndNewsScreen : Symbol, IBufferSource, IEventListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ top_shadow;
+
+	NGUIPager@ pager;
+	NGUIScroller@ scroller;
+
+	array<LineWithDate@> dates_items;
+	array<EventsItem@> events_items;
+	array<EventsNewsItemWrapper@> news_items;
+
+	DynamicRingBuffer@ buffer;
+
+	NGUILabel@ bottom;
+	NGUILabel@ bottom_bg;
+	NGUILabel@ bottom_text;
+	NGUILabel@ pull_to_go_shadow;
+	PullToGo@ pull_to_go;
+
+	float initial_image_height = 0.0f;
+	float initial_image_y = 0.0f;
+
+	EventsAndNewsScreen(main::SymbolInstEventsAndNewsScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.ev_news_bg;
+		@top_shadow = symbol.ev_news_scroller.ev_news_top_shadow;
+		@scroller = cast<NGUIScroller>(symbol.ev_news_scroller);
+		@pager = cast<NGUIPager>(symbol.ev_news_scroller.ev_news_pager);
+
+		// initial_image_height = image.height;
+		// initial_image_y = image.y;
+
+		@bottom = cast<NGUILabel>(symbol.ev_news_scroller.ev_news_bottom);
+		@bottom_bg = symbol.ev_news_scroller.ev_news_bottom.ev_news_bottom_bg;
+		@bottom_text = symbol.ev_news_scroller.ev_news_bottom.ev_news_bottom_text;
+		@pull_to_go_shadow = symbol.ev_news_pull_to_go_shadow;
+
+		@pull_to_go = PullToGo(symbol.ev_news_pull_to_go);
+
+		bottom_text.SetText("EVENTS AND NEWS");
+
+		BIND_ARRAY(dates_items, 16, symbol.ev_news_scroller.ev_news_dates, LineWithDate);
+		BIND_ARRAY(events_items, 5, symbol.ev_news_scroller.ev_news_pager.ev_news_items, EventsItem);
+		BIND_ARRAY(news_items, 16, symbol.ev_news_scroller.ev_news_items0, EventsNewsItemWrapper);
+
+		@buffer = DynamicRingBuffer(news_items.length(), this, cast<NGUIScroller>(scroller));
+
+		bottom.Show(false);
+		pull_to_go.Show(false);
+		pull_to_go_shadow.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_EVENT;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		top_shadow.width = kScreenWidth;
+
+		pager.width = kScreenWidth;
+		scroller.width = kScreenWidth;
+		bottom.width = kScreenWidth;
+
+		bottom_bg.width = kScreenWidth;
+		bottom_bg.height = 10.0f * bottom.height;
+
+		pull_to_go_shadow.width = kScreenWidth;
+
+		pull_to_go.pager.height = 2.0f * kScreenHeight + 2.0f * bottom.height;
+		pull_to_go.pager_dot.y = bottom.height;
+	}
+
+	int GetElementCount() override
+	{
+		return model.news.length();
+	}
+
+	float GetElementHeight() override
+	{
+		return 0.0f;
+	}
+
+	float GetExtraScrollSize() override
+	{
+		return 0.0f;//bottom.height + 50.0f;
+	}
+
+	void UpdateWidgets(float dt) override
+	{
+		LOOP(news_items)
+		{
+			if (news_items[i].IsVisible())
+			{
+				news_items[i].Update(dt);
+			}
+		}
+	}
+
+	void UpdateElement(float offset, int buffer_index, int index, bool show) override
+	{
+		EventsNewsItemWrapper@ item = news_items[buffer_index];
+		item.Show(show);
+
+		if (index >= model.news.length())
+		{
+			return;
+		}
+
+		DataNews@ page = model.news[index];
+		
+		if (show)
+		{
+			item.y = offset;
+			item.SetData(page);
+		}
+	}
+
+	float GetInitialOffset() override
+	{
+		return 0.5f * kScreenHeight + 30.0f;
+	}
+
+	float GetElementHeight(int index) override
+	{
+		return news_items[0].GetHeight(model.news[index]);
+	}
+
+	float GetElementPadding(int index) override
+	{
+		return 50.0f;
+	}
+
+	float GetScrollerOffset() override
+	{
+		return 0.0f;
+	}
+
+	void Process(Event@ event) override
+	{
+		if (event.code == kModelReady)
+		{
+
+		}
+		else if (event.code == kModelNewsReady)
+		{
+			buffer.FullRefresh();
+		}
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		buffer.Update(dt);
+
+		const float pos = scroller.GetPosition();
+		const float pager_pos = pager.GetPosition();
+
+		LOOP(events_items)
+		{
+			events_items[i].Show(false);
+		}
+
+		LOOP(dates_items)
+		{
+			dates_items[i].Show(false);
+		}
+
+		EventsItem@ item;
+		LineWithDate@ date_item;
+		DataEvent@ event;
+
+		const int items_count = events_items.length();
+		const int dates_items_count = dates_items.length();
+
+		const float date_step = pager.width / 4.0f;
+		
+		float x = 0.0f;
+		float date_x = - 0.25f * pager.GetPosition() * pager.width;
+		LOOP(model.events)
+		{
+			@item = events_items[i % items_count];
+			@date_item = dates_items[i % items_count];
+			@event = model.events[i];
+
+			const float abs_x = x - pager.GetPosition() * pager.width;
+			const bool visible = (abs_x + item.width >= 0.0f && abs_x < pager.width);
+
+			const float item_abs_x = item.x - pager.GetPosition() * pager.width;
+			const bool item_visible = (item_abs_x + item.width >= 0.0f && item_abs_x < pager.width);
+
+			const float date_abs_x = 0.5f * (pager.width + date_x - 0.25f * pager.GetPosition() * pager.width);
+			const bool date_visible = (date_abs_x + date_item.width >= 0.0f && date_abs_x <= pager.width);
+
+			const float date_item_abs_x = date_item.x - 0.25f * pager.GetPosition() * pager.width;
+			const bool date_item_visible = (date_item_abs_x + date_item.width >= 0.0f && date_item_abs_x <= pager.width);
+
+			if (!item_visible)
+			{
+				item.need_reload = true;
+			}
+
+			if (!date_item_visible)
+			{
+				date_item.need_reload = true;
+			}
+
+			if (date_visible)
+			{
+				if (date_item.need_reload)
+				{
+					date_item.need_reload = false;
+
+					date_item.SetDate(event.day, event.month);
+				}
+
+				const float dx = date_x;
+
+				const float goal_alpha = 0.5f;
+				const float gloal_scale = 0.85f;
+
+				float scale = (1.0f + gloal_scale) - clampf(gloal_scale + (1.0f - gloal_scale) * abs(dx) / date_step, 0.0f, 1.0f);
+				float alpha = (1.0f + goal_alpha) - clampf(goal_alpha + (1.0f - goal_alpha) * abs(dx) / date_step, 0.0f, 1.0f);
+
+				date_item.date.fontScale = scale;
+				date_item.date.alpha = alpha;
+				date_item.date.y = 0.8f * date_item.date.GetCurTextHeight() * (1.0f - scale);
+
+				date_item.line.Show(i != size - 1);
+				date_item.line.x = 50.0f;
+				date_item.line.width = date_step - 100.0f;
+
+				date_item.Show(true);
+				date_item.Update(dt);
+
+				date_item.x = date_x;
+			}
+
+			if (visible)
+			{
+				if (item.need_reload)
+				{
+					item.need_reload = false;
+
+					item.image.SetTextureURL(event.image);
+					item.title.SetText(event.title);
+					item.desc.SetText(event.desc);
+					item.desc.y = item.title.y + item.title.GetCurTextHeight() + 10.0f;
+					item.calendar.y = clampf(item.desc.y + item.desc.GetCurTextHeight() + 30.0f, 50.0f, kInf);
+					item.calendar_button.y = item.calendar.y;
+
+					@item.object = event;
+				}
+
+				if (pager.GetCurPage() == i)
+				{
+					if (pos > 0.0f)
+					{
+						pager.height = 568.0f + 2.0f * pos;
+						pager.y = -284.0f - pos;
+						item.image.y = 0.5f * pos;
+					}
+					else
+					{
+						pager.height = 568.0f;
+						pager.y = -284.0f;
+						item.image.y = 0.0f;
+					}
+				}
+
+				view.Clip(item.image, kScreenWidth, pager.height);
+
+				item.Show(true);
+				item.Update(dt);
+
+				item.x = x;
+			}
+
+			x += kScreenWidth;
+			date_x += date_step;
+		}
+
+		pager.numPages = model.events.length();
+
+		bg.y = -568.0f;
+		bg.height = 2.0f * kScreenHeight;
+		// bg.y = pos - 4.0f;
+		// bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+		// top_shadow.y = bg.y;
+
+		const float sz = clampf(scroller.scrollSize - scroller.height, 0.0f, kInf);
+
+		bottom.y = sz + scroller.height;
+
+		if (pos < -sz)
+		{
+			pull_to_go.height = abs(pos + sz);
+		}
+		else
+		{
+			pull_to_go.height = 0.0f;
+		}
+
+		if (!pull_to_go.runned)
+		{
+			pull_to_go_shadow.y = pull_to_go.height;
+		}
+	}
+
+	void StartRefresh()
+	{
+		model.LoadNews();
+	}
+
+	bool pull_to_go_started = false;
+
+	void StartPullToGo()
+	{
+		model.ContinueNews();
+		return;
+
+		if (!controller.IsTouchActive())
+		{
+			return;
+		}
+
+		pull_to_go_started = true;
+
+		scroller.EnableRefreshOffset(true);
+		pull_to_go.UpdateText(false);
+
+		pull_to_go.pager.SetPosition(0.0f, true);
+
+		RotateTo(pull_to_go.arrow, -180.0f, 0.5f).Perform();
+	}
+
+	void DoneOpenPullToGo()
+	{
+		pull_to_go.opened = true;
+		pull_to_go.pager.Show(true);
+		bottom_text.Show(false);
+	}
+
+	void DoneClosePullToGo()
+	{
+		pull_to_go.opened = false;
+		pull_to_go.runned = false;
+		scroller.EnableRefreshOffset(false);
+	}
+
+	void RunPullToGo()
+	{
+		if (!pull_to_go_started)
+		{
+			return;
+		}
+
+		pull_to_go.runned = true;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeIn(pull_to_go.pager_dot, 0.5f * duration, 0.0f, use_filled: true), FadeOut(pull_to_go.arrow, 0.5f * duration, 1.0f), FadeOut(pull_to_go.text, 0.5f * duration, 1.0f), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, 2.0f * bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.5f * bottom.height, duration)), EffectCallback(this.DoneOpenPullToGo)).Perform();
+	}
+
+	void ResetPullToGo()
+	{
+		pull_to_go_started = false;
+
+		pull_to_go.text.Show(true);
+		pull_to_go.text.alpha = 1.0f;
+
+		pull_to_go.arrow.Show(true);
+		pull_to_go.arrow.alpha = 1.0f;
+
+		pull_to_go.UpdateText(true);
+		pull_to_go.arrow.rot_z = 0.0f;
+	}
+
+	void StopPullToGo()
+	{
+		if (!pull_to_go.opened)
+		{
+			return;
+		}
+
+		pull_to_go.pager.Show(false);
+
+		bottom_text.Show(true);
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeOut(pull_to_go.pager_dot, 0.5f * duration, 1.0f, use_filled: true), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.0f, duration)), EffectCallback(this.DoneClosePullToGo)).Perform();
+		TIMEOUT_CB(this.ResetPullToGo, 2.0f * duration);
+	}
+};
+
+class NewsExpandedScreen : Symbol, IDragListener
+{
+	NGUILabel@ bg;
+	NGUILabel@ image;
+	NGUILabelRich@ title;
+	NGUILabel@ date;
+	NGUILabel@ date_bg;
+	NGUILabel@ top_shadow;
+	NGUILabel@ share_icon;
+	NGUILabel@ share_text;
+
+	NGUIButton@ share_button;
+
+	NGUIScroller@ scroller;
+
+	BlockTop@ content;
+
+	float initial_image_height = 0.0f;
+	float initial_image_y = 0.0f;
+
+	DataNews@ current_page;
+
+	NewsExpandedScreen(main::SymbolInstNewsExpandedSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.ev_bg0;
+		@image = symbol.ev_image0;
+		@title = symbol.ev_scroller0.ev_desc0;
+		@date = symbol.ev_scroller0.ev_date0;
+		@date_bg = symbol.ev_scroller0.ev_date_bg0;
+		@share_icon = symbol.ev_scroller0.ev_share_icon0;
+		@share_text = symbol.ev_scroller0.ev_share_text0;
+		@share_button = symbol.ev_scroller0.ev_share_button0;
+		@top_shadow = symbol.ev_top_shadow0;
+		@content = BlockTop(symbol.ev_scroller0.ev_top_blocks0);
+		@scroller = cast<NGUIScroller>(symbol.ev_scroller0);
+
+		initial_image_height = image.height;
+		initial_image_y = image.y;
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_DRAG;
+
+		CLICK(share_button, this.OnClickShare);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		top_shadow.width = kScreenWidth;
+
+		scroller.width = kScreenWidth;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		const float pos = scroller.GetPosition();
+
+		const float as = image.width / image.height;
+		if (pos > 0.0f)
+		{
+			image.height = initial_image_height + pos;
+			image.width = as * image.height;
+		}
+		else
+		{
+			image.height = initial_image_height;
+			image.width = as * image.height;
+		}
+
+		view.Clip(image, kScreenWidth, image.height);
+
+		if (share_icon.IsVisible())
+		{
+			share_icon.y = content.height + 430.0f;
+			share_text.y = share_icon.y + share_icon.height + 20.0f;
+
+			share_button.y = share_icon.y - 20.0f;
+			share_button.width = kScreenWidth;
+			share_button.height = share_icon.height + 100.0f;
+
+			scroller.scrollSize = share_text.y + 80.0f;
+		}
+		else
+		{
+			scroller.scrollSize = content.height + 430.0f;
+		}
+
+		bg.y = pos;
+		bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+		top_shadow.y = bg.y;
+	}
+
+	void OnStartDrag(NGUIButton@ button, float x, float y) override
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir) override
+	{
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir) override
+	{
+		ONLY_VISIBLE;
+
+		if (swipe_dir == kSwipeRight)
+		{
+			LOOP(content.contents)
+			{
+				if (content.contents[i].pager.IsVisible() && controller.IsClicked(content.contents[i].pager) && content.contents[i].pager.GetCurPage() > 0)
+				{
+					return;
+				}
+			}
+
+			Hide();
+		}
+	}
+
+	void Hide()
+	{
+		@current_page = null;
+
+		MoveTo(screens::news_expanded, kScreenWidth, 0.0f, 0.4f).HideAfterDone().Perform();
+		
+		screens::events_and_news.Show(true);
+		screens::events_and_news.x = -kScreenWidth;
+		MoveTo(screens::events_and_news, 0.0f, 0.0f, 0.4f).Perform();
+
+		screens::top.TransformToLines();
+	}
+
+	void Show(DataNews@ page)
+	{
+		@current_page = page;
+
+		share_icon.Show(!current_page.share_url.isEmpty());
+		share_text.Show(!current_page.share_url.isEmpty());
+		share_button.Show(!current_page.share_url.isEmpty());
+
+		content.Show(true);
+
+		content.title.SetText(kEmpty);
+		content.SetContent(page.blocks);
+
+		content.Show(true);
+		content.shadow0.Show(false);
+
+		title.SetText(page.initial_text);
+		date.SetText(page.date_str);
+		date_bg.width = date.GetTextWidth(page.date_str) + date.x + 20.0f;
+
+		if (page.image.isEmpty())
+		{
+			image.SetTexture(kEmpty);
+		}
+		else
+		{
+			image.SetTextureURL(page.image);
+		}
+
+		MoveTo(screens::events_and_news, -kScreenWidth, 0.0f, 0.4f).HideAfterDone().Perform();
+
+		screens::news_expanded.Show(true);
+		screens::news_expanded.x = kScreenWidth;
+		MoveTo(screens::news_expanded, 0.0f, 0.0f, 0.4f).Perform();
+
+		screens::top.TransformToCross();
+	}
+
+	void OnClickShare()
+	{
+		if (current_page is null)
+		{
+			return;
+		}
+
+		core.Mobile.StartShareText(current_page.share_url, kEmpty, null);
+	}
+};
+
+class MusicAlbum : Symbol
+{
+	MusicAlbum(main::SymbolInstMusicAlbumSymbol@ symbol)
+	{
+		super(symbol);
+	}
+};
+
+class MusicItem : Symbol
+{
+	NGUILabel@ title;
+	NGUILabel@ duration;
+
+	NGUIButton@ button;
+
+	MusicItem(main::SymbolInstMusicItemSymbol@ symbol)
+	{
+		super(symbol);
+
+		@title = symbol.music_item_title;
+		@duration = symbol.music_item_duration;
+
+		@button = symbol.music_item_button;
+	}
+
+	void Init() override
+	{
+		CLICK(button, OnClick);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+
+		button.width = width;
+		button.height = height;
+	}
+
+	void OnClick()
+	{
+		DataSong@ song = cast<DataSong>(object);
+		core.Utils.OpenURL(song.url, false);
+	}
+};
+
+class MusicScreen : Symbol
+{
+	NGUILabel@ bg;
+
+	NGUIScroller@ scroller;
+
+	MusicAlbum@ album;
+
+	array<MusicItem@> items;
+
+	main::SymbolMusicItemSymbol@ music_items;
+
+	NGUILabel@ bottom;
+	NGUILabel@ bottom_bg;
+	NGUILabel@ bottom_text;
+	NGUILabel@ pull_to_go_shadow;
+	PullToGo@ pull_to_go;
+
+	MusicScreen(main::SymbolInstMusicScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.music_bg;
+		@scroller = cast<NGUIScroller>(symbol.music_scroller);
+
+		@album = MusicAlbum(symbol.music_scroller.music_album);
+
+		@music_items = symbol.music_scroller.music_items;
+
+		@bottom = cast<NGUILabel>(symbol.music_scroller.music_bottom);
+		@bottom_bg = symbol.music_scroller.music_bottom.music_bottom_bg;
+		@bottom_text = symbol.music_scroller.music_bottom.music_bottom_text;
+		@pull_to_go_shadow = symbol.music_pull_to_go_shadow;
+
+		@pull_to_go = PullToGo(symbol.music_pull_to_go);
+
+		bottom_text.SetText("MUSIC");
+
+		bottom.Show(false);
+		pull_to_go.Show(false);
+		pull_to_go_shadow.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+
+		BIND_ARRAY(items, model.songs.length(), music_items, MusicItem);
+		LOOP(model.songs)
+		{
+			items[i].Init();
+			items[i].Resize();
+
+			@items[i].object = model.songs[i];
+
+			items[i].title.SetText(model.songs[i].title);
+			items[i].duration.SetText(model.songs[i].duration);
+		}
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		scroller.width = kScreenWidth;
+		bg.width = kScreenWidth;
+		bottom.width = kScreenWidth;
+
+		bottom_bg.width = kScreenWidth;
+		bottom_bg.height = 10.0f * bottom.height;
+
+		pull_to_go_shadow.width = kScreenWidth;
+
+		pull_to_go.pager.height = 2.0f * kScreenHeight + 2.0f * bottom.height;
+		pull_to_go.pager_dot.y = bottom.height;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		const float pos = scroller.GetPosition();
+
+		float y = album.height + 150.0f;
+		LOOP(model.songs)
+		{
+			items[i].y = y;
+			y += items[i].height;
+		}
+
+		scroller.scrollSize = y/* - 190.0f*/;
+
+		bg.y = pos;
+		bg.height = -bg.GetAbsoluteY() + 2.0f * kScreenHeight;
+
+		const float sz = clampf(scroller.scrollSize - scroller.height, 0.0f, kInf);
+
+		bottom.y = sz + scroller.height;
+
+		if (pos < -sz)
+		{
+			pull_to_go.height = abs(pos + sz);
+		}
+		else
+		{
+			pull_to_go.height = 0.0f;
+		}
+
+		if (!pull_to_go.runned)
+		{
+			pull_to_go_shadow.y = pull_to_go.height;
+		}
+	}
+
+	bool pull_to_go_started = false;
+
+	void StartPullToGo()
+	{
+		return;
+
+		if (!controller.IsTouchActive())
+		{
+			return;
+		}
+
+		pull_to_go_started = true;
+
+		scroller.EnableRefreshOffset(true);
+		pull_to_go.UpdateText(false);
+
+		pull_to_go.pager.SetPosition(4.0f, true);
+
+		RotateTo(pull_to_go.arrow, -180.0f, 0.5f).Perform();
+	}
+
+	void DoneOpenPullToGo()
+	{
+		pull_to_go.opened = true;
+		pull_to_go.pager.Show(true);
+		bottom_text.Show(false);
+	}
+
+	void DoneClosePullToGo()
+	{
+		pull_to_go.opened = false;
+		pull_to_go.runned = false;
+		scroller.EnableRefreshOffset(false);
+	}
+
+	void RunPullToGo()
+	{
+		if (!pull_to_go_started)
+		{
+			return;
+		}
+
+		pull_to_go.runned = true;
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeIn(pull_to_go.pager_dot, 0.5f * duration, 0.0f, use_filled: true), FadeOut(pull_to_go.arrow, 0.5f * duration, 1.0f), FadeOut(pull_to_go.text, 0.5f * duration, 1.0f), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, 2.0f * bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.5f * bottom.height, duration)), EffectCallback(this.DoneOpenPullToGo)).Perform();
+	}
+
+	void ResetPullToGo()
+	{
+		pull_to_go_started = false;
+
+		pull_to_go.text.Show(true);
+		pull_to_go.text.alpha = 1.0f;
+
+		pull_to_go.arrow.Show(true);
+		pull_to_go.arrow.alpha = 1.0f;
+
+		pull_to_go.UpdateText(true);
+		pull_to_go.arrow.rot_z = 0.0f;
+	}
+
+	void StopPullToGo()
+	{
+		if (!pull_to_go.opened)
+		{
+			return;
+		}
+
+		pull_to_go.pager.Show(false);
+
+		bottom_text.Show(true);
+
+		const float duration = 0.4f;
+		EffectWithCallback(EffectPrecedence(FadeOut(pull_to_go.pager_dot, 0.5f * duration, 1.0f, use_filled: true), MoveTo(pull_to_go_shadow, pull_to_go_shadow.x, bottom.height, duration), MoveTo(bottom_text, bottom_text.x, 0.0f, duration)), EffectCallback(this.DoneClosePullToGo)).Perform();
+		TIMEOUT_CB(this.ResetPullToGo, 2.0f * duration);
+	}
+};
+
+class FilmographyPanel : Symbol
+{
+	NGUILabel@ bg;
+	NGUILabel@ pull_bg;
+	NGUILabel@ image;
+	NGUILabel@ title;
+	NGUILabel@ year;
+	NGUILabel@ duration;
+	NGUILabelRich@ about;
+	NGUILabel@ desc;
+	NGUILabel@ itunes;
+	NGUILabel@ netflix;
+
+	NGUIScroller@ scroller;
+	NGUIScroller@ image_scroller;
+	NGUIButton@ pull_button;
+	NGUIButton@ itunes_button;
+	NGUIButton@ netflix_button;
+
+	array<BlockContentImage@> items;
+
+	FilmographyPanel(main::SymbolInstFilmographyPanelSymbol@ symbol)
+	{
+		super(symbol);
+
+		@bg = symbol.film_panel_bg;
+		@pull_bg = symbol.film_panel_pull_bg;
+		@image = symbol.film_panel_scroller.film_panel_image;
+		@title = symbol.film_panel_scroller.film_panel_title;
+		@year = symbol.film_panel_scroller.film_panel_year;
+		@duration = symbol.film_panel_scroller.film_panel_duration;
+		@about = symbol.film_panel_scroller.film_panel_desc;
+		@desc = symbol.film_panel_scroller.film_panel_text;
+		@itunes = symbol.film_panel_scroller.film_panel_itunes;
+		@netflix = symbol.film_panel_scroller.film_panel_netflix;
+		@itunes_button = symbol.film_panel_scroller.film_panel_itunes_button;
+		@netflix_button = symbol.film_panel_scroller.film_panel_netflix_button;
+
+		@scroller = cast<NGUIScroller>(symbol.film_panel_scroller);
+		@image_scroller = cast<NGUIScroller>(symbol.film_panel_scroller.film_panel_image_scroller);
+		@pull_button = symbol.film_panel_pull_button;
+
+		BIND_ARRAY(items, 16, symbol.film_panel_scroller.film_panel_image_scroller.film_panel_image_items, BlockContentImage);
+	}
+
+	void Init() override
+	{
+		CLICK(itunes_button, OnClickiTunes);
+		CLICK(netflix_button, OnClickNetflix);
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		bg.width = kScreenWidth;
+		pull_bg.width = kScreenWidth;
+		scroller.width = kScreenWidth;
+		image_scroller.width = kScreenWidth;
+		about.width = kScreenWidth - about.x - 40.0f;
+		desc.width = kScreenWidth - 2.0f * desc.x;
+	}
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		LOOP(items)
+		{
+			items[i].Show(false);
+			items[i].width = 236.0f;
+			items[i].height = 157.0f;
+		}
+
+		if (object is null)
+		{
+			return;
+		}
+
+		DataFilm@ film = cast<DataFilm>(object);
+
+		BlockContentImage@ item;
+		DataImage@ img;
+
+		const int items_count = items.length();
+		
+		float x = 30.0f;
+		LOOP(film.images)
+		{
+			@item = items[i % items_count];
+			@img = film.images[i];
+
+			const float abs_x = x + image_scroller.GetPosition();
+			const bool visible = (abs_x + item.width >= 0.0f && abs_x < image_scroller.width);
+
+			const float item_abs_x = item.x + image_scroller.GetPosition();
+			const bool item_visible = (item_abs_x + item.width >= 0.0f && item_abs_x < image_scroller.width);
+
+			if (!item_visible)
+			{
+				item.need_reload = true;
+			}
+
+			if (visible)
+			{
+				if (item.need_reload)
+				{
+					item.need_reload = false;
+
+					item.image.SetTextureURL(img.image);
+					item.video.Show(img.video);
+					@item.object = img;
+				}
+
+				item.image.width = item.width;
+				item.image.height = item.height;
+
+				item.button.width = item.width;
+				item.button.height = item.height;
+
+				view.Clip(item.image, item.width, item.height);
+
+				item.Show(true);
+				item.Update(dt);
+
+				item.x = x;
+			}
+
+			x += item.width + 30.0f;
+		}
+
+		view.Clip(image, image.width, image.height);
+
+		image_scroller.scrollSize = x;
+		// image_scroller.scrollSize = clampf(x - width, 0.0f, kInf);
+	}
+
+	void OnClickiTunes()
+	{
+		if (object is null)
+		{
+			return;
+		}
+
+		DataFilm@ film = cast<DataFilm>(object);
+		core.Utils.OpenURL(film.itunes_link, false);
+	}
+
+	void OnClickNetflix()
+	{
+		if (object is null)
+		{
+			return;
+		}
+
+		DataFilm@ film = cast<DataFilm>(object);
+		core.Utils.OpenURL(film.netflix_link, false);
+	}
+};
+
+class FilmographyItem : Symbol
+{
+	NGUILabel@ image;
+	NGUILabel@ shadow;
+	NGUILabel@ title;
+	NGUILabel@ year;
+
+	FilmographyItem(main::SymbolInstFilmographyItemSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@image = symbol.film_image;
+		@shadow = symbol.film_shadow;
+		@title = symbol.film_title;
+		@year = symbol.film_year;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		image.width = kScreenWidth;
+		shadow.width = kScreenWidth;
+	}
+};
+
+class FilmographyScreen : Symbol, IDragListener, IEventListener
+{
+	NGUILabel@ bg;
+
+	NGUIPager@ pager;
+
+	FilmographyPanel@ panel;
+	array<FilmographyItem@> items;
+
+	FilmographyScreen(main::SymbolInstFilmographyScreenSymbol@ symbol)
+	{
+		super(symbol);
+		Show(false);
+
+		@bg = symbol.film_bg;
+		@pager = cast<NGUIPager>(symbol.film_pager);
+
+		@panel = FilmographyPanel(symbol.film_panel);
+
+		BIND_ARRAY(items, 5, symbol.film_pager.film_items, FilmographyItem);
+	}
+
+	void Init() override
+	{
+		REG_TASK;
+		REG_DRAG;
+		REG_EVENT;
+	}
+
+	void Resize() override
+	{
+		width = kScreenWidth;
+		pager.width = kScreenWidth;
+	}
+
+	void Process(Event@ event) override
+	{
+		if (event.code == kModelReady)
+		{
+		}
+	}
+
+	int prev_page = -1;
+
+	void Update(float dt) override
+	{
+		ONLY_VISIBLE;
+
+		panel.Update(dt);
+
+		const float pos = pager.GetPosition();
+
+		if (pager.GetCurPage() != prev_page && !model.films.isEmpty())
+		{
+			const int page = pager.GetCurPage();
+			prev_page = page;
+
+			@panel.object = model.films[page];
+
+			panel.title.SetText(model.films[page].title);
+			panel.year.SetText(model.films[page].year);
+			panel.duration.SetText(model.films[page].duration + " min");
+			panel.image.SetTextureURL(model.films[page].small_image);
+			panel.about.SetText(model.films[page].about);
+			panel.desc.SetText(model.films[page].desc);
+
+			if (model.films[page].itunes_link.isEmpty())
+			{
+				panel.netflix.x = 40.0f;
+			}
+			else
+			{
+				panel.netflix.x = 260.0f;	
+			}
+
+			panel.itunes.Show(!model.films[page].itunes_link.isEmpty());
+			panel.netflix.Show(!model.films[page].netflix_link.isEmpty());
+
+			panel.itunes_button.Show(!model.films[page].itunes_link.isEmpty());
+			panel.netflix_button.Show(!model.films[page].netflix_link.isEmpty());
+
+			// model.films[page].itunes_link;
+			// model.films[page].netflix_link;
+
+			panel.image_scroller.y = panel.desc.y + panel.desc.GetCurTextHeight() + 30.0f;
+			panel.itunes.y = panel.image_scroller.y + panel.image_scroller.height + 30.0f;
+			panel.itunes_button.y = panel.itunes.y;
+			panel.netflix.y = panel.image_scroller.y + panel.image_scroller.height + 30.0f;
+			panel.netflix_button.y = panel.netflix.y;
+
+			panel.scroller.scrollSize = panel.image_scroller.y + panel.image_scroller.height + 200.0f;
+
+			LOOP(panel.items)
+			{
+				panel.items[i].need_reload = true;
+			}
+		}
+
+		LOOP(items)
+		{
+			items[i].Show(false);
+		}
+
+		FilmographyItem@ item;
+		DataFilm@ film;
+
+		const int items_count = items.length();
+		
+		float x = 0.0f;
+		LOOP(model.films)
+		{
+			@item = items[i % items_count];
+			@film = model.films[i];
+
+			const float abs_x = x - pager.GetPosition() * pager.width;
+			const bool visible = (abs_x + item.width >= 0.0f && abs_x < pager.width);
+
+			const float item_abs_x = item.x - pager.GetPosition() * pager.width;
+			const bool item_visible = (item_abs_x + item.width >= 0.0f && item_abs_x < pager.width);
+
+			if (!item_visible)
+			{
+				item.need_reload = true;
+			}
+
+			if (visible)
+			{
+				if (item.need_reload)
+				{
+					item.need_reload = false;
+
+					item.title.SetText(film.title);
+					item.year.SetText(film.year);
+
+					item.image.SetTextureURL(film.image);
+
+					@item.object = film;
+				}
+
+				view.Clip(item.image, kScreenWidth, kScreenHeight);
+
+				item.Show(true);
+				item.Update(dt);
+
+				item.x = x;
+			}
+
+			x += kScreenWidth;
+		}
+
+		pager.numPages = model.films.length();
+
+		// if (panel_opened)
+		// {
+		// 	pager.Allow_Scroll = false;
+		// }
+		pager.Allow_Scroll = !panel_opened;
+	}
+
+	bool panel_opened = false;
+	bool move_panel_in_progress = false;
+
+	void DoneOpenPanel()
+	{
+		panel_opened = true;
+		move_panel_in_progress = false;
+	}
+
+	void DoneClosePanel()
+	{
+		panel_opened = false;
+		move_panel_in_progress = false;
+	}
+
+	void OnStartDrag(NGUIButton@ button, float x, float y) override
+	{
+	}
+
+	void OnDrag(NGUIButton@ button, float dx, float dy, DragDirection dir) override
+	{
+		ONLY_VISIBLE;
+
+		// pager.Allow_Scroll = (dir == kDragHorz);
+
+		if (move_panel_in_progress || dir == kDragHorz /* || pager.Allow_Scroll*/)
+		{
+			return;
+		}
+
+		// if (button is panel.pull_button)
+		if (panel.scroller.GetPosition() >= 0.0f)
+		{
+			if (panel_opened)
+			{
+				panel.y = (-250.0f + dy) < -250.0f ? -250.0f : (-250.0f + dy);
+			}
+			else
+			{
+				panel.y = (548.0f + dy) > 548.0f ? 548.0f : (548.0f + dy);
+			}
+
+			// if (panel.y <= -210.0f && dy < 0.0f)
+			// {
+			// 	panel.scroller.Allow_Scroll = true;
+			// }
+			// else
+			// {
+			// 	panel.scroller.Allow_Scroll = false;
+			// }
+		}
+	}
+
+	void OnStopDrag(NGUIButton@ button, float x, float y, DragDirection drag_dir, SwipeDirection swipe_dir) override
+	{
+		ONLY_VISIBLE;
+
+		if (move_panel_in_progress)
+		{
+			return;
+		}
+
+		if (panel.scroller.GetPosition() < 0.0f)
+		{
+			return;
+		}
+
+		move_panel_in_progress = true;
+
+		const float dy = abs(panel.y - 548.0f) / 808.0f;
+		if (panel_opened)
+		{
+			if (dy > 0.8f)
+			{
+				EffectWithCallback(MoveTo(panel, panel.x, -250.0f, 0.4f), EffectCallback(this.DoneOpenPanel)).PerformNonBlock();
+			}
+			else
+			{
+				EffectWithCallback(MoveTo(panel, panel.x, 548.0f, 0.4f), EffectCallback(this.DoneClosePanel)).PerformNonBlock();
+			}
+		}
+		else
+		{
+			if (dy < 0.2f)
+			{
+				EffectWithCallback(MoveTo(panel, panel.x, 548.0f, 0.4f), EffectCallback(this.DoneClosePanel)).PerformNonBlock();
+			}
+			else
+			{
+				EffectWithCallback(MoveTo(panel, panel.x, -250.0f, 0.4f), EffectCallback(this.DoneOpenPanel)).PerformNonBlock();
+			}
+		}
+	}
+};
+
+class LoadingScreen : Symbol, IEventListener
+{
+	NGUILabel@ decor;
+	NGUILabel@ text;
+	NGUILabel@ line;
+
+	LoadingScreen(main::SymbolInstLoadingScreenSymbol@ symbol)
+	{
+		super(symbol);
+
+		@decor = symbol.loading_decor0;
+		@text = symbol.loading_text;
+		@line = symbol.loading_line0;
+
+		decor.Show(false);
+		text.Show(false);
+		line.Show(false);
+	}
+
+	void Init() override
+	{
+		REG_EVENT;
+	}
+
+	void Hide()
+	{
+		FadeOut(this, 0.4f, 1.0f).Perform();
+	}
+
+	void CheckInternet()
+	{
+		if (controller.NoInternet())
+		{
+			TIMEOUT_CB(this.CheckInternet, 0.5f);
+		}
+		else
+		{
+			api.GetData(NetworkCallback(model.OnGetData));
+			model.LoadNews();
+
+			// TIMEOUT_CB(this.Hide, 5.0f);
+		}
+	}
+
+	void Process(Event@ event) override
+	{
+		if (event.code == kModelReady)
+		{
+			if (!model.quotes.isEmpty())
+			{
+				text.SetText(model.quotes[round(randomf(0, model.quotes.length() - 1))]);
+			}
+			else if (controller.NoInternet())
+			{
+				text.SetText("No internet connection");
+			}
+
+			EffectPrecedence(FadeIn(decor, 0.4f, 0.0f), FadeIn(text, 0.4f, 0.0f), FadeIn(line, 0.4f, 0.0f)).Perform();
+
+			if (controller.NoInternet() && model.quotes.isEmpty())
+			{
+				TIMEOUT_CB(this.CheckInternet, 0.5f);
+			}
+			else
+			{
+				TIMEOUT_CB(this.Hide, 5.0f);
+			}
+		}
+	}
+};
+
+bool inited = false;
+
+void Init()
+{
+	@controller = BaseController();
+	controller.Init();
+}
+
+void Update(float dt)
+{
+	if (!inited)
+	{
+		inited = true;
+		Init();
+
+		if (controller.NoInternet())
+		{
+			screens::top.TransformToCross();
+		}
+		else
+		{
+			@screens::menu.current_screen = screens::events_and_news;
+			screens::menu.current_screen.Show(true);
+		}
+
+		screens::menu.Show(true);
+	}
+
+	if (controller !is null)
+	{
+		controller.Update(dt);
+	}
+}

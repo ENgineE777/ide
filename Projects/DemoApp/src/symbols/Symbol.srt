@@ -1,0 +1,105 @@
+const float kReloadTimeout = 0.2f;
+
+class Symbol : ITask
+{
+	bool need_reload = true;
+	bool need_reload_by_timeout = true;
+
+	float reload_timeout = kReloadTimeout;
+
+	NGUIWidget@ symbol;
+	NGUIWidget@ base;
+
+	AppNowObject@ object;
+
+	Symbol(ref@ symbol)
+	{
+		@this.symbol = cast<NGUIWidget>(symbol);
+
+		if (symbol !is null)
+		{
+			string type;
+			this.symbol.GetType(type);
+
+			if (type == kNGUISymbolInstance)
+			{
+				// FIXME: NGUISymbolInstance must be in script
+				main::SymbolInstMainScreenSymbol@ instance = cast<main::SymbolInstMainScreenSymbol>(cast<ref>(this.symbol));
+				
+				string class_name;
+				instance.GetSymbolName(class_name);
+
+				array<Symbol@>@ container;
+				if (!screens::symbols_by_class.get(class_name, @container))
+				{
+					@container = array<Symbol@>();
+					screens::symbols_by_class.set(class_name, @container);
+				}
+
+				container.insertLast(this);
+			}
+
+			view.style.ReadChildren(this.symbol);
+			view.style.Apply(this.symbol);
+
+			screens::symbols.insertLast(this);
+		}
+	}
+
+	float angle { get { return GetAngle(); } set { SetAngle(value); } }
+	float alpha { get { return GetAlpha(); } set { SetAlpha(value); } }
+	float height { get { return GetHeight(); } set { SetHeight(value); } }
+	float width { get { return GetWidth(); } set { SetWidth(value); } }
+	float x { get { return GetX(); } set { SetX(value); } }
+	float y { get { return GetY(); } set { SetY(value); } }
+
+	bool IsActive() { return symbol.IsActive(); }
+	bool IsFocused() { return symbol.IsFocused(); }
+	bool IsVisible() { return symbol.IsVisible(); }
+
+	float GetAbsoluteX() { return symbol.GetAbsoluteX(); }
+	float GetAbsoluteY() { return symbol.GetAbsoluteY(); }
+	float GetTextHeight(string&in txt) { return symbol.GetTextHeight(txt); }
+	float GetTextWidth(string&in txt) { return symbol.GetTextWidth(txt); }
+
+	void Activate(bool Active) { symbol.Activate(Active); }
+	void GetData(string&out name) { symbol.GetData(name); }
+	void GetText(string&out name) { symbol.GetText(name); }
+	void GetName(string&out name) { symbol.GetName(name); }
+	void SetColor(float r, float g, float b) { symbol.SetColor(r, g, b); }
+	void SetFocused(bool set_focused) { symbol.SetFocused(set_focused); }
+	void SetText(const string&in name) { symbol.SetText(name); }
+	void Show(bool show) { symbol.Show(show); }
+
+	int GetIndexInParentChilds() { return symbol.GetIndexInParentChilds(); }
+	void SetIndexInParentChilds(int index) { symbol.SetIndexInParentChilds(index); }
+
+	void SetAngle(float value) { symbol.rot_z = value; }
+	float GetAngle() { return symbol.rot_z; }
+
+	void SetAlpha(float value) { symbol.alpha = value; }
+	float GetAlpha() { return symbol.alpha; }
+
+	void SetX(float value) { symbol.x = value; }
+	void SetY(float value) { symbol.y = value; }
+
+	float GetX() { return symbol.x; }
+	float GetY() { return symbol.y; }
+
+	void SetWidth(float value) { symbol.width = value; }
+	void SetHeight(float value) { symbol.height = value; }
+
+	float GetWidth() { return symbol.width; }
+	float GetHeight() { return symbol.height; }
+
+	void Init() {}
+	void Resize() {}
+	void Update(float dt) {}
+};
+
+mixin class MirrorBaseSymbol
+{
+	void Show(bool show) override { symbol.Show(show); base.Show(show); }
+	void SetWidth(float value) override { symbol.width = value; base.width = value; }
+	void SetHeight(float value) override { symbol.height = value; base.height = value; }
+};

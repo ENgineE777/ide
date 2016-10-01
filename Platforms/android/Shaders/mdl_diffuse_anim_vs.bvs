@@ -1,0 +1,25 @@
+
+attribute vec4 position;
+attribute vec4 normal;
+attribute vec2 tex;
+attribute vec4 indices;
+attribute vec4 weights;
+
+varying vec2 DestinationUV;
+
+uniform mat4 modelViewProj;
+uniform mat4 animBones[35];
+
+void main(void)
+{
+	vec4 p0 = animBones[int(indices.x)] * position;
+    vec4 p1 = animBones[int(indices.y)] * position;
+	vec4 p2 = animBones[int(indices.z)] * position;
+	vec4 p3 = animBones[int(indices.w)] * position;
+	
+    vec4 p = p0 * weights.x + p1 * weights.y +
+			 p2 * weights.z + p3 * weights.w;
+	
+	gl_Position = modelViewProj * p;
+	DestinationUV = tex;
+}

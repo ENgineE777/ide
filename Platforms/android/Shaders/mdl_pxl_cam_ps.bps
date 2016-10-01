@@ -1,0 +1,19 @@
+
+varying mediump vec2 oTex;
+varying mediump vec3 oNormal;
+
+uniform sampler2D slot0;
+
+uniform mediump vec4 viewVec;
+uniform mediump vec4 lightDirColor;
+uniform mediump vec4 ambientColor;
+
+void main(void)
+{
+	mediump vec4 diff = texture2D(slot0, oTex);
+	
+	highp float k = clamp(dot(viewVec.xyz, normalize(oNormal)), 0.0, 1.0);
+	highp vec4 light = k * vec4(lightDirColor.xyz, 1) * lightDirColor.w;
+	
+	gl_FragColor = diff * ambientColor + diff * light + (light + ambientColor) * 0.1;
+}

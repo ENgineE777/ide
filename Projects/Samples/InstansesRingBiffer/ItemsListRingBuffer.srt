@@ -1,0 +1,58 @@
+#include "scrollerRingBuffer"
+
+class ItemsReservListRingBuffer : ScrollerRingBuffer
+{
+	NGUIScroller@ scroller;
+	array<scene::SymbolInstItemSymbol@> items_list;
+    
+	bool init = false;
+
+	void InitWidgets()
+	{
+		if(init) return;
+
+		init = true;
+
+		@scroller = scene::Scroller;
+		scene::SymbolItemSymbol@ items = scene::ItemsList;
+				
+		items_list.resize(buffer_length);
+
+		for (int i=0; i<buffer_length; i++)
+		{			
+			@items_list[i] = items.AddInstance();			
+			items_list[i].Show(false);			
+		}				
+	}
+
+	void UpdateWidgets()
+	{
+		scroller.scrollSize = num_items * 256 - 6;
+	}
+
+	int GetElementCount()
+	{		
+		return num_items;		
+	}
+
+	int GetFirstVisibleIndex()
+	{		
+		return -scroller.GetPosition() / 256.0f;
+	}
+
+	void UpdateElement(int buffer_index, int index, bool show)
+	{				    
+		items_list[buffer_index].Show(show);		
+
+		if (show)
+		{			
+            int image_index = index % 9;        
+	
+            items_list[buffer_index].ItemImage.SetTexture("Projects/Samples/InstansesRingBiffer/images/image0" + image_index + ".jpg");	
+
+			items_list[buffer_index].ItemText.SetText("Item No." + (index + 1));
+
+			items_list[buffer_index].y = index * 256;			
+		}
+	}
+};

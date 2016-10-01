@@ -1,0 +1,538 @@
+bool g_locale_debug = false;
+
+class LocaleData
+{
+	string key;
+	string value;
+
+	LocaleData()
+	{
+
+	}
+
+	LocaleData(const string&in k, const string&in v)
+	{
+		key = k;
+		value = v;
+	}
+};
+
+class Locale
+{
+	string client_locale_;
+	private array<LocaleData@> data_;
+
+	Locale()
+	{
+	}
+
+	void Init()
+	{
+		core.GetLocale(client_locale_);
+	}
+
+	void LoadData(const string&in file)
+	{
+		INFOTO("Locale", "Load: "+file);
+
+		int data_type = data_json;
+		string root = kEmpty;
+		if (file.findFirst('.xml') >= 0)
+		{
+			root = "locale";
+			data_type = data_xml;
+		}
+
+		if (core.DataFile.Start(file, root, data_type))
+		{
+			for (; core.DataFile.EnterBlock(root); core.DataFile.LeaveBlock())
+			{
+				LocaleData new_data;
+
+				core.DataFile.Read("name", new_data.key);
+
+				if (new_data.key.isEmpty())
+				{
+					continue;
+				}
+
+				if (!core.DataFile.Read(client_locale_, new_data.value))
+				{
+					core.DataFile.Read("en", new_data.value);
+				}
+
+				LocaleData@ old_data = Find(new_data.key);
+				if (old_data !is null)
+				{
+					old_data.value = new_data.value;
+				}
+				else
+				{
+					data_.insertLast(new_data);
+				}
+
+			}
+
+			core.DataFile.Finish();
+		}
+	}
+
+	LocaleData@ Find(const string&in key)
+	{
+		if (g_locale_debug && core.GetCurrentPlatform() == platform_pc)
+		{
+			return LocaleData(key, "$"+key);
+		}
+
+		LocaleData@ d;
+		for (int i = 0, size = data_.length(); i < size; ++i)
+		{
+			@d = data_[i];
+
+			if (d.key == key)
+			{
+				return d;
+			}
+		}
+
+		return null;
+	}
+
+	void Debug(NGUILabel@ wgt, const string&in key)
+	{
+		if (g_locale_debug && core.GetCurrentPlatform() == platform_pc)
+		{
+			wgt.SetText("$"+key);
+		}
+	}
+
+	void Debug(NGUILabelRich@ wgt, const string&in key)
+	{
+		if (g_locale_debug && core.GetCurrentPlatform() == platform_pc)
+		{
+			wgt.SetText("$"+key);
+		}
+	}
+
+	void Debug(Symbol@ wgt, const string&in key)
+	{
+		if (g_locale_debug && core.GetCurrentPlatform() == platform_pc)
+		{
+			wgt.SetText("$"+key);
+		}
+	}
+
+	void Translate(NGUILabel@ wgt, const string&in key)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			wgt.SetText(d.value);
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabel@ wgt, const string&in key, const string&in arg0)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val) && replaceFirst(val, kBraces, arg3, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabelRich@ wgt, const string&in key)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			wgt.SetText(d.value);
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabelRich@ wgt, const string&in key, const string&in arg0)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val) && replaceFirst(val, kBraces, arg3, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(Symbol@ wgt, const string&in key)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			wgt.SetText(d.value);
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(Symbol@ wgt, const string&in key, const string&in arg0)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+
+	void Translate(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+	{
+		LocaleData@ d = Find(key);
+		if (d !is null)
+		{
+			string val;
+			if (replaceFirst(d.value, kBraces, arg0, val) && replaceFirst(val, kBraces, arg1, val) && replaceFirst(val, kBraces, arg2, val) && replaceFirst(val, kBraces, arg3, val))
+			{
+				wgt.SetText(val);
+			}
+		}
+
+		Debug(wgt, key);
+	}
+};
+
+Locale locale;
+
+string _(const string&in key)
+{
+	LocaleData@ d = locale.Find(key);
+	return d is null ? kEmpty : d.value;
+}
+
+void _(string&out value, const string&in key)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		value = d.value;
+	}
+}
+
+void _(string&out value, const string&in key, const string&in arg0)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		replaceFirst(d.value, kBraces, arg0, value);
+	}
+}
+
+void _(string&out value, const string&in key, const string&in arg0, const string&in arg1)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		replaceFirst(d.value, kBraces, arg0, value);
+		replaceFirst(value, kBraces, arg1, value);
+	}
+}
+
+void _(string&out value, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		replaceFirst(d.value, kBraces, arg0, value);
+		replaceFirst(value, kBraces, arg1, value);
+		replaceFirst(value, kBraces, arg2, value);
+	}
+}
+
+void _(string&out value, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		replaceFirst(d.value, kBraces, arg0, value);
+		replaceFirst(value, kBraces, arg1, value);
+		replaceFirst(value, kBraces, arg2, value);
+		replaceFirst(value, kBraces, arg3, value);
+	}
+}
+
+void _(string&out value, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3, const string&in arg4)
+{
+	LocaleData@ d = locale.Find(key);
+
+	if (d is null)
+	{
+		value = kEmpty;
+	}
+	else
+	{
+		replaceFirst(d.value, kBraces, arg0, value);
+		replaceFirst(value, kBraces, arg1, value);
+		replaceFirst(value, kBraces, arg2, value);
+		replaceFirst(value, kBraces, arg3, value);
+		replaceFirst(value, kBraces, arg4, value);
+	}
+}
+
+void _(NGUILabel@ wgt)
+{
+	string key;
+	wgt.GetText(key);
+	
+	locale.Translate(wgt, key);
+}
+
+void _(NGUILabel@ wgt, const string&in key)
+{
+	locale.Translate(wgt, key);
+}
+
+void _(NGUILabel@ wgt, const string&in key, const string&in arg0)
+{
+	locale.Translate(wgt, key, arg0);
+}
+
+void _(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+{
+	locale.Translate(wgt, key, arg0, arg1);
+}
+
+void _(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2);
+}
+
+void _(NGUILabel@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2, arg3);
+}
+
+void _(NGUILabelRich@ wgt)
+{
+	string key;
+	wgt.GetText(key);
+	
+	locale.Translate(wgt, key);
+}
+
+void _(NGUILabelRich@ wgt, const string&in key)
+{
+	locale.Translate(wgt, key);
+}
+
+void _(NGUILabelRich@ wgt, const string&in key, const string&in arg0)
+{
+	locale.Translate(wgt, key, arg0);
+}
+
+void _(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+{
+	locale.Translate(wgt, key, arg0, arg1);
+}
+
+void _(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2);
+}
+
+void _(NGUILabelRich@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2, arg3);
+}
+
+void _(Symbol@ wgt, const string&in key)
+{
+	locale.Translate(wgt, key);
+}
+
+void _(Symbol@ wgt)
+{
+	string key;
+	wgt.GetText(key);
+	
+	locale.Translate(wgt, key);
+}
+
+void _(Symbol@ wgt, const string&in key, const string&in arg0)
+{
+	locale.Translate(wgt, key, arg0);
+}
+
+void _(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1)
+{
+	locale.Translate(wgt, key, arg0, arg1);
+}
+
+void _(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2);
+}
+
+void _(Symbol@ wgt, const string&in key, const string&in arg0, const string&in arg1, const string&in arg2, const string&in arg3)
+{
+	locale.Translate(wgt, key, arg0, arg1, arg2, arg3);
+}

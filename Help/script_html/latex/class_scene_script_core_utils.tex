@@ -1,0 +1,624 @@
+\hypertarget{class_scene_script_core_utils}{}\section{Scene\+Script\+Core\+Utils Class Reference}
+\label{class_scene_script_core_utils}\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+float \hyperlink{class_scene_script_core_utils_a0ad6eabfa539ad83e39b51f4c9949009}{Rnd} ()
+\item 
+void \hyperlink{class_scene_script_core_utils_a0fa3be6ad21276f85207db050bbe7c8d}{Get\+Ray\+Dir} (Vector \&pos, Vector \&dir)
+\item 
+void \hyperlink{class_scene_script_core_utils_a65568a59d7bb3ed4048223b1415e815b}{Get\+Screen\+Pos} (Vector \&in pos, Vector \&screen\+\_\+pos)
+\item 
+void \hyperlink{class_scene_script_core_utils_a6e17557a95868df25c7639ad9e3af37f}{Get\+Cam\+Dir} (Vector \&dir)
+\item 
+float \hyperlink{class_scene_script_core_utils_a9c899b92c5c7c6132730b7c98011067e}{Get\+Hour} ()
+\item 
+float \hyperlink{class_scene_script_core_utils_a51257caacd09badefecbeeafb4fbfbb1}{Get\+Minute} ()
+\item 
+float \hyperlink{class_scene_script_core_utils_aa11532473220da4cce608725cb3e8a35}{Get\+Second} ()
+\item 
+float \hyperlink{class_scene_script_core_utils_a6b33a3054c5f86ec3e7d371e490eae79}{Get\+Day} ()
+\item 
+float \hyperlink{class_scene_script_core_utils_a4ee852179c20abe1f58f21c8ae6d494c}{Get\+Month} ()
+\item 
+float \hyperlink{class_scene_script_core_utils_a51a9b16c409c5b8c58979208dcc5dfab}{Get\+Year} ()
+\item 
+int64 \hyperlink{class_scene_script_core_utils_ab7c6e31eac5937558ffb14ea657b094e}{Get\+System\+Time} ()
+\item 
+int \hyperlink{class_scene_script_core_utils_a9decb7a6ccb332314d9cffa1bf60350a}{Parse\+Unix\+Time} (int index, uint64 time)
+\item 
+void \hyperlink{class_scene_script_core_utils_a72d964d4efe6e40bca2f81f36b3d47f4}{Get\+Date\+Time\+U\+TC} (int \&year, int \&month, int \&day, int \&hour, int \&min, int \&sec)
+\item 
+int64 \hyperlink{class_scene_script_core_utils_a106ae27358ab3b6cc073665ca13ade2a}{Get\+Timestamp} (int year, int month, int day, int hour, int min, int sec)
+\item 
+int \hyperlink{class_scene_script_core_utils_a5600deb19c410de48dcfea3b5231f4e1}{Get\+Week\+Of\+Day} (int day, int month, int year)
+\item 
+float \hyperlink{class_scene_script_core_utils_a7380a399dd6dc66de6d0ebb94730269e}{Get\+Fps} ()
+\item 
+int \hyperlink{class_scene_script_core_utils_a3fc4ba1bbf123ddb308dc694074a61d9}{Calc\+Utf8\+Len} (string \&text)
+\item 
+void \hyperlink{class_scene_script_core_utils_a37741b646b2e6f68cf3b5a320379b4a6}{Clamp\+Utf8} (string \&in text, string \&res, int clamp\+\_\+len)
+\item 
+void \hyperlink{class_scene_script_core_utils_a7f1fe71148c0f4104b1ee2e618b2b275}{Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8} (string \&in wstr, string \&str)
+\item 
+void \hyperlink{class_scene_script_core_utils_ad10fe7b2df7b2d4de06f34967420da15}{Int64\+To\+String} (int64 val, string \&str)
+\item 
+void \hyperlink{class_scene_script_core_utils_a7d31b445a6247eea0adac3473a4691df}{U\+Int64\+To\+String} (uint64 val, string \&str)
+\item 
+void \hyperlink{class_scene_script_core_utils_a0f701e398ad5a9c5e85d842fee541894}{Get\+M\+D5\+Hash} (string \&in str, string \&hash)
+\item 
+void \hyperlink{class_scene_script_core_utils_af5eaaad32fb32c6a6f11a37686e691dd}{Get\+U\+ID} (string \&in postfix, string \&uid)
+\item 
+void \hyperlink{class_scene_script_core_utils_a82c988bc35f1a57634f324190edcd8b2}{Get\+I\+S\+O8601\+Date\+Time} (string \&str)
+\item 
+void \hyperlink{class_scene_script_core_utils_a6fce3dbb278a56415f73d8cad625092a}{Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry} (string \&str)
+\item 
+void \hyperlink{class_scene_script_core_utils_a37aee74c8e532f969c94fab04bc54bf9}{Extract\+File\+Name} (string \&in Full\+Path, string \&File\+Name)
+\item 
+void \hyperlink{class_scene_script_core_utils_abc64efec7afd2f9fb0256d56dc08f88a}{Open\+U\+RL} (string \&in url, bool inner)
+\item 
+void \hyperlink{class_scene_script_core_utils_a4e1b43e01447ffe267b52b8d7b8369a3}{Open\+U\+RL} (string \&in url, string \&in stop\+\_\+url)
+\item 
+void \hyperlink{class_scene_script_core_utils_a5e52a560b264f2b2ee8f6579e031459d}{Open\+Video} (string \&in path, string \&in show\+Name)
+\item 
+void \hyperlink{class_scene_script_core_utils_a9c84f8e58f032546cb230a655956f941}{Open\+Video} (string \&in path)
+\item 
+void \hyperlink{class_scene_script_core_utils_aad71200535a5088e14caee6329d8dd4b}{Start\+Monitoring\+Region} (string \&in id, string \&in uuid)
+\item 
+void \hyperlink{class_scene_script_core_utils_a5e7fdd32a7bec0c97f8077581058890f}{Stop\+Monitoring\+Region} (string \&in id)
+\item 
+void \hyperlink{class_scene_script_core_utils_a2722a33db0a0fa3a0d5d8bbf41249257}{Set\+Callback\+On\+Enter\+Region} (string \&in id, string \&in func)
+\item 
+void \hyperlink{class_scene_script_core_utils_a3f8274fd2e3f443468c778c727b63e77}{Set\+Callback\+On\+Exit\+Region} (string \&in id, string \&in func)
+\item 
+int \hyperlink{class_scene_script_core_utils_acc87a7db2e222d65eee89d9f7798d247}{Get\+Region\+Beacons\+Count} (string \&in id)
+\item 
+int \hyperlink{class_scene_script_core_utils_a19636799c31d3276957ccfc9e97dc648}{Get\+Region\+Beacon\+Minor} (string \&in id, int index)
+\item 
+int \hyperlink{class_scene_script_core_utils_ab14a3ede103acb243489482f41f5fca0}{Get\+Region\+Beacon\+Major} (string \&in id, int index)
+\item 
+int \hyperlink{class_scene_script_core_utils_a0ddeb1ee4d6d9dd34cca8ec28bd80e03}{Get\+Region\+Beacon\+Proximity} (string \&in id, int index)
+\item 
+float \hyperlink{class_scene_script_core_utils_aac5bb622b04a044a05dcd3d8b1444ff8}{Get\+Region\+Beacon\+Distance} (string \&in id, int index)
+\item 
+void \hyperlink{class_scene_script_core_utils_afaf74e221cef71b3f63c8db5cea18a67}{H\+T\+M\+L\+To\+Text} (string \&in, string \&out)
+\item 
+void \hyperlink{class_scene_script_core_utils_abf1b29c423616c51cd7ca6c654ac4971}{Lower\+Case} (string \&in, string \&out)
+\item 
+void \hyperlink{class_scene_script_core_utils_ab561c8dad7dd36ecb08f60c06ef021cb}{Upper\+Case} (string \&in, string \&out)
+\item 
+void \hyperlink{class_scene_script_core_utils_ac29aa08f8bec088a811e17c32df2ae1e}{Replace} (string \&str, string \&in find, string \&in replace)
+\item 
+void \hyperlink{class_scene_script_core_utils_a64328eb589865efe2bf2703782fc2d3e}{Print\+Text\+On\+Photo} (string \&in text, string \&in input\+\_\+photo, string \&in output\+\_\+photo, string \&in output\+\_\+ext)
+\item 
+void \hyperlink{class_scene_script_core_utils_af8ac8f7da38488059e7d927b48be5547}{Print\+Call\+Stack} ()
+\item 
+void \hyperlink{class_scene_script_core_utils_af4dece532f9b58b4ee70065ebfa4f103}{Copy\+File} (string \&src, string \&dest)
+\item 
+float \hyperlink{class_scene_script_core_utils_ad6b11465209bf1918e3ac3801cb6fad0}{Quadratic\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_aad772d9017b7e90b52437a80d0b7bde2}{Quadratic\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ae9c379d922a3ce3aed2bb730484ed61d}{Quadratic\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a4a27dda78eaf15cc5a8eb00d5d7ea47b}{Cubic\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a2189f157a31e5066f6c2265b769020b9}{Cubic\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a1b741fa9594e600a7ed5e3d08882a71f}{Cubic\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_acd66bd8fd1a489bc7fe0abaaca747905}{Quartic\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ac894794c65bc4f0b27858ad332bce270}{Quartic\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_aff8241e270c91be029c84625778930ff}{Quartic\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_aca6a4436737260472795aac82f24e259}{Quintic\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a09f96835e68c2c96edb9f87f89b5b140}{Quintic\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a9c45ec7052f797248fb236327448f10d}{Quintic\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a13bf904dd97db82b63493ff762c59138}{Sine\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a154e59e013f89810615c858a98aa08cc}{Sine\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a1e5d1b19fd87a9ee62f595880f59394e}{Sine\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a4755b60f0944b8b8c8850264fd1541f2}{Circular\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ad7e50ea76236ac25456065b125901b61}{Circular\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a8f77fb5aaeabadb8db9656339e32fff9}{Circular\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_afd95bf24890bb207017dd2d9f4aa8007}{Exponential\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a991c1dc5354aad7952355ae48f09aac8}{Exponential\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a0533b25ed087f309e37c50c7eede9d8f}{Exponential\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a6191fc57e78af24ca7c93878a6c0c62a}{Elastic\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a44a75d0d088c59dd99e264323ec78c0c}{Elastic\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a6eb7b2e8b76f55145cc7c8bef31b11f5}{Elastic\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_aa5a2cfe6126eda769cc5dde5555cf280}{Back\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ac489b26dc16254abeda9018a0f7a7bac}{Back\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a607e62bb8adae205b5e5c79fb5555272}{Back\+Ease\+In\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_a1ba9e67039ca5ee1f17543767de32975}{Bounce\+Ease\+In} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ab8af5e249c0744049b040db7ac344de2}{Bounce\+Ease\+Out} (float f)
+\item 
+float \hyperlink{class_scene_script_core_utils_ace82c5375438a7f7d8eb0d3ea98633aa}{Bounce\+Ease\+In\+Out} (float f)
+\item 
+int64 \hyperlink{class_scene_script_core_utils_a5fd4bda31c2e16a9d62564a5e471e7bc}{Get\+Install\+Time} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_scene_script_core_utils_aa5a2cfe6126eda769cc5dde5555cf280}{}\label{class_scene_script_core_utils_aa5a2cfe6126eda769cc5dde5555cf280} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Back\+Ease\+In@{Back\+Ease\+In}}
+\index{Back\+Ease\+In@{Back\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Back\+Ease\+In()}{BackEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Back\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a607e62bb8adae205b5e5c79fb5555272}{}\label{class_scene_script_core_utils_a607e62bb8adae205b5e5c79fb5555272} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Back\+Ease\+In\+Out@{Back\+Ease\+In\+Out}}
+\index{Back\+Ease\+In\+Out@{Back\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Back\+Ease\+In\+Out()}{BackEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Back\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ac489b26dc16254abeda9018a0f7a7bac}{}\label{class_scene_script_core_utils_ac489b26dc16254abeda9018a0f7a7bac} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Back\+Ease\+Out@{Back\+Ease\+Out}}
+\index{Back\+Ease\+Out@{Back\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Back\+Ease\+Out()}{BackEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Back\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a1ba9e67039ca5ee1f17543767de32975}{}\label{class_scene_script_core_utils_a1ba9e67039ca5ee1f17543767de32975} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Bounce\+Ease\+In@{Bounce\+Ease\+In}}
+\index{Bounce\+Ease\+In@{Bounce\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Bounce\+Ease\+In()}{BounceEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Bounce\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ace82c5375438a7f7d8eb0d3ea98633aa}{}\label{class_scene_script_core_utils_ace82c5375438a7f7d8eb0d3ea98633aa} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Bounce\+Ease\+In\+Out@{Bounce\+Ease\+In\+Out}}
+\index{Bounce\+Ease\+In\+Out@{Bounce\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Bounce\+Ease\+In\+Out()}{BounceEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Bounce\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ab8af5e249c0744049b040db7ac344de2}{}\label{class_scene_script_core_utils_ab8af5e249c0744049b040db7ac344de2} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Bounce\+Ease\+Out@{Bounce\+Ease\+Out}}
+\index{Bounce\+Ease\+Out@{Bounce\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Bounce\+Ease\+Out()}{BounceEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Bounce\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a3fc4ba1bbf123ddb308dc694074a61d9}{}\label{class_scene_script_core_utils_a3fc4ba1bbf123ddb308dc694074a61d9} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Calc\+Utf8\+Len@{Calc\+Utf8\+Len}}
+\index{Calc\+Utf8\+Len@{Calc\+Utf8\+Len}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Calc\+Utf8\+Len()}{CalcUtf8Len()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Calc\+Utf8\+Len (\begin{DoxyParamCaption}\item[{string \&}]{text }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a4755b60f0944b8b8c8850264fd1541f2}{}\label{class_scene_script_core_utils_a4755b60f0944b8b8c8850264fd1541f2} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Circular\+Ease\+In@{Circular\+Ease\+In}}
+\index{Circular\+Ease\+In@{Circular\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Circular\+Ease\+In()}{CircularEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Circular\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a8f77fb5aaeabadb8db9656339e32fff9}{}\label{class_scene_script_core_utils_a8f77fb5aaeabadb8db9656339e32fff9} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Circular\+Ease\+In\+Out@{Circular\+Ease\+In\+Out}}
+\index{Circular\+Ease\+In\+Out@{Circular\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Circular\+Ease\+In\+Out()}{CircularEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Circular\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ad7e50ea76236ac25456065b125901b61}{}\label{class_scene_script_core_utils_ad7e50ea76236ac25456065b125901b61} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Circular\+Ease\+Out@{Circular\+Ease\+Out}}
+\index{Circular\+Ease\+Out@{Circular\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Circular\+Ease\+Out()}{CircularEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Circular\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a37741b646b2e6f68cf3b5a320379b4a6}{}\label{class_scene_script_core_utils_a37741b646b2e6f68cf3b5a320379b4a6} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Clamp\+Utf8@{Clamp\+Utf8}}
+\index{Clamp\+Utf8@{Clamp\+Utf8}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Clamp\+Utf8()}{ClampUtf8()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Clamp\+Utf8 (\begin{DoxyParamCaption}\item[{string \&in}]{text,  }\item[{string \&}]{res,  }\item[{int}]{clamp\+\_\+len }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a7f1fe71148c0f4104b1ee2e618b2b275}{}\label{class_scene_script_core_utils_a7f1fe71148c0f4104b1ee2e618b2b275} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8@{Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8}}
+\index{Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8@{Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8()}{ConvertASCIIToUTF8()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Convert\+A\+S\+C\+I\+I\+To\+U\+T\+F8 (\begin{DoxyParamCaption}\item[{string \&in}]{wstr,  }\item[{string \&}]{str }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_af4dece532f9b58b4ee70065ebfa4f103}{}\label{class_scene_script_core_utils_af4dece532f9b58b4ee70065ebfa4f103} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Copy\+File@{Copy\+File}}
+\index{Copy\+File@{Copy\+File}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Copy\+File()}{CopyFile()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Copy\+File (\begin{DoxyParamCaption}\item[{string \&}]{src,  }\item[{string \&}]{dest }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a4a27dda78eaf15cc5a8eb00d5d7ea47b}{}\label{class_scene_script_core_utils_a4a27dda78eaf15cc5a8eb00d5d7ea47b} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Cubic\+Ease\+In@{Cubic\+Ease\+In}}
+\index{Cubic\+Ease\+In@{Cubic\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Cubic\+Ease\+In()}{CubicEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Cubic\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a1b741fa9594e600a7ed5e3d08882a71f}{}\label{class_scene_script_core_utils_a1b741fa9594e600a7ed5e3d08882a71f} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Cubic\+Ease\+In\+Out@{Cubic\+Ease\+In\+Out}}
+\index{Cubic\+Ease\+In\+Out@{Cubic\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Cubic\+Ease\+In\+Out()}{CubicEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Cubic\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a2189f157a31e5066f6c2265b769020b9}{}\label{class_scene_script_core_utils_a2189f157a31e5066f6c2265b769020b9} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Cubic\+Ease\+Out@{Cubic\+Ease\+Out}}
+\index{Cubic\+Ease\+Out@{Cubic\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Cubic\+Ease\+Out()}{CubicEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Cubic\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a6191fc57e78af24ca7c93878a6c0c62a}{}\label{class_scene_script_core_utils_a6191fc57e78af24ca7c93878a6c0c62a} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Elastic\+Ease\+In@{Elastic\+Ease\+In}}
+\index{Elastic\+Ease\+In@{Elastic\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Elastic\+Ease\+In()}{ElasticEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Elastic\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a6eb7b2e8b76f55145cc7c8bef31b11f5}{}\label{class_scene_script_core_utils_a6eb7b2e8b76f55145cc7c8bef31b11f5} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Elastic\+Ease\+In\+Out@{Elastic\+Ease\+In\+Out}}
+\index{Elastic\+Ease\+In\+Out@{Elastic\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Elastic\+Ease\+In\+Out()}{ElasticEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Elastic\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a44a75d0d088c59dd99e264323ec78c0c}{}\label{class_scene_script_core_utils_a44a75d0d088c59dd99e264323ec78c0c} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Elastic\+Ease\+Out@{Elastic\+Ease\+Out}}
+\index{Elastic\+Ease\+Out@{Elastic\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Elastic\+Ease\+Out()}{ElasticEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Elastic\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_afd95bf24890bb207017dd2d9f4aa8007}{}\label{class_scene_script_core_utils_afd95bf24890bb207017dd2d9f4aa8007} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Exponential\+Ease\+In@{Exponential\+Ease\+In}}
+\index{Exponential\+Ease\+In@{Exponential\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Exponential\+Ease\+In()}{ExponentialEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Exponential\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a0533b25ed087f309e37c50c7eede9d8f}{}\label{class_scene_script_core_utils_a0533b25ed087f309e37c50c7eede9d8f} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Exponential\+Ease\+In\+Out@{Exponential\+Ease\+In\+Out}}
+\index{Exponential\+Ease\+In\+Out@{Exponential\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Exponential\+Ease\+In\+Out()}{ExponentialEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Exponential\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a991c1dc5354aad7952355ae48f09aac8}{}\label{class_scene_script_core_utils_a991c1dc5354aad7952355ae48f09aac8} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Exponential\+Ease\+Out@{Exponential\+Ease\+Out}}
+\index{Exponential\+Ease\+Out@{Exponential\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Exponential\+Ease\+Out()}{ExponentialEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Exponential\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a37aee74c8e532f969c94fab04bc54bf9}{}\label{class_scene_script_core_utils_a37aee74c8e532f969c94fab04bc54bf9} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Extract\+File\+Name@{Extract\+File\+Name}}
+\index{Extract\+File\+Name@{Extract\+File\+Name}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Extract\+File\+Name()}{ExtractFileName()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Extract\+File\+Name (\begin{DoxyParamCaption}\item[{string \&in}]{Full\+Path,  }\item[{string \&}]{File\+Name }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a6e17557a95868df25c7639ad9e3af37f}{}\label{class_scene_script_core_utils_a6e17557a95868df25c7639ad9e3af37f} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Cam\+Dir@{Get\+Cam\+Dir}}
+\index{Get\+Cam\+Dir@{Get\+Cam\+Dir}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Cam\+Dir()}{GetCamDir()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+Cam\+Dir (\begin{DoxyParamCaption}\item[{Vector \&}]{dir }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a72d964d4efe6e40bca2f81f36b3d47f4}{}\label{class_scene_script_core_utils_a72d964d4efe6e40bca2f81f36b3d47f4} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Date\+Time\+U\+TC@{Get\+Date\+Time\+U\+TC}}
+\index{Get\+Date\+Time\+U\+TC@{Get\+Date\+Time\+U\+TC}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Date\+Time\+U\+T\+C()}{GetDateTimeUTC()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+Date\+Time\+U\+TC (\begin{DoxyParamCaption}\item[{int \&}]{year,  }\item[{int \&}]{month,  }\item[{int \&}]{day,  }\item[{int \&}]{hour,  }\item[{int \&}]{min,  }\item[{int \&}]{sec }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a6b33a3054c5f86ec3e7d371e490eae79}{}\label{class_scene_script_core_utils_a6b33a3054c5f86ec3e7d371e490eae79} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Day@{Get\+Day}}
+\index{Get\+Day@{Get\+Day}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Day()}{GetDay()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Day (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a7380a399dd6dc66de6d0ebb94730269e}{}\label{class_scene_script_core_utils_a7380a399dd6dc66de6d0ebb94730269e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Fps@{Get\+Fps}}
+\index{Get\+Fps@{Get\+Fps}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Fps()}{GetFps()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Fps (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a9c899b92c5c7c6132730b7c98011067e}{}\label{class_scene_script_core_utils_a9c899b92c5c7c6132730b7c98011067e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Hour@{Get\+Hour}}
+\index{Get\+Hour@{Get\+Hour}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Hour()}{GetHour()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Hour (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a5fd4bda31c2e16a9d62564a5e471e7bc}{}\label{class_scene_script_core_utils_a5fd4bda31c2e16a9d62564a5e471e7bc} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Install\+Time@{Get\+Install\+Time}}
+\index{Get\+Install\+Time@{Get\+Install\+Time}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Install\+Time()}{GetInstallTime()}}
+{\footnotesize\ttfamily int64 Scene\+Script\+Core\+Utils\+::\+Get\+Install\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a82c988bc35f1a57634f324190edcd8b2}{}\label{class_scene_script_core_utils_a82c988bc35f1a57634f324190edcd8b2} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+I\+S\+O8601\+Date\+Time@{Get\+I\+S\+O8601\+Date\+Time}}
+\index{Get\+I\+S\+O8601\+Date\+Time@{Get\+I\+S\+O8601\+Date\+Time}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+I\+S\+O8601\+Date\+Time()}{GetISO8601DateTime()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+I\+S\+O8601\+Date\+Time (\begin{DoxyParamCaption}\item[{string \&}]{str }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a6fce3dbb278a56415f73d8cad625092a}{}\label{class_scene_script_core_utils_a6fce3dbb278a56415f73d8cad625092a} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry@{Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry}}
+\index{Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry@{Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry()}{GetISO8601DateTimeForAzureQuerry()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+I\+S\+O8601\+Date\+Time\+For\+Azure\+Querry (\begin{DoxyParamCaption}\item[{string \&}]{str }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a0f701e398ad5a9c5e85d842fee541894}{}\label{class_scene_script_core_utils_a0f701e398ad5a9c5e85d842fee541894} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+M\+D5\+Hash@{Get\+M\+D5\+Hash}}
+\index{Get\+M\+D5\+Hash@{Get\+M\+D5\+Hash}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+M\+D5\+Hash()}{GetMD5Hash()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+M\+D5\+Hash (\begin{DoxyParamCaption}\item[{string \&in}]{str,  }\item[{string \&}]{hash }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a51257caacd09badefecbeeafb4fbfbb1}{}\label{class_scene_script_core_utils_a51257caacd09badefecbeeafb4fbfbb1} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Minute@{Get\+Minute}}
+\index{Get\+Minute@{Get\+Minute}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Minute()}{GetMinute()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Minute (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a4ee852179c20abe1f58f21c8ae6d494c}{}\label{class_scene_script_core_utils_a4ee852179c20abe1f58f21c8ae6d494c} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Month@{Get\+Month}}
+\index{Get\+Month@{Get\+Month}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Month()}{GetMonth()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Month (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a0fa3be6ad21276f85207db050bbe7c8d}{}\label{class_scene_script_core_utils_a0fa3be6ad21276f85207db050bbe7c8d} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Ray\+Dir@{Get\+Ray\+Dir}}
+\index{Get\+Ray\+Dir@{Get\+Ray\+Dir}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Ray\+Dir()}{GetRayDir()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+Ray\+Dir (\begin{DoxyParamCaption}\item[{Vector \&}]{pos,  }\item[{Vector \&}]{dir }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aac5bb622b04a044a05dcd3d8b1444ff8}{}\label{class_scene_script_core_utils_aac5bb622b04a044a05dcd3d8b1444ff8} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Region\+Beacon\+Distance@{Get\+Region\+Beacon\+Distance}}
+\index{Get\+Region\+Beacon\+Distance@{Get\+Region\+Beacon\+Distance}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Region\+Beacon\+Distance()}{GetRegionBeaconDistance()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Region\+Beacon\+Distance (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{int}]{index }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ab14a3ede103acb243489482f41f5fca0}{}\label{class_scene_script_core_utils_ab14a3ede103acb243489482f41f5fca0} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Region\+Beacon\+Major@{Get\+Region\+Beacon\+Major}}
+\index{Get\+Region\+Beacon\+Major@{Get\+Region\+Beacon\+Major}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Region\+Beacon\+Major()}{GetRegionBeaconMajor()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Get\+Region\+Beacon\+Major (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{int}]{index }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a19636799c31d3276957ccfc9e97dc648}{}\label{class_scene_script_core_utils_a19636799c31d3276957ccfc9e97dc648} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Region\+Beacon\+Minor@{Get\+Region\+Beacon\+Minor}}
+\index{Get\+Region\+Beacon\+Minor@{Get\+Region\+Beacon\+Minor}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Region\+Beacon\+Minor()}{GetRegionBeaconMinor()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Get\+Region\+Beacon\+Minor (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{int}]{index }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a0ddeb1ee4d6d9dd34cca8ec28bd80e03}{}\label{class_scene_script_core_utils_a0ddeb1ee4d6d9dd34cca8ec28bd80e03} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Region\+Beacon\+Proximity@{Get\+Region\+Beacon\+Proximity}}
+\index{Get\+Region\+Beacon\+Proximity@{Get\+Region\+Beacon\+Proximity}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Region\+Beacon\+Proximity()}{GetRegionBeaconProximity()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Get\+Region\+Beacon\+Proximity (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{int}]{index }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_acc87a7db2e222d65eee89d9f7798d247}{}\label{class_scene_script_core_utils_acc87a7db2e222d65eee89d9f7798d247} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Region\+Beacons\+Count@{Get\+Region\+Beacons\+Count}}
+\index{Get\+Region\+Beacons\+Count@{Get\+Region\+Beacons\+Count}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Region\+Beacons\+Count()}{GetRegionBeaconsCount()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Get\+Region\+Beacons\+Count (\begin{DoxyParamCaption}\item[{string \&in}]{id }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a65568a59d7bb3ed4048223b1415e815b}{}\label{class_scene_script_core_utils_a65568a59d7bb3ed4048223b1415e815b} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Screen\+Pos@{Get\+Screen\+Pos}}
+\index{Get\+Screen\+Pos@{Get\+Screen\+Pos}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Screen\+Pos()}{GetScreenPos()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+Screen\+Pos (\begin{DoxyParamCaption}\item[{Vector \&in}]{pos,  }\item[{Vector \&}]{screen\+\_\+pos }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aa11532473220da4cce608725cb3e8a35}{}\label{class_scene_script_core_utils_aa11532473220da4cce608725cb3e8a35} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Second@{Get\+Second}}
+\index{Get\+Second@{Get\+Second}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Second()}{GetSecond()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Second (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ab7c6e31eac5937558ffb14ea657b094e}{}\label{class_scene_script_core_utils_ab7c6e31eac5937558ffb14ea657b094e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+System\+Time@{Get\+System\+Time}}
+\index{Get\+System\+Time@{Get\+System\+Time}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+System\+Time()}{GetSystemTime()}}
+{\footnotesize\ttfamily int64 Scene\+Script\+Core\+Utils\+::\+Get\+System\+Time (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a106ae27358ab3b6cc073665ca13ade2a}{}\label{class_scene_script_core_utils_a106ae27358ab3b6cc073665ca13ade2a} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Timestamp@{Get\+Timestamp}}
+\index{Get\+Timestamp@{Get\+Timestamp}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Timestamp()}{GetTimestamp()}}
+{\footnotesize\ttfamily int64 Scene\+Script\+Core\+Utils\+::\+Get\+Timestamp (\begin{DoxyParamCaption}\item[{int}]{year,  }\item[{int}]{month,  }\item[{int}]{day,  }\item[{int}]{hour,  }\item[{int}]{min,  }\item[{int}]{sec }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_af5eaaad32fb32c6a6f11a37686e691dd}{}\label{class_scene_script_core_utils_af5eaaad32fb32c6a6f11a37686e691dd} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+U\+ID@{Get\+U\+ID}}
+\index{Get\+U\+ID@{Get\+U\+ID}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+U\+I\+D()}{GetUID()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Get\+U\+ID (\begin{DoxyParamCaption}\item[{string \&in}]{postfix,  }\item[{string \&}]{uid }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a5600deb19c410de48dcfea3b5231f4e1}{}\label{class_scene_script_core_utils_a5600deb19c410de48dcfea3b5231f4e1} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Week\+Of\+Day@{Get\+Week\+Of\+Day}}
+\index{Get\+Week\+Of\+Day@{Get\+Week\+Of\+Day}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Week\+Of\+Day()}{GetWeekOfDay()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Get\+Week\+Of\+Day (\begin{DoxyParamCaption}\item[{int}]{day,  }\item[{int}]{month,  }\item[{int}]{year }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a51a9b16c409c5b8c58979208dcc5dfab}{}\label{class_scene_script_core_utils_a51a9b16c409c5b8c58979208dcc5dfab} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Get\+Year@{Get\+Year}}
+\index{Get\+Year@{Get\+Year}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Get\+Year()}{GetYear()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Get\+Year (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_afaf74e221cef71b3f63c8db5cea18a67}{}\label{class_scene_script_core_utils_afaf74e221cef71b3f63c8db5cea18a67} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!H\+T\+M\+L\+To\+Text@{H\+T\+M\+L\+To\+Text}}
+\index{H\+T\+M\+L\+To\+Text@{H\+T\+M\+L\+To\+Text}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{H\+T\+M\+L\+To\+Text()}{HTMLToText()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+H\+T\+M\+L\+To\+Text (\begin{DoxyParamCaption}\item[{string \&}]{in,  }\item[{string \&}]{out }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ad10fe7b2df7b2d4de06f34967420da15}{}\label{class_scene_script_core_utils_ad10fe7b2df7b2d4de06f34967420da15} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Int64\+To\+String@{Int64\+To\+String}}
+\index{Int64\+To\+String@{Int64\+To\+String}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Int64\+To\+String()}{Int64ToString()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Int64\+To\+String (\begin{DoxyParamCaption}\item[{int64}]{val,  }\item[{string \&}]{str }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_abf1b29c423616c51cd7ca6c654ac4971}{}\label{class_scene_script_core_utils_abf1b29c423616c51cd7ca6c654ac4971} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Lower\+Case@{Lower\+Case}}
+\index{Lower\+Case@{Lower\+Case}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Lower\+Case()}{LowerCase()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Lower\+Case (\begin{DoxyParamCaption}\item[{string \&}]{in,  }\item[{string \&}]{out }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_abc64efec7afd2f9fb0256d56dc08f88a}{}\label{class_scene_script_core_utils_abc64efec7afd2f9fb0256d56dc08f88a} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Open\+U\+RL@{Open\+U\+RL}}
+\index{Open\+U\+RL@{Open\+U\+RL}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Open\+U\+R\+L()}{OpenURL()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Open\+U\+RL (\begin{DoxyParamCaption}\item[{string \&in}]{url,  }\item[{bool}]{inner }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a4e1b43e01447ffe267b52b8d7b8369a3}{}\label{class_scene_script_core_utils_a4e1b43e01447ffe267b52b8d7b8369a3} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Open\+U\+RL@{Open\+U\+RL}}
+\index{Open\+U\+RL@{Open\+U\+RL}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Open\+U\+R\+L()}{OpenURL()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Open\+U\+RL (\begin{DoxyParamCaption}\item[{string \&in}]{url,  }\item[{string \&in}]{stop\+\_\+url }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a5e52a560b264f2b2ee8f6579e031459d}{}\label{class_scene_script_core_utils_a5e52a560b264f2b2ee8f6579e031459d} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Open\+Video@{Open\+Video}}
+\index{Open\+Video@{Open\+Video}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Open\+Video()}{OpenVideo()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Open\+Video (\begin{DoxyParamCaption}\item[{string \&in}]{path,  }\item[{string \&in}]{show\+Name }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a9c84f8e58f032546cb230a655956f941}{}\label{class_scene_script_core_utils_a9c84f8e58f032546cb230a655956f941} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Open\+Video@{Open\+Video}}
+\index{Open\+Video@{Open\+Video}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Open\+Video()}{OpenVideo()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Open\+Video (\begin{DoxyParamCaption}\item[{string \&in}]{path }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a9decb7a6ccb332314d9cffa1bf60350a}{}\label{class_scene_script_core_utils_a9decb7a6ccb332314d9cffa1bf60350a} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Parse\+Unix\+Time@{Parse\+Unix\+Time}}
+\index{Parse\+Unix\+Time@{Parse\+Unix\+Time}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Parse\+Unix\+Time()}{ParseUnixTime()}}
+{\footnotesize\ttfamily int Scene\+Script\+Core\+Utils\+::\+Parse\+Unix\+Time (\begin{DoxyParamCaption}\item[{int}]{index,  }\item[{uint64}]{time }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_af8ac8f7da38488059e7d927b48be5547}{}\label{class_scene_script_core_utils_af8ac8f7da38488059e7d927b48be5547} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Print\+Call\+Stack@{Print\+Call\+Stack}}
+\index{Print\+Call\+Stack@{Print\+Call\+Stack}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Print\+Call\+Stack()}{PrintCallStack()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Print\+Call\+Stack (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a64328eb589865efe2bf2703782fc2d3e}{}\label{class_scene_script_core_utils_a64328eb589865efe2bf2703782fc2d3e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Print\+Text\+On\+Photo@{Print\+Text\+On\+Photo}}
+\index{Print\+Text\+On\+Photo@{Print\+Text\+On\+Photo}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Print\+Text\+On\+Photo()}{PrintTextOnPhoto()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Print\+Text\+On\+Photo (\begin{DoxyParamCaption}\item[{string \&in}]{text,  }\item[{string \&in}]{input\+\_\+photo,  }\item[{string \&in}]{output\+\_\+photo,  }\item[{string \&in}]{output\+\_\+ext }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ad6b11465209bf1918e3ac3801cb6fad0}{}\label{class_scene_script_core_utils_ad6b11465209bf1918e3ac3801cb6fad0} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quadratic\+Ease\+In@{Quadratic\+Ease\+In}}
+\index{Quadratic\+Ease\+In@{Quadratic\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quadratic\+Ease\+In()}{QuadraticEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quadratic\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ae9c379d922a3ce3aed2bb730484ed61d}{}\label{class_scene_script_core_utils_ae9c379d922a3ce3aed2bb730484ed61d} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quadratic\+Ease\+In\+Out@{Quadratic\+Ease\+In\+Out}}
+\index{Quadratic\+Ease\+In\+Out@{Quadratic\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quadratic\+Ease\+In\+Out()}{QuadraticEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quadratic\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aad772d9017b7e90b52437a80d0b7bde2}{}\label{class_scene_script_core_utils_aad772d9017b7e90b52437a80d0b7bde2} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quadratic\+Ease\+Out@{Quadratic\+Ease\+Out}}
+\index{Quadratic\+Ease\+Out@{Quadratic\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quadratic\+Ease\+Out()}{QuadraticEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quadratic\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_acd66bd8fd1a489bc7fe0abaaca747905}{}\label{class_scene_script_core_utils_acd66bd8fd1a489bc7fe0abaaca747905} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quartic\+Ease\+In@{Quartic\+Ease\+In}}
+\index{Quartic\+Ease\+In@{Quartic\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quartic\+Ease\+In()}{QuarticEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quartic\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aff8241e270c91be029c84625778930ff}{}\label{class_scene_script_core_utils_aff8241e270c91be029c84625778930ff} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quartic\+Ease\+In\+Out@{Quartic\+Ease\+In\+Out}}
+\index{Quartic\+Ease\+In\+Out@{Quartic\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quartic\+Ease\+In\+Out()}{QuarticEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quartic\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ac894794c65bc4f0b27858ad332bce270}{}\label{class_scene_script_core_utils_ac894794c65bc4f0b27858ad332bce270} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quartic\+Ease\+Out@{Quartic\+Ease\+Out}}
+\index{Quartic\+Ease\+Out@{Quartic\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quartic\+Ease\+Out()}{QuarticEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quartic\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aca6a4436737260472795aac82f24e259}{}\label{class_scene_script_core_utils_aca6a4436737260472795aac82f24e259} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quintic\+Ease\+In@{Quintic\+Ease\+In}}
+\index{Quintic\+Ease\+In@{Quintic\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quintic\+Ease\+In()}{QuinticEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quintic\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a9c45ec7052f797248fb236327448f10d}{}\label{class_scene_script_core_utils_a9c45ec7052f797248fb236327448f10d} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quintic\+Ease\+In\+Out@{Quintic\+Ease\+In\+Out}}
+\index{Quintic\+Ease\+In\+Out@{Quintic\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quintic\+Ease\+In\+Out()}{QuinticEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quintic\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a09f96835e68c2c96edb9f87f89b5b140}{}\label{class_scene_script_core_utils_a09f96835e68c2c96edb9f87f89b5b140} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Quintic\+Ease\+Out@{Quintic\+Ease\+Out}}
+\index{Quintic\+Ease\+Out@{Quintic\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Quintic\+Ease\+Out()}{QuinticEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Quintic\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ac29aa08f8bec088a811e17c32df2ae1e}{}\label{class_scene_script_core_utils_ac29aa08f8bec088a811e17c32df2ae1e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Replace@{Replace}}
+\index{Replace@{Replace}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Replace()}{Replace()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Replace (\begin{DoxyParamCaption}\item[{string \&}]{str,  }\item[{string \&in}]{find,  }\item[{string \&in}]{replace }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a0ad6eabfa539ad83e39b51f4c9949009}{}\label{class_scene_script_core_utils_a0ad6eabfa539ad83e39b51f4c9949009} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Rnd@{Rnd}}
+\index{Rnd@{Rnd}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Rnd()}{Rnd()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Rnd (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a2722a33db0a0fa3a0d5d8bbf41249257}{}\label{class_scene_script_core_utils_a2722a33db0a0fa3a0d5d8bbf41249257} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Set\+Callback\+On\+Enter\+Region@{Set\+Callback\+On\+Enter\+Region}}
+\index{Set\+Callback\+On\+Enter\+Region@{Set\+Callback\+On\+Enter\+Region}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Set\+Callback\+On\+Enter\+Region()}{SetCallbackOnEnterRegion()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Set\+Callback\+On\+Enter\+Region (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{string \&in}]{func }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a3f8274fd2e3f443468c778c727b63e77}{}\label{class_scene_script_core_utils_a3f8274fd2e3f443468c778c727b63e77} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Set\+Callback\+On\+Exit\+Region@{Set\+Callback\+On\+Exit\+Region}}
+\index{Set\+Callback\+On\+Exit\+Region@{Set\+Callback\+On\+Exit\+Region}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Set\+Callback\+On\+Exit\+Region()}{SetCallbackOnExitRegion()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Set\+Callback\+On\+Exit\+Region (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{string \&in}]{func }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a13bf904dd97db82b63493ff762c59138}{}\label{class_scene_script_core_utils_a13bf904dd97db82b63493ff762c59138} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Sine\+Ease\+In@{Sine\+Ease\+In}}
+\index{Sine\+Ease\+In@{Sine\+Ease\+In}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Sine\+Ease\+In()}{SineEaseIn()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Sine\+Ease\+In (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a1e5d1b19fd87a9ee62f595880f59394e}{}\label{class_scene_script_core_utils_a1e5d1b19fd87a9ee62f595880f59394e} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Sine\+Ease\+In\+Out@{Sine\+Ease\+In\+Out}}
+\index{Sine\+Ease\+In\+Out@{Sine\+Ease\+In\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Sine\+Ease\+In\+Out()}{SineEaseInOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Sine\+Ease\+In\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a154e59e013f89810615c858a98aa08cc}{}\label{class_scene_script_core_utils_a154e59e013f89810615c858a98aa08cc} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Sine\+Ease\+Out@{Sine\+Ease\+Out}}
+\index{Sine\+Ease\+Out@{Sine\+Ease\+Out}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Sine\+Ease\+Out()}{SineEaseOut()}}
+{\footnotesize\ttfamily float Scene\+Script\+Core\+Utils\+::\+Sine\+Ease\+Out (\begin{DoxyParamCaption}\item[{float}]{f }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_aad71200535a5088e14caee6329d8dd4b}{}\label{class_scene_script_core_utils_aad71200535a5088e14caee6329d8dd4b} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Start\+Monitoring\+Region@{Start\+Monitoring\+Region}}
+\index{Start\+Monitoring\+Region@{Start\+Monitoring\+Region}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Start\+Monitoring\+Region()}{StartMonitoringRegion()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Start\+Monitoring\+Region (\begin{DoxyParamCaption}\item[{string \&in}]{id,  }\item[{string \&in}]{uuid }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a5e7fdd32a7bec0c97f8077581058890f}{}\label{class_scene_script_core_utils_a5e7fdd32a7bec0c97f8077581058890f} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Stop\+Monitoring\+Region@{Stop\+Monitoring\+Region}}
+\index{Stop\+Monitoring\+Region@{Stop\+Monitoring\+Region}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Stop\+Monitoring\+Region()}{StopMonitoringRegion()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Stop\+Monitoring\+Region (\begin{DoxyParamCaption}\item[{string \&in}]{id }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_a7d31b445a6247eea0adac3473a4691df}{}\label{class_scene_script_core_utils_a7d31b445a6247eea0adac3473a4691df} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!U\+Int64\+To\+String@{U\+Int64\+To\+String}}
+\index{U\+Int64\+To\+String@{U\+Int64\+To\+String}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{U\+Int64\+To\+String()}{UInt64ToString()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+U\+Int64\+To\+String (\begin{DoxyParamCaption}\item[{uint64}]{val,  }\item[{string \&}]{str }\end{DoxyParamCaption})}
+
+\hypertarget{class_scene_script_core_utils_ab561c8dad7dd36ecb08f60c06ef021cb}{}\label{class_scene_script_core_utils_ab561c8dad7dd36ecb08f60c06ef021cb} 
+\index{Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}!Upper\+Case@{Upper\+Case}}
+\index{Upper\+Case@{Upper\+Case}!Scene\+Script\+Core\+Utils@{Scene\+Script\+Core\+Utils}}
+\subsubsection{\texorpdfstring{Upper\+Case()}{UpperCase()}}
+{\footnotesize\ttfamily void Scene\+Script\+Core\+Utils\+::\+Upper\+Case (\begin{DoxyParamCaption}\item[{string \&}]{in,  }\item[{string \&}]{out }\end{DoxyParamCaption})}
+
